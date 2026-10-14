@@ -1,81 +1,53 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { Landmark, MapPin, Plus, ShieldCheck } from "lucide-react";
+import { count, desc, eq } from "drizzle-orm";
 import { requireUser, editors } from "@/lib/auth";
 import { listSites } from "@/lib/sites";
-import { siteKinds, protectionLevels } from "@/lib/labels";
-import { fmtDate } from "@/lib/format";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { EmptyState, PageBody, PageHeader } from "@/components/page-header";
+import { db, schema } from "@/lib/db";
+import { siteKinds } from "@/lib/labels";
+import { HomeSearch, type HomeMap, type HomeSite } from "./home-search";
 
-export const metadata: Metadata = { title: "Bens" };
+export const metadata: Metadata = { title: "Início" };
 
-export default async function SitesPage() {
+export default async function HomePage({ searchParams }: PageProps<"/">) {
   const user = await requireUser();
-  const sites = await listSites(user.orgId);
-  const canEdit = editors.includes(user.role);
+  const { buscar } = await searchParams;
+  const { orthophotos: o, sites: s, damages: d } = schema;
+  const [rows, mapRows] = await Promise.all([
+    listSites(user.orgId),
+    db
+      .select({ id: o.id, siteId: o.siteId, name: o.name, siteName: s.name, damageCount: count(d.id) })
+      .from(o)
+      .innerJoin(s, eq(s.id, o.siteId))
+      .leftJoin(d, eq(d.orthophotoId, o.id))
+      .where(eq(s.orgId, user.orgId))
+      .groupBy(o.id, s.name)
+      .orderBy(desc(o.createdAt)),
+  ]);
+
+  const sites: HomeSite[] = rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    kind: siteKinds[r.kind],
+    city: r.city,
+    state: r.state,
+    protection: r.protection !== "nenhuma" ? r.protectionBody || "Tombado" : null,
+    elementCount: r.elementCount,
+    damageCount: r.damageCount,
+  }));
+  const maps: HomeMap[] = mapRows;
 
   return (
-    <>
-      <PageHeader
-        eyebrow={user.orgName}
-        title="Bens"
-        description="O patrimônio que sua equipe documenta: capturas, nuvens de pontos e mapas de danos."
-        actions={
-          canEdit && (
-            <Button asChild>
-              <Link href="/bens/novo">
-                <Plus /> Cadastrar bem
-              </Link>
-            </Button>
-          )
-        }
-      />
-      <PageBody>
-        {sites.length === 0 ? (
-          <EmptyState icon={Landmark} title="Nenhum bem cadastrado">
-            Comece cadastrando a igreja, casarão ou conjunto que vai documentar. Depois divida em partes
-            (fachadas, nave, retábulos) e registre as capturas.
-          </EmptyState>
-        ) : (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {sites.map((s) => (
-              <Link
-                key={s.id}
-                href={`/bens/${s.id}`}
-                className="group overflow-hidden rounded-xl border bg-card transition-colors hover:border-brand/40"
-              >
-                <div className="relative h-28 bg-[#16181b]">
-                  <div className="dot-field absolute inset-0 opacity-50 [mask-image:linear-gradient(to_top,transparent,black)]" />
-                  <Badge variant="secondary" className="absolute top-3 left-3 bg-white/90">
-                    {siteKinds[s.kind]}
-                  </Badge>
-                  {s.protection !== "nenhuma" && (
-                    <span className="absolute top-3 right-3 inline-flex items-center gap-1 rounded-full bg-brand px-2 py-0.5 text-[11px] font-medium text-white">
-                      <ShieldCheck className="size-3" /> {s.protectionBody || protectionLevels[s.protection]}
-                    </span>
-                  )}
-                </div>
-                <div className="grid gap-2 p-4">
-                  <h2 className="font-serif text-xl leading-tight group-hover:text-brand">{s.name}</h2>
-                  {(s.city || s.state) && (
-                    <p className="flex items-center gap-1 text-[13px] text-muted-foreground">
-                      <MapPin className="size-3.5" /> {[s.city, s.state].filter(Boolean).join(" · ")}
-                    </p>
-                  )}
-                  <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-[12.5px] text-muted-foreground">
-                    <span><b className="font-medium text-foreground">{s.elementCount}</b> partes</span>
-                    <span><b className="font-medium text-foreground">{s.campaignCount}</b> campanhas</span>
-                    <span><b className="font-medium text-foreground">{s.damageCount}</b> danos</span>
-                    <span className="ml-auto">atualizado {fmtDate(s.updatedAt)}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-        )}
-      </PageBody>
-    </>
+    <div className="flex min-h-[calc(100svh-3.5rem)] flex-col lg:min-h-svh">
+      <div className="flex items-center px-4 pt-3.5 sm:px-6">
+        <span className="rounded-full bg-muted px-3.5 py-1.5 text-[13.5px]">
+          {user.orgName} <span className="text-muted-foreground">· Plano ateliê</span>
+        </span>
+      </div>
+      <div className="flex flex-1 flex-col justify-center px-4 pt-10 pb-16 sm:px-6 lg:pt-0">
+        <div className="lg:-mt-[6vh]">
+          <HomeSearch sites={sites} maps={maps} canEdit={editors.includes(user.role)} autoFocus={buscar === "1"} />
+        </div>
+      </div>
+    </div>
   );
 }

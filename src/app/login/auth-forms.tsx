@@ -11,7 +11,7 @@ function TextField({ id, label, ...props }: { id: string; label: string } & Reac
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>{label}</Label>
-      <Input id={id} name={id} required className="h-10" {...props} />
+      <Input id={id} name={id} required className="h-11 rounded-xl" {...props} />
     </div>
   );
 }
@@ -23,7 +23,7 @@ export function LoginForm() {
       <TextField id="email" label="E-mail" type="email" autoComplete="email" />
       <TextField id="password" label="Senha" type="password" autoComplete="current-password" />
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
-      <Button type="submit" size="lg" className="mt-2 h-10" disabled={pending}>
+      <Button type="submit" size="lg" className="mt-2 h-11 rounded-full" disabled={pending}>
         {pending && <Loader2 className="animate-spin" />}
         Entrar
       </Button>
@@ -40,7 +40,7 @@ export function SignupForm() {
       <TextField id="email" label="E-mail" type="email" autoComplete="email" />
       <TextField id="password" label="Senha" type="password" autoComplete="new-password" minLength={8} />
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
-      <Button type="submit" size="lg" className="mt-2 h-10" disabled={pending}>
+      <Button type="submit" size="lg" className="mt-2 h-11 rounded-full" disabled={pending}>
         {pending && <Loader2 className="animate-spin" />}
         Criar conta
       </Button>

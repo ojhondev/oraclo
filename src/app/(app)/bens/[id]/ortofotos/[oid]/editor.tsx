@@ -418,7 +418,7 @@ export function DamageMapEditor({
         </Button>
         <div className="mr-auto grid min-w-0 leading-tight">
           <span className="truncate text-[11.5px] text-muted-foreground">{siteName} · mapa de danos</span>
-          <span className="truncate font-serif text-xl">{ortho.name}</span>
+          <span className="truncate text-[16px] font-medium">{ortho.name}</span>
         </div>
 
         <Popover open={calOpen} onOpenChange={setCalOpen}>
@@ -799,7 +799,7 @@ function DamagePanel({
       </div>
       <div className="flex items-center gap-2">
         <Swatch type={type} />
-        <span className="font-serif text-xl leading-tight">{type.name}</span>
+        <span className="text-[16px] font-medium leading-tight">{type.name}</span>
       </div>
       <div className="flex flex-wrap gap-2">
         <Badge variant="outline">{geometryKinds[type.geometry]}</Badge>

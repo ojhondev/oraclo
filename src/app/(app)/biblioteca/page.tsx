@@ -30,8 +30,8 @@ export default async function LibraryPage() {
       />
       <PageBody className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {categories.map((cat) => (
-          <section key={cat} className="rounded-xl border bg-card">
-            <h2 className="border-b px-5 py-3 font-serif text-xl">{cat}</h2>
+          <section key={cat} className="rounded-2xl border bg-card">
+            <h2 className="border-b px-5 py-3 text-[16px] font-medium">{cat}</h2>
             <ul className="divide-y">
               {types
                 .filter((x) => x.category === cat)

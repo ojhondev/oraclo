@@ -40,10 +40,10 @@ const DELIVERABLES = [
 
 function Section({ title, description, children, action }: { title: string; description?: string; children: React.ReactNode; action?: React.ReactNode }) {
   return (
-    <section className="grid content-start gap-4 rounded-xl border bg-card p-5">
+    <section className="grid content-start gap-4 rounded-2xl border bg-card p-5">
       <div className="flex flex-wrap items-start gap-3">
         <div className="min-w-0 flex-1">
-          <h2 className="font-serif text-2xl leading-tight">{title}</h2>
+          <h2 className="text-[17px] font-medium leading-tight">{title}</h2>
           {description && <p className="mt-1 text-[13px] text-muted-foreground">{description}</p>}
         </div>
         {action}

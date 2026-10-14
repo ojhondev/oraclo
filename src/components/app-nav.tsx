@@ -3,15 +3,30 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Landmark, Layers, Smartphone, LogOut, Menu } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronsUpDown,
+  Landmark,
+  Layers,
+  LogOut,
+  Menu,
+  PanelLeft,
+  Plus,
+  Search,
+  Smartphone,
+  UserRound,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/brand";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { initials } from "@/lib/format";
 import { roles } from "@/lib/labels";
 import { logout } from "@/app/login/actions";
 import type { SessionUser } from "@/lib/auth";
+import type { Recent } from "@/lib/recent";
 
 const ITEMS = [
   { href: "/", label: "Bens", icon: Landmark, match: (p: string) => p === "/" || p.startsWith("/bens") },
@@ -19,17 +34,159 @@ const ITEMS = [
   { href: "/app-captura", label: "App de captura", icon: Smartphone, match: (p: string) => p.startsWith("/app-captura") },
 ];
 
-function NavList({ user, onNavigate }: { user: SessionUser; onNavigate?: () => void }) {
+import { COLLAPSE_COOKIE } from "@/lib/ui-prefs";
+
+function IconButton({ label, children, ...props }: { label: string } & React.ComponentProps<"button">) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          aria-label={label}
+          className="grid size-8 place-items-center rounded-lg text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"
+          {...props}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom">{label}</TooltipContent>
+    </Tooltip>
+  );
+}
+
+function Group({ title, empty, children, collapsed }: { title: string; empty: string; children: React.ReactNode[]; collapsed: boolean }) {
+  const [open, setOpen] = useState(true);
+  if (collapsed) return null;
+  return (
+    <div className="mt-6 px-3">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="flex w-full items-center justify-between rounded-md px-2 py-1 text-[14px] text-sidebar-foreground/60 hover:text-sidebar-foreground"
+      >
+        {title}
+        <ChevronDown className={cn("size-4 transition-transform", !open && "-rotate-90")} />
+      </button>
+      {open && (
+        <div className="mt-1 grid gap-0.5">
+          {children.length ? children : <p className="px-2 py-1 text-[13.5px] text-sidebar-foreground/45">{empty}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function AccountMenu({ user, collapsed, onNavigate }: { user: SessionUser; collapsed: boolean; onNavigate?: () => void }) {
+  const [open, setOpen] = useState(false);
+  const go = () => {
+    setOpen(false);
+    onNavigate?.();
+  };
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "flex w-full items-center gap-2.5 rounded-lg p-1.5 text-left transition-colors hover:bg-sidebar-accent",
+            open && "bg-sidebar-accent",
+            collapsed && "justify-center",
+          )}
+        >
+          <Avatar className="size-7">
+            <AvatarFallback className="bg-primary text-[10.5px] font-medium text-primary-foreground">{initials(user.name)}</AvatarFallback>
+          </Avatar>
+          {!collapsed && (
+            <>
+              <span className="grid min-w-0 flex-1 leading-tight">
+                <span className="truncate text-[14px]">{user.name}</span>
+                <span className="truncate text-[12px] text-sidebar-foreground/55">{user.orgName}</span>
+              </span>
+              <ChevronsUpDown className="size-4 text-sidebar-foreground/50" />
+            </>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent side="top" align="start" sideOffset={8} className="w-[268px] rounded-xl p-1.5 shadow-lg">
+        <div className="flex items-center gap-2.5 px-2.5 py-2">
+          <Avatar className="size-9">
+            <AvatarFallback className="bg-primary text-[11px] font-medium text-primary-foreground">{initials(user.name)}</AvatarFallback>
+          </Avatar>
+          <span className="grid min-w-0 leading-tight">
+            <span className="truncate text-[14px] font-medium">{user.name}</span>
+            <span className="truncate text-[12.5px] text-muted-foreground">{user.email}</span>
+          </span>
+        </div>
+        <div className="mx-1 my-1 border-t" />
+        <div className="px-2.5 py-1.5 text-[12.5px] text-muted-foreground">
+          {user.orgName} · {roles[user.role]}
+        </div>
+        <div className="mx-1 my-1 border-t" />
+        <MenuLink href="/perfil" icon={UserRound} onClick={go}>Meu perfil</MenuLink>
+        <MenuLink href="/biblioteca" icon={Layers} onClick={go}>Biblioteca de danos</MenuLink>
+        <MenuLink href="/app-captura" icon={Smartphone} onClick={go}>App de captura</MenuLink>
+        <div className="mx-1 my-1 border-t" />
+        <form action={logout}>
+          <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] hover:bg-muted">
+            <LogOut className="size-4 text-muted-foreground" /> Sair
+          </button>
+        </form>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function MenuLink({ href, icon: Icon, children, onClick }: { href: string; icon: React.ElementType; children: React.ReactNode; onClick: () => void }) {
+  return (
+    <Link href={href} onClick={onClick} className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] hover:bg-muted">
+      <Icon className="size-4 text-muted-foreground" /> {children}
+    </Link>
+  );
+}
+
+function NavContent({
+  user,
+  recent,
+  collapsed,
+  onToggle,
+  onNavigate,
+}: {
+  user: SessionUser;
+  recent: Recent;
+  collapsed: boolean;
+  onToggle?: () => void;
+  onNavigate?: () => void;
+}) {
   const pathname = usePathname();
   return (
     <div className="flex h-full flex-col">
-      <Link href="/" onClick={onNavigate} className="flex items-center gap-2.5 px-5 pt-6 pb-2">
-        <BrandMark className="h-6" />
-        <span className="font-serif text-[22px] leading-none tracking-tight">Oraclo</span>
-      </Link>
-      <p className="truncate px-5 pb-6 text-[12px] text-muted-foreground">{user.orgName}</p>
+      <div className={cn("flex items-center px-3 pt-3.5 pb-4", collapsed ? "flex-col gap-2" : "justify-between")}>
+        <Link href="/" onClick={onNavigate} aria-label="Oraclo — início" className="grid size-9 place-items-center rounded-lg text-foreground hover:bg-sidebar-accent">
+          <BrandMark className="h-6" />
+        </Link>
+        <div className={cn("flex items-center gap-0.5", collapsed && "flex-col")}>
+          <Link href="/?buscar=1" onClick={onNavigate} aria-label="Buscar" className="grid size-8 place-items-center rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground">
+            <Search className="size-[18px]" />
+          </Link>
+          {onToggle && (
+            <IconButton label={collapsed ? "Expandir barra lateral" : "Recolher barra lateral"} onClick={onToggle}>
+              <PanelLeft className="size-[18px]" />
+            </IconButton>
+          )}
+        </div>
+      </div>
 
       <nav className="grid gap-0.5 px-3">
+        <Link
+          href="/bens/novo"
+          onClick={onNavigate}
+          className={cn(
+            "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] hover:bg-sidebar-accent",
+            collapsed && "justify-center px-0",
+          )}
+          title="Novo bem"
+        >
+          <Plus className="size-[18px]" />
+          {!collapsed && "Novo"}
+        </Link>
         {ITEMS.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
           return (
@@ -37,70 +194,90 @@ function NavList({ user, onNavigate }: { user: SessionUser; onNavigate?: () => v
               key={href}
               href={href}
               onClick={onNavigate}
+              title={label}
               className={cn(
-                "flex h-9 items-center gap-3 rounded-md px-3 text-[13.5px] text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                active && "bg-sidebar-accent font-medium text-sidebar-foreground",
+                "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] transition-colors hover:bg-sidebar-accent",
+                active && "bg-sidebar-accent",
+                collapsed && "justify-center px-0",
               )}
             >
-              <Icon className={cn("size-4 opacity-70", active && "text-brand opacity-100")} />
-              {label}
+              <Icon className={cn("size-[18px]", active ? "text-brand" : "text-sidebar-foreground/80")} />
+              {!collapsed && label}
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-auto flex items-center gap-1 p-3">
-        <Link
-          href="/perfil"
-          onClick={onNavigate}
-          title="Meu perfil"
-          className={cn(
-            "flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-sidebar-accent",
-            pathname.startsWith("/perfil") && "bg-sidebar-accent",
-          )}
-        >
-          <Avatar className="size-8">
-            <AvatarFallback className="bg-secondary text-[11px] font-medium">{initials(user.name)}</AvatarFallback>
-          </Avatar>
-          <span className="grid min-w-0 flex-1 leading-tight">
-            <span className="truncate text-[13px] font-medium">{user.name}</span>
-            <span className="truncate text-[11.5px] text-muted-foreground">Meu perfil · {roles[user.role]}</span>
-          </span>
-        </Link>
-        <form action={logout}>
-          <button
-            aria-label="Sair"
-            className="grid size-8 place-items-center rounded-md text-muted-foreground hover:bg-sidebar-accent hover:text-foreground"
-          >
-            <LogOut className="size-4" />
-          </button>
-        </form>
+      <div className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-4">
+        <Group title="Bens" empty="Nenhum bem" collapsed={collapsed}>
+          {recent.sites.map((s) => (
+            <Link
+              key={s.id}
+              href={`/bens/${s.id}`}
+              onClick={onNavigate}
+              className={cn(
+                "truncate rounded-md px-2 py-1.5 text-[14px] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
+                pathname === `/bens/${s.id}` && "bg-sidebar-accent text-sidebar-foreground",
+              )}
+            >
+              {s.name}
+            </Link>
+          ))}
+        </Group>
+        <Group title="Mapas de danos" empty="Nenhum mapa recente" collapsed={collapsed}>
+          {recent.maps.map((m) => (
+            <Link
+              key={m.id}
+              href={`/bens/${m.siteId}/ortofotos/${m.id}`}
+              onClick={onNavigate}
+              className="truncate rounded-md px-2 py-1.5 text-[14px] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+            >
+              {m.name}
+            </Link>
+          ))}
+        </Group>
+      </div>
+
+      <div className="p-2">
+        <AccountMenu user={user} collapsed={collapsed} onNavigate={onNavigate} />
       </div>
     </div>
   );
 }
 
-export function AppSidebar({ user }: { user: SessionUser }) {
+export function AppSidebar({ user, recent, initialCollapsed }: { user: SessionUser; recent: Recent; initialCollapsed: boolean }) {
+  const [collapsed, setCollapsed] = useState(initialCollapsed);
+  const toggle = () =>
+    setCollapsed((c) => {
+      // cookie lido no servidor para a barra já renderizar no estado certo
+      document.cookie = `${COLLAPSE_COOKIE}=${c ? "0" : "1"}; path=/; max-age=31536000; samesite=lax`;
+      return !c;
+    });
   return (
-    <aside className="sticky top-0 hidden h-svh w-60 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
-      <NavList user={user} />
+    <aside
+      className={cn(
+        "sticky top-0 hidden h-svh shrink-0 border-r border-sidebar-border bg-sidebar transition-[width] duration-200 lg:block",
+        collapsed ? "w-[60px]" : "w-60",
+      )}
+    >
+      <NavContent user={user} recent={recent} collapsed={collapsed} onToggle={toggle} />
     </aside>
   );
 }
 
-export function MobileBar({ user }: { user: SessionUser }) {
+export function MobileBar({ user, recent }: { user: SessionUser; recent: Recent }) {
   const [open, setOpen] = useState(false);
   return (
     <div className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b bg-background/90 px-4 backdrop-blur lg:hidden">
-      <button aria-label="Menu" onClick={() => setOpen(true)} className="-ml-1 grid size-9 place-items-center rounded-md hover:bg-muted">
+      <button aria-label="Menu" onClick={() => setOpen(true)} className="-ml-1 grid size-9 place-items-center rounded-lg hover:bg-muted">
         <Menu className="size-5" />
       </button>
       <BrandMark className="h-5" />
-      <span className="font-serif text-lg leading-none">Oraclo</span>
+      <span className="text-[15px] font-medium">Oraclo</span>
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 bg-sidebar p-0">
           <SheetTitle className="sr-only">Menu</SheetTitle>
-          <NavList user={user} onNavigate={() => setOpen(false)} />
+          <NavContent user={user} recent={recent} collapsed={false} onNavigate={() => setOpen(false)} />
         </SheetContent>
       </Sheet>
     </div>

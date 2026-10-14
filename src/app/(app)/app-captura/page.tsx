@@ -29,14 +29,14 @@ export default async function CaptureAppPage() {
       <PageBody>
         <ol className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {STEPS.map(({ icon: Icon, title, text }, i) => (
-            <li key={title} className="grid content-start gap-2 rounded-xl border bg-card p-5">
+            <li key={title} className="grid content-start gap-2 rounded-2xl border bg-card p-5">
               <span className="flex items-center gap-2">
                 <span className="grid size-8 place-items-center rounded-full bg-brand-soft text-brand">
                   <Icon className="size-4" />
                 </span>
                 <span className="label">Passo {i + 1}</span>
               </span>
-              <h2 className="font-serif text-xl">{title}</h2>
+              <h2 className="text-[16px] font-medium">{title}</h2>
               <p className="text-[13.5px] text-muted-foreground">{text}</p>
             </li>
           ))}

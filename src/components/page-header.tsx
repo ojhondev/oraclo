@@ -14,10 +14,10 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("flex flex-wrap items-end gap-4 px-5 pt-7 pb-5 sm:px-8 lg:px-10", className)}>
+    <header className={cn("flex flex-wrap items-end gap-4 px-5 pt-8 pb-6 sm:px-8 lg:px-10", className)}>
       <div className="min-w-0 flex-1">
-        {eyebrow && <p className="label mb-1.5">{eyebrow}</p>}
-        <h1 className="h-display text-[28px] sm:text-[32px]">{title}</h1>
+        {eyebrow && <p className="label mb-1">{eyebrow}</p>}
+        <h1 className="h-display text-[24px] sm:text-[28px]">{title}</h1>
         {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

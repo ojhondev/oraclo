@@ -29,7 +29,7 @@ export function BrandLogo({ className }: { className?: string }) {
   return (
     <span className={cn("inline-flex items-center gap-2.5", className)}>
       <BrandMark className="h-7" />
-      <span className="font-serif text-[26px] leading-none tracking-tight">Oraclo</span>
+      <span className="text-[22px] font-medium leading-none tracking-tight">Oraclo</span>
     </span>
   );
 }

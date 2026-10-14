@@ -39,6 +39,8 @@ import {
   submitCapture,
 } from "../actions";
 import { GuidedCamera, type Shot } from "./camera";
+import { VideoCapture } from "./video";
+import type { VideoFrame } from "@/lib/video-frames";
 import { useUploader } from "./use-uploader";
 
 type Capture = typeof schema.captures.$inferSelect;
@@ -97,6 +99,7 @@ export function CaptureWorkspace({
   const [meters, setMeters] = useState("");
   const [pass, setPass] = useState<1 | 2>(1);
   const [camera, setCamera] = useState(false);
+  const [media, setMedia] = useState<"fotos" | "video">("fotos");
   const [session, setSession] = useState<number[]>([]);
   const [status, setStatus] = useState(capture.status);
   // acompanha mudanças de status vindas do servidor (ex.: rascunho → enviando)
@@ -130,6 +133,11 @@ export function CaptureWorkspace({
   async function addShot(s: Shot) {
     await up.add({ blob: s.blob, name: s.name, type: s.type, width: s.width, height: s.height, sharpness: s.sharpness, pass, takenAt: new Date().toISOString() });
     if (s.sharpness != null) setSession((x) => [...x, s.sharpness!].slice(-20));
+  }
+
+  async function addVideoFrame(f: VideoFrame, name: string) {
+    await up.add({ blob: f.blob, name, type: "image/jpeg", width: f.width, height: f.height, sharpness: f.sharpness, pass, takenAt: new Date().toISOString() });
+    if (f.sharpness != null) setSession((x) => [...x, f.sharpness!].slice(-20));
   }
 
   async function addFiles(list: FileList | null) {
@@ -235,8 +243,8 @@ export function CaptureWorkspace({
           </p>
           <p className="mt-1 text-muted-foreground">
             {status === "concluida"
-              ? "A nuvem de pontos e os arquivos aparecem na página do bem, em Modelos e arquivos."
-              : "A equipe Oraclo vai gerar a nuvem de pontos, a malha 3D e o relatório de qualidade. Você recebe o resultado na página do bem."}
+              ? "A nuvem de pontos e os arquivos aparecem na página do projeto e em Modelos 3D."
+              : "A equipe Oraclo vai gerar a nuvem de pontos, a malha 3D e o relatório de qualidade. Você recebe o resultado na página do projeto."}
           </p>
         </section>
       ) : (
@@ -324,8 +332,23 @@ export function CaptureWorkspace({
                   <span className="text-[12.5px] text-muted-foreground">JPG, PNG ou HEIC — centenas de uma vez. Mantenha a página aberta até o envio terminar.</span>
                   <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }} />
                 </label>
+              ) : null}
+              {importMode ? (
+                <div className="mt-3">
+                  <VideoCapture compact onFrame={addVideoFrame} />
+                </div>
               ) : (
               <>
+              <div className="mb-2 grid grid-cols-2 gap-1 rounded-full border p-1 text-[13px]">
+                {([
+                  ["fotos", "Fotos"],
+                  ["video", "Vídeo"],
+                ] as const).map(([k, label]) => (
+                  <button key={k} onClick={() => setMedia(k)} className={cn("h-8 rounded-full", media === k ? "bg-foreground text-background" : "text-muted-foreground")}>
+                    {label}
+                  </button>
+                ))}
+              </div>
               <div className="mb-3 grid grid-cols-2 gap-1 rounded-full bg-muted p-1 text-[13px]">
                 {([1, 2] as const).map((p) => (
                   <button key={p} onClick={() => setPass(p)} className={cn("h-8 rounded-full", pass === p ? "bg-card shadow-sm ring-1 ring-border" : "text-muted-foreground")}>
@@ -333,6 +356,10 @@ export function CaptureWorkspace({
                   </button>
                 ))}
               </div>
+              {media === "video" ? (
+                <VideoCapture onFrame={addVideoFrame} />
+              ) : (
+              <>
               <div className="grid gap-2 sm:grid-cols-3">
                 <Button size="lg" className="h-12" onClick={() => setCamera(true)}>
                   <Camera /> Câmera guiada
@@ -349,6 +376,8 @@ export function CaptureWorkspace({
                 <b className="font-medium text-foreground">Foto em alta</b>: abre a câmera do celular com resolução máxima, uma foto por vez.{" "}
                 <b className="font-medium text-foreground">Da galeria</b>: fotos já tiradas (ou de outra câmera).
               </p>
+              </>
+              )}
               <input ref={hiResRef} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }} />
               <input ref={galleryRef} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }} />
               </>

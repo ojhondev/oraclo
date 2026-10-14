@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { login, signup } from "./actions";
 
-function TextField({ id, label, ...props }: { id: string; label: string } & React.ComponentProps<"input">) {
+export function TextField({ id, label, ...props }: { id: string; label: string } & React.ComponentProps<"input">) {
   return (
     <div className="grid gap-1.5">
       <Label htmlFor={id}>{label}</Label>

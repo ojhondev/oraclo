@@ -34,3 +34,8 @@ export function initials(name: string) {
     .map((p) => p[0]!.toUpperCase())
     .join("");
 }
+
+/** Dias inteiros que faltam até a data (0 se já passou). */
+export function daysUntil(d: Date) {
+  return Math.max(0, Math.ceil((d.getTime() - Date.now()) / 86400_000));
+}

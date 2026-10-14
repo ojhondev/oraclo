@@ -15,6 +15,7 @@ import {
   Search,
   Smartphone,
   UserRound,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { BrandLogo, BrandMark } from "@/components/brand";
@@ -33,6 +34,7 @@ const ITEMS = [
   { href: "/", label: "Bens", icon: Landmark, match: (p: string) => p === "/" || p.startsWith("/bens") },
   { href: "/biblioteca", label: "Biblioteca de danos", icon: Layers, match: (p: string) => p.startsWith("/biblioteca") },
   { href: "/app-captura", label: "App de captura", icon: Smartphone, match: (p: string) => p.startsWith("/app-captura") },
+  { href: "/equipe", label: "Equipe", icon: Users, match: (p: string) => p.startsWith("/equipe") },
 ];
 
 import { COLLAPSE_COOKIE } from "@/lib/ui-prefs";
@@ -127,6 +129,7 @@ function AccountMenu({ user, collapsed, onNavigate }: { user: SessionUser; colla
         </div>
         <div className="mx-1 my-1 border-t" />
         <MenuLink href="/perfil" icon={UserRound} onClick={go}>Meu perfil</MenuLink>
+        <MenuLink href="/equipe" icon={Users} onClick={go}>Equipe</MenuLink>
         <MenuLink href="/biblioteca" icon={Layers} onClick={go}>Biblioteca de danos</MenuLink>
         <MenuLink href="/app-captura" icon={Smartphone} onClick={go}>App de captura</MenuLink>
         <div className="mx-1 my-1 border-t" />

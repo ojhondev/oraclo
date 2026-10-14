@@ -24,6 +24,9 @@ export default async function LoginPage() {
       }
     >
       <LoginForm />
+      <p className="mt-4 text-center text-[13.5px]">
+        <Link href="/esqueci-senha" className="text-muted-foreground underline underline-offset-4 hover:text-foreground">Esqueci minha senha</Link>
+      </p>
     </AuthShell>
   );
 }

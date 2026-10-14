@@ -47,3 +47,9 @@ export async function logout() {
   await destroySession();
   redirect("/login");
 }
+
+/** Sai e volta para a página do convite (aceitar convite estando logado em outra conta). */
+export async function logoutToInvite(token: string) {
+  await destroySession();
+  redirect(`/convite/${encodeURIComponent(token)}`);
+}

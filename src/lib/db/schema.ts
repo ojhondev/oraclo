@@ -278,3 +278,29 @@ export const damages = pgTable("damages", {
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 }, (t) => [index("damages_site_idx").on(t.siteId)]);
+
+/* ───────────────────────── Convites e senhas ───────────────────────── */
+
+/** Convite para entrar numa organização. Guarda só o hash do token enviado no link. */
+export const invitations = pgTable("invitations", {
+  id: id(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  email: text("email").notNull(),
+  role: roleEnum("role").notNull().default("tecnico"),
+  tokenHash: text("token_hash").notNull(),
+  invitedBy: uuid("invited_by").references(() => users.id, { onDelete: "set null" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdAt: createdAt(),
+}, (t) => [index("invitations_org_idx").on(t.orgId), uniqueIndex("invitations_token_idx").on(t.tokenHash)]);
+
+/** Pedido de redefinição de senha (link de uso único, expira em 1 hora). */
+export const passwordResets = pgTable("password_resets", {
+  id: id(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+  createdAt: createdAt(),
+}, (t) => [uniqueIndex("password_resets_token_idx").on(t.tokenHash), index("password_resets_user_idx").on(t.userId)]);

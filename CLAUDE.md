@@ -29,6 +29,8 @@ qualquer feature nova).
 - Consultas que não são actions ficam em `src/lib/*` — nunca exportar consulta de um arquivo `"use server"`.
 - Datas sempre por `src/lib/format.ts` (fuso America/Sao_Paulo); servidor roda em UTC.
 - Rótulos dos enums em `src/lib/labels.ts`.
+- Tokens de convite e de nova senha: só o **hash** fica no banco (`src/lib/email.ts`, `src/lib/tokens.ts`).
+  Funções que criam links (ex.: `createResetFor`) ficam em `src/lib/*`, nunca exportadas de arquivo `"use server"`.
 - Biblioteca de danos padrão = linhas de `damage_types` com `org_id` nulo
   (`src/lib/damage-library.ts`, idempotente). Personalizadas têm `org_id`.
 - Ortofotos (JPG/PNG) vão para o **Vercel Blob** (store `oraclo-files`, gru1, público com
@@ -46,6 +48,9 @@ qualquer feature nova).
 
 ## Env (Vercel + `.env.local`)
 `DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`.
+E-mail (convites e nova senha): `RESEND_API_KEY` + `EMAIL_FROM` (ex.: "Oraclo <nao-responda@dominio>"); sem eles roda em
+**modo simulado** (`src/lib/email.ts`): nada é enviado, o texto vai para o log e o admin vê o link para copiar.
+`APP_URL` opcional (base dos links; senão usa o host da requisição).
 
 ## Deploy
 Produção em **oraclo-app.vercel.app** (oraclo.vercel.app pertence a terceiros).

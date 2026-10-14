@@ -21,8 +21,9 @@ const opt = z
 
 const siteSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome do bem."),
-  kind: z.enum(schema.siteKindEnum.enumValues),
-  protection: z.enum(schema.protectionEnum.enumValues),
+  // selects do Radix só enviam valor depois da hidratação — usa o padrão se vier vazio
+  kind: z.enum(schema.siteKindEnum.enumValues).catch("igreja"),
+  protection: z.enum(schema.protectionEnum.enumValues).catch("nenhuma"),
   protectionBody: opt,
   processNumber: opt,
   period: opt,
@@ -73,7 +74,7 @@ export async function addElement(siteId: string, _: State, form: FormData): Prom
   const user = await requireUser(editors);
   await getSite(user.orgId, siteId);
   const parsed = z
-    .object({ name: z.string().trim().min(2, "Dê um nome à parte do bem."), kind: z.enum(schema.elementKindEnum.enumValues) })
+    .object({ name: z.string().trim().min(2, "Dê um nome à parte do bem."), kind: z.enum(schema.elementKindEnum.enumValues).catch("fachada") })
     .safeParse({ name: form.get("name"), kind: form.get("kind") });
   if (!parsed.success) return { error: parsed.error.issues[0]!.message };
   await db.insert(elements).values({ ...parsed.data, siteId });
@@ -115,7 +116,7 @@ export async function addCampaign(siteId: string, _: State, form: FormData): Pro
   const parsed = z
     .object({
       name: z.string().trim().min(2, "Dê um nome à campanha."),
-      purpose: z.enum(schema.purposeEnum.enumValues),
+      purpose: z.enum(schema.purposeEnum.enumValues).catch("levantamento"),
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida."),
       notes: opt,
     })

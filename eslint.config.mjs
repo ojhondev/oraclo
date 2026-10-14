@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // caches e scripts locais (fora do git)
+    ".cache/**",
+    ".tmp/**",
   ]),
 ]);
 

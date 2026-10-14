@@ -11,7 +11,6 @@ import {
   date,
   jsonb,
   uniqueIndex,
-  unique,
   index,
 } from "drizzle-orm/pg-core";
 
@@ -215,12 +214,19 @@ export const orthophotos = pgTable("orthophotos", {
   name: text("name").notNull(),
   /** Plano de projeção no sistema do modelo: origem, normal e eixo "para cima". */
   plane: jsonb("plane").$type<{ origin: number[]; normal: number[]; up: number[] }>(),
-  mmPerPixel: real("mm_per_pixel").notNull(),
+  /** Escala da imagem. Nulo = ainda não calibrada (sem áreas/comprimentos). */
+  mmPerPixel: real("mm_per_pixel"),
+  /** Calibração feita no editor: dois pontos (px) e a distância real entre eles. */
+  calibration: jsonb("calibration").$type<{ a: [number, number]; b: [number, number]; meters: number }>(),
   widthPx: integer("width_px").notNull(),
   heightPx: integer("height_px").notNull(),
+  /** Imagem (JPG/PNG) no object storage. */
+  url: text("url").notNull(),
   storageKey: text("storage_key"),
+  contentType: text("content_type").notNull().default("image/jpeg"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: createdAt(),
-});
+}, (t) => [index("orthophotos_site_idx").on(t.siteId)]);
 
 export const geometryKindEnum = pgEnum("geometry_kind", ["area", "linha", "ponto"]);
 export type GeometryKind = (typeof geometryKindEnum.enumValues)[number];
@@ -238,7 +244,7 @@ export const damageTypes = pgTable("damage_types", {
   geometry: geometryKindEnum("geometry").notNull().default("area"),
   description: text("description"),
   sortOrder: integer("sort_order").notNull().default(0),
-}, (t) => [unique("damage_types_org_code_uq").on(t.orgId, t.code).nullsNotDistinct()]);
+}, (t) => [index("damage_types_org_idx").on(t.orgId)]);
 
 export const severityEnum = pgEnum("severity", ["baixa", "media", "alta", "critica"]);
 

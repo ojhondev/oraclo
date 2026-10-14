@@ -27,10 +27,21 @@ qualquer feature nova).
 - Rótulos dos enums em `src/lib/labels.ts`.
 - Biblioteca de danos padrão = linhas de `damage_types` com `org_id` nulo
   (`src/lib/damage-library.ts`, idempotente). Personalizadas têm `org_id`.
-- Arquivos pesados (fotos, nuvens, malhas) vão para object storage (Cloudflare R2,
-  ainda não conectado) — o banco guarda só metadados (`storage_key`).
+- Ortofotos (JPG/PNG) vão para o **Vercel Blob** (store `oraclo-files`, gru1, público com
+  sufixo aleatório) por upload direto do navegador (`/api/upload`, que valida sessão,
+  papel e o bem). Caminho: `orgs/<orgId>/sites/<siteId>/...`. Nuvens/malhas pesadas
+  irão para Cloudflare R2 (ainda não conectado) — o banco guarda só metadados.
+- Mapa de danos: pontos em **pixels da imagem** (`damages.geometry.points`); áreas e
+  comprimentos vêm de `src/lib/geometry.ts` × `orthophotos.mm_per_pixel` e são
+  recalculados no servidor a cada mudança de escala. Exportações em
+  `src/lib/exports/` (DXF R2007 em metros + IMAGE, zipado com a ortofoto; prancha A3 em PDF).
+- Testar exportações fora do Next: `.cache/check-exports.mts` com `tsx` e o tsconfig
+  `.cache/tsconfig.check.json` (stub de `server-only`).
 - Mockado primeiro: app de captura, upload e processamento em GPU ainda não existem;
   a UI mostra "em breve" nesses pontos.
 
 ## Env (Vercel + `.env.local`)
-`DATABASE_URL` (+ vars Neon), `AUTH_SECRET`.
+`DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`.
+
+## Deploy
+Produção em **oraclo-app.vercel.app** (oraclo.vercel.app pertence a terceiros).

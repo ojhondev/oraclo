@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Box, Camera, FileDown, MapPin, Pencil, ShieldCheck, Smartphone, Upload } from "lucide-react";
+import { Box, Camera, FileDown, ImageUp, MapPin, Pencil, ShieldCheck, Smartphone, Upload } from "lucide-react";
 import { editors, requireUser } from "@/lib/auth";
 import { getSite, getSiteDetail } from "@/lib/sites";
+import { listOrthophotos } from "@/lib/orthophotos";
+import { fmtMmPerPixel } from "@/lib/geometry";
 import {
   captureModes,
   captureStatuses,
@@ -54,7 +56,7 @@ function Section({ title, description, children, action }: { title: string; desc
 export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
   const { id } = await params;
   const user = await requireUser();
-  const { site, elements, campaigns, outputs } = await getSiteDetail(user.orgId, id);
+  const [{ site, elements, campaigns, outputs }, orthos] = await Promise.all([getSiteDetail(user.orgId, id), listOrthophotos(id)]);
   const canEdit = editors.includes(user.role);
   const elementName = Object.fromEntries(elements.map((e) => [e.id, e.name]));
 
@@ -98,6 +100,45 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
       />
       <PageBody className="grid gap-5 xl:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div className="grid content-start gap-5">
+          <Section
+            title="Ortofotos e mapas de danos"
+            description="Imagens em escala de fachadas, paredes, pisos e forros. Desenhe os danos sobre elas e exporte a prancha (PDF) e o DXF."
+            action={
+              canEdit && (
+                <Button size="sm" asChild>
+                  <Link href={`/bens/${site.id}/ortofotos/nova`}>
+                    <ImageUp /> Enviar ortofoto
+                  </Link>
+                </Button>
+              )
+            }
+          >
+            {orthos.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">
+                Nenhuma ortofoto ainda. Envie um JPG ou PNG da fachada (de qualquer software de fotogrametria) para começar o mapa de danos.
+              </p>
+            ) : (
+              <ul className="grid gap-3 sm:grid-cols-2 2xl:grid-cols-3">
+                {orthos.map((o) => (
+                  <li key={o.id}>
+                    <Link href={`/bens/${site.id}/ortofotos/${o.id}`} className="group block overflow-hidden rounded-lg border transition-colors hover:border-brand/40">
+                      <div className="aspect-[4/3] bg-[#1b1d21]">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={o.url} alt="" loading="lazy" className="size-full object-contain" />
+                      </div>
+                      <div className="grid gap-0.5 p-3">
+                        <span className="truncate text-[13.5px] font-medium group-hover:text-brand">{o.name}</span>
+                        <span className="text-[12px] text-muted-foreground">
+                          {[o.elementName, `${o.damageCount} danos`, fmtMmPerPixel(o.mmPerPixel)].filter(Boolean).join(" · ")}
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </Section>
+
           <Section
             title="Campanhas de captura"
             description="Cada ida a campo (levantamento, monitoramento, etapa de obra) agrupa as capturas daquele dia."

@@ -1,4 +1,5 @@
 import "server-only";
+import { isNull } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
 import type { GeometryKind } from "@/lib/db/schema";
 
@@ -47,10 +48,15 @@ export const DEFAULT_DAMAGE_TYPES: DefaultType[] = [
   { code: "INS", name: "Instalação aparente (elétrica, hidráulica)", category: "Ações humanas", color: "#64748b", pattern: "linha", geometry: "linha", description: "Fiação, tubulação ou equipamento sobreposto." },
 ];
 
-/** Garante a biblioteca padrão (orgId nulo) no banco — idempotente. */
+/** Garante a biblioteca padrão (orgId nulo) no banco — insere só os códigos que faltam. */
 export async function ensureDefaultDamageTypes() {
-  await db
-    .insert(schema.damageTypes)
-    .values(DEFAULT_DAMAGE_TYPES.map((t, i) => ({ ...t, orgId: null, sortOrder: i })))
-    .onConflictDoNothing();
+  const have = await db
+    .select({ code: schema.damageTypes.code })
+    .from(schema.damageTypes)
+    .where(isNull(schema.damageTypes.orgId));
+  const existing = new Set(have.map((r) => r.code));
+  const missing = DEFAULT_DAMAGE_TYPES.map((t, i) => ({ ...t, orgId: null, sortOrder: i })).filter(
+    (t) => !existing.has(t.code),
+  );
+  if (missing.length) await db.insert(schema.damageTypes).values(missing);
 }

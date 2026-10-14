@@ -85,3 +85,6 @@ export async function requireUser(roles?: Role[]) {
 
 /** Papéis que podem criar/editar bens, campanhas e danos. */
 export const editors: Role[] = ["admin", "tecnico"];
+
+/** Papéis que podem fazer capturas em campo (fotos, medidas, roteiro). */
+export const capturers: Role[] = ["admin", "tecnico", "campo"];

@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Camera, CircleDot, Ruler, Repeat, Sun, UploadCloud } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { PageBody, PageHeader } from "@/components/page-header";
-import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = { title: "App de captura" };
 
@@ -23,8 +22,7 @@ export default async function CaptureAppPage() {
       <PageHeader
         eyebrow="Celular"
         title="App de captura"
-        description="O app do Oraclo transforma o celular em um instrumento de levantamento: ele guia a captura e envia tudo para a plataforma."
-        actions={<Badge variant="outline">em desenvolvimento</Badge>}
+        description="A captura roda dentro da própria plataforma, no navegador do celular: abra um bem, escolha a campanha e toque em Nova captura. Dica: use Adicionar à tela inicial para abrir o Oraclo como app."
       />
       <PageBody>
         <ol className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

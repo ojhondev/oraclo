@@ -117,6 +117,11 @@ export const captures = pgTable("captures", {
   device: text("device"),
   fileCount: integer("file_count").notNull().default(0),
   totalBytes: bigint("total_bytes", { mode: "number" }).notNull().default(0),
+  /** Itens do roteiro de campo marcados (alvos posicionados, luz, etc.). */
+  checklist: jsonb("checklist").$type<Record<string, boolean>>(),
+  notes: text("notes"),
+  /** Quando a equipe de campo concluiu e mandou para processamento. */
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 }, (t) => [index("captures_campaign_idx").on(t.campaignId)]);
@@ -135,8 +140,15 @@ export const captureFiles = pgTable("capture_files", {
   height: integer("height"),
   /** Nota de nitidez 0–1 calculada no celular/servidor; baixa = descartar. */
   sharpness: real("sharpness"),
+  url: text("url"),
+  contentType: text("content_type"),
+  /** Volta do roteiro: 1 = de longe (conjunto), 2 = de perto (detalhes). */
+  pass: integer("pass"),
+  /** Id gerado no celular — evita registrar a mesma foto duas vezes ao retomar o envio. */
+  clientId: text("client_id"),
+  takenAt: timestamp("taken_at", { withTimezone: true }),
   createdAt: createdAt(),
-}, (t) => [index("capture_files_capture_idx").on(t.captureId)]);
+}, (t) => [index("capture_files_capture_idx").on(t.captureId), uniqueIndex("capture_files_client_idx").on(t.captureId, t.clientId)]);
 
 /** Medida de trena entre dois alvos — dá escala e mede o erro do modelo. */
 export const controlDistances = pgTable("control_distances", {

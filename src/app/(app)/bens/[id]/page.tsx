@@ -1,12 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Box, Camera, FileDown, ImageUp, MapPin, Pencil, ShieldCheck, Smartphone, Upload } from "lucide-react";
-import { editors, requireUser } from "@/lib/auth";
+import { Box, Camera, FileDown, ImageUp, MapPin, Pencil, ShieldCheck } from "lucide-react";
+import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite, getSiteDetail } from "@/lib/sites";
 import { listOrthophotos } from "@/lib/orthophotos";
 import { fmtMmPerPixel } from "@/lib/geometry";
 import {
-  captureModes,
   captureStatuses,
   elementKinds,
   protectionLevels,
@@ -19,7 +18,8 @@ import { Badge } from "@/components/ui/badge";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { ConfirmButton } from "@/components/confirm-button";
 import { deleteCampaign, deleteElement } from "../actions";
-import { AddCampaignForm, AddElementForm } from "./panels";
+import { AddCampaignForm, AddElementForm, NewCaptureForm } from "./panels";
+import { startCapture } from "./capturas/actions";
 
 export async function generateMetadata({ params }: PageProps<"/bens/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -58,6 +58,7 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
   const user = await requireUser();
   const [{ site, elements, campaigns, outputs }, orthos] = await Promise.all([getSiteDetail(user.orgId, id), listOrthophotos(id)]);
   const canEdit = editors.includes(user.role);
+  const canCapture = capturers.includes(user.role);
   const elementName = Object.fromEntries(elements.map((e) => [e.id, e.name]));
 
   const facts: [string, string | null][] = [
@@ -165,30 +166,30 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
                         </span>
                       )}
                     </div>
-                    {c.captures.length === 0 ? (
-                      <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 rounded-md bg-muted/60 px-3 py-2.5 text-[13px] text-muted-foreground">
-                        <span className="inline-flex items-center gap-1.5">
-                          <Smartphone className="size-3.5" /> Capture pelo app do Oraclo
-                        </span>
-                        <span className="inline-flex items-center gap-1.5">
-                          <Upload className="size-3.5" /> ou importe fotos de drone / nuvem de laser (E57, LAS)
-                        </span>
-                        <Badge variant="outline" className="ml-auto">em breve</Badge>
-                      </div>
-                    ) : (
-                      <ul className="mt-3 grid gap-1.5">
+                    {c.captures.length > 0 && (
+                      <ul className="mt-3 grid gap-1">
                         {c.captures.map((k) => (
-                          <li key={k.id} className="flex flex-wrap items-center gap-2 text-[13px]">
-                            <Camera className="size-3.5 text-muted-foreground" />
-                            <span>{k.elementId ? elementName[k.elementId] : "Sem parte definida"}</span>
-                            <span className="text-muted-foreground">· {captureModes[k.mode]}</span>
-                            <span className="text-muted-foreground">· {k.fileCount} arquivos ({fmtBytes(k.totalBytes)})</span>
-                            <Badge variant={k.status === "concluida" ? "default" : "secondary"} className="ml-auto">
-                              {captureStatuses[k.status]}
-                            </Badge>
+                          <li key={k.id}>
+                            <Link
+                              href={`/bens/${site.id}/capturas/${k.id}`}
+                              className="-mx-2 flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] hover:bg-muted"
+                            >
+                              <Camera className="size-3.5 text-muted-foreground" />
+                              <span>{k.elementId ? elementName[k.elementId] : "Sem parte definida"}</span>
+                              <span className="text-muted-foreground">· {k.fileCount} fotos ({fmtBytes(k.totalBytes)})</span>
+                              <Badge variant={k.status === "concluida" ? "default" : "secondary"} className="ml-auto">
+                                {captureStatuses[k.status]}
+                              </Badge>
+                            </Link>
                           </li>
                         ))}
                       </ul>
+                    )}
+                    {canCapture && (
+                      <NewCaptureForm
+                        action={startCapture.bind(null, site.id, c.id)}
+                        elements={elements.map((e) => ({ value: e.id, label: e.name }))}
+                      />
                     )}
                   </li>
                 ))}

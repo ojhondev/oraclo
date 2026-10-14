@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef, useTransition } from "react";
-import { Loader2, Plus, Wand2 } from "lucide-react";
+import { Camera, Loader2, Plus, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/form";
@@ -65,5 +65,27 @@ export function AddCampaignForm({ siteId, today }: { siteId: string; today: stri
       </form>
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
     </div>
+  );
+}
+
+/** Abre uma nova captura de fotos na campanha (escolhendo a parte do bem). */
+export function NewCaptureForm({ action, elements }: { action: (form: FormData) => Promise<void>; elements: { value: string; label: string }[] }) {
+  const [pending, start] = useTransition();
+  return (
+    <form
+      action={(fd) => start(() => action(fd))}
+      className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-muted/60 p-2"
+    >
+      <SimpleSelect
+        name="elementId"
+        options={elements}
+        allowNone
+        noneLabel="Parte do bem (opcional)"
+        className="h-9 min-w-44 flex-1 bg-card"
+      />
+      <Button type="submit" size="sm" className="h-9" disabled={pending}>
+        {pending ? <Loader2 className="animate-spin" /> : <Camera />} Nova captura
+      </Button>
+    </form>
   );
 }

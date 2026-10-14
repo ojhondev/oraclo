@@ -32,6 +32,9 @@ const createSchema = z.object({
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   mmPerPixel: z.number().positive().nullable(),
+  /** Quando gerada a partir de um modelo 3D do Oraclo. */
+  outputId: z.string().uuid().nullable().optional(),
+  plane: z.object({ origin: z.array(z.number()).length(3), normal: z.array(z.number()).length(3), up: z.array(z.number()).length(3) }).nullable().optional(),
 });
 
 export async function createOrthophoto(siteId: string, input: z.input<typeof createSchema>) {
@@ -49,6 +52,13 @@ export async function createOrthophoto(siteId: string, input: z.input<typeof cre
       .where(and(eq(schema.elements.id, data.elementId), eq(schema.elements.siteId, siteId)));
     if (!el) data.elementId = null;
   }
+  if (data.outputId) {
+    const [out] = await db
+      .select({ id: schema.outputs.id })
+      .from(schema.outputs)
+      .where(and(eq(schema.outputs.id, data.outputId), eq(schema.outputs.siteId, siteId)));
+    if (!out) data.outputId = null;
+  }
   const [o] = await db
     .insert(orthophotos)
     .values({
@@ -61,6 +71,8 @@ export async function createOrthophoto(siteId: string, input: z.input<typeof cre
       widthPx: data.width,
       heightPx: data.height,
       mmPerPixel: data.mmPerPixel,
+      outputId: data.outputId ?? null,
+      plane: data.plane ?? null,
       createdBy: user.id,
     })
     .returning({ id: orthophotos.id });

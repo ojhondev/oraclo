@@ -7,6 +7,7 @@ import { CHECKLIST, getCaptureDetail } from "@/lib/captures";
 import { fmtBytes, fmtDate } from "@/lib/format";
 import { captureModes } from "@/lib/labels";
 import { CaptureWorkspace } from "./workspace";
+import { CaptureResults } from "./results";
 
 export const metadata: Metadata = { title: "Captura" };
 
@@ -14,7 +15,7 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
   const { id, cid } = await params;
   const user = await requireUser();
   const site = await getSite(user.orgId, id);
-  const { capture, campaign, elementName, files, distances } = await getCaptureDetail(id, cid);
+  const { capture, campaign, elementName, files, distances, results, report } = await getCaptureDetail(id, cid);
 
   return (
     <div className="px-4 pt-5 pb-16 sm:px-8 lg:px-10">
@@ -42,6 +43,20 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
         canEdit={editors.includes(user.role)}
         isAdmin={user.role === "admin"}
       />
+      {(results.length > 0 || (editors.includes(user.role) && capture.status !== "rascunho")) && (
+        <div className="mx-auto mt-4 max-w-2xl">
+          <CaptureResults
+            siteId={id}
+            orgId={user.orgId}
+            captureId={cid}
+            status={capture.status}
+            results={results}
+            report={report}
+            distances={distances}
+            canEdit={editors.includes(user.role)}
+          />
+        </div>
+      )}
     </div>
   );
 }

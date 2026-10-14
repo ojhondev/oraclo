@@ -12,6 +12,7 @@ const isUuid = (s?: string) => !!s && /^[0-9a-f-]{36}$/i.test(s);
  * pertencem à organização do usuário.
  *  - { siteId }             → ortofoto (JPG/PNG, até 200 MB, só editores)
  *  - { siteId, captureId }  → foto de captura (até 60 MB, inclusive equipe de campo)
+ *  - { siteId, captureId, kind: "resultado" } → nuvem/malha/relatório processados (até 5 GB, editores)
  */
 export async function POST(request: Request) {
   const body = (await request.json()) as HandleUploadBody;
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const user = await getUser();
         if (!user) throw new Error("Sessão expirada. Entre de novo.");
-        const { siteId, captureId } = JSON.parse(clientPayload || "{}") as { siteId?: string; captureId?: string };
+        const { siteId, captureId, kind } = JSON.parse(clientPayload || "{}") as { siteId?: string; captureId?: string; kind?: string };
         if (!isUuid(siteId)) throw new Error("Bem inválido.");
         const [site] = await db
           .select({ id: schema.sites.id })
@@ -41,6 +42,12 @@ export async function POST(request: Request) {
             .where(and(eq(schema.captures.id, captureId), eq(schema.campaigns.siteId, siteId!)))
             .limit(1);
           if (!cap) throw new Error("Captura não encontrada.");
+          if (kind === "resultado") {
+            // resultado do processamento (nuvem, malha, relatório): só editores, arquivos grandes
+            if (!editors.includes(user.role)) throw new Error("Sem permissão para enviar o resultado.");
+            if (!pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/capturas/${captureId}/resultado/`)) throw new Error("Caminho inválido.");
+            return { maximumSizeInBytes: 5 * 1024 * 1024 * 1024, addRandomSuffix: true };
+          }
           if (!pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/capturas/${captureId}/`)) throw new Error("Caminho inválido.");
           return {
             allowedContentTypes: ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],

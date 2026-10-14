@@ -195,6 +195,7 @@ export const outputs = pgTable("outputs", {
   format: text("format").notNull(),
   name: text("name").notNull(),
   storageKey: text("storage_key").notNull(),
+  url: text("url"),
   bytes: bigint("bytes", { mode: "number" }).notNull().default(0),
   pointCount: bigint("point_count", { mode: "number" }),
   /** Sistema de coordenadas (EPSG), ex.: 31983 = SIRGAS 2000 / UTM 23S. */

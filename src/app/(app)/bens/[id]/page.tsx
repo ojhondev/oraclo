@@ -5,6 +5,7 @@ import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite, getSiteDetail } from "@/lib/sites";
 import { listOrthophotos } from "@/lib/orthophotos";
 import { fmtMmPerPixel } from "@/lib/geometry";
+import type { OutputMeta } from "@/lib/model-formats";
 import {
   captureStatuses,
   elementKinds,
@@ -221,14 +222,27 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
               </div>
             ) : (
               <ul className="grid gap-1.5">
-                {outputs.map((o) => (
-                  <li key={o.id} className="flex items-center gap-2 text-[13px]">
-                    <Box className="size-3.5 text-muted-foreground" />
-                    {o.name}
-                    <Badge variant="outline">{o.format.toUpperCase()}</Badge>
-                    <span className="ml-auto text-muted-foreground">{fmtBytes(o.bytes)}</span>
-                  </li>
-                ))}
+                {outputs.map((o) => {
+                  const viewable = !!(o.meta as OutputMeta | null)?.viewable;
+                  return (
+                    <li key={o.id} className="flex flex-wrap items-center gap-2 text-[13px]">
+                      <Box className="size-3.5 text-muted-foreground" />
+                      <span className="min-w-0 truncate">{o.name}</span>
+                      <Badge variant="outline">{o.format.toUpperCase()}</Badge>
+                      <span className="ml-auto text-muted-foreground">{fmtBytes(o.bytes)}</span>
+                      {viewable && (
+                        <Button size="sm" asChild>
+                          <Link href={`/bens/${site.id}/modelos/${o.id}`}>Ver em 3D</Link>
+                        </Button>
+                      )}
+                      {o.url && (
+                        <Button size="sm" variant="outline" asChild>
+                          <a href={`${o.url}?download=1`}>Baixar</a>
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </Section>

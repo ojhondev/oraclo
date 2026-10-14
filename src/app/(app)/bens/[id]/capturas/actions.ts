@@ -10,8 +10,9 @@ import { db, schema } from "@/lib/db";
 import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite } from "@/lib/sites";
 import { getCapture } from "@/lib/captures";
+import { formatOf, type OutputMeta } from "@/lib/model-formats";
 
-const { captures, captureFiles, controlDistances, campaigns, sites } = schema;
+const { captures, captureFiles, controlDistances, campaigns, sites, qualityReports } = schema;
 
 async function guard(siteId: string, captureId: string, roles = capturers) {
   const user = await requireUser(roles);
@@ -195,4 +196,109 @@ export async function deleteCapture(siteId: string, captureId: string) {
   await db.update(sites).set({ updatedAt: new Date() }).where(eq(sites.id, siteId));
   refresh(siteId);
   redirect(`/bens/${siteId}`);
+}
+
+/* ───────────── Resultado do processamento ───────────── */
+
+const outputSchema = z.object({
+  url: z.string().url(),
+  pathname: z.string(),
+  name: z.string().min(1).max(200),
+  bytes: z.number().int().nonnegative(),
+  pointCount: z.number().int().nonnegative().nullable().optional(),
+});
+
+/** Registra um arquivo de resultado (nuvem, malha, relatório) já enviado ao storage. */
+export async function registerOutput(siteId: string, captureId: string, input: z.input<typeof outputSchema>) {
+  const { user } = await guard(siteId, captureId, editors);
+  const o = outputSchema.parse(input);
+  const fmt = formatOf(o.name);
+  if (!fmt) throw new Error("Formato não aceito. Use E57, LAS, LAZ, PLY, XYZ, PTS, GLB, OBJ, FBX, ZIP ou PDF.");
+  if (!new URL(o.url).hostname.endsWith(".blob.vercel-storage.com") || !o.pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/capturas/${captureId}/resultado/`)) {
+    throw new Error("Arquivo inválido.");
+  }
+  const meta: OutputMeta = { viewable: fmt.viewable, upAxis: fmt.upAxis };
+  const [row] = await db
+    .insert(schema.outputs)
+    .values({
+      siteId,
+      captureId,
+      kind: fmt.kind,
+      format: fmt.ext,
+      name: o.name,
+      storageKey: o.pathname,
+      url: o.url,
+      bytes: o.bytes,
+      pointCount: o.pointCount ?? null,
+      meta,
+    })
+    .returning();
+  await db.update(sites).set({ updatedAt: new Date() }).where(eq(sites.id, siteId));
+  refresh(siteId, captureId);
+  return row!;
+}
+
+export async function deleteOutput(siteId: string, captureId: string, outputId: string) {
+  await guard(siteId, captureId, editors);
+  const [o] = await db
+    .delete(schema.outputs)
+    .where(and(eq(schema.outputs.id, outputId), eq(schema.outputs.captureId, captureId)))
+    .returning({ url: schema.outputs.url });
+  if (o?.url) await del(o.url).catch(() => {});
+  refresh(siteId, captureId);
+}
+
+const reportSchema = z.object({
+  photosUsed: z.number().int().nonnegative(),
+  photosDiscarded: z.number().int().nonnegative(),
+  reprojectionErrorPx: z.number().nonnegative().nullable(),
+  distances: z.array(z.object({ id: z.string().uuid(), modelMm: z.number().int().positive().nullable() })),
+});
+
+/** Limite do selo "apto para levantamento cadastral" (PRD §4). */
+const APPROVAL_MM = 30;
+
+/**
+ * Relatório de qualidade: a equipe informa o que o software de fotogrametria mediu,
+ * inclusive o comprimento de cada distância de controle no modelo; o Oraclo calcula
+ * os resíduos, o erro médio quadrático e o selo de aptidão.
+ */
+export async function saveQualityReport(siteId: string, captureId: string, input: z.input<typeof reportSchema>) {
+  await guard(siteId, captureId, editors);
+  const r = reportSchema.parse(input);
+  const rows = await db.select().from(controlDistances).where(eq(controlDistances.captureId, captureId));
+  const residuals: number[] = [];
+  for (const d of rows) {
+    const m = r.distances.find((x) => x.id === d.id)?.modelMm ?? null;
+    const residual = m == null ? null : m - d.measuredMm;
+    if (residual != null) residuals.push(residual);
+    await db.update(controlDistances).set({ modelMm: m, residualMm: residual }).where(eq(controlDistances.id, d.id));
+  }
+  const rms = residuals.length ? Math.sqrt(residuals.reduce((a, x) => a + x * x, 0) / residuals.length) : null;
+  const max = residuals.length ? Math.max(...residuals.map(Math.abs)) : null;
+  const values = {
+    photosUsed: r.photosUsed,
+    photosDiscarded: r.photosDiscarded,
+    reprojectionErrorPx: r.reprojectionErrorPx,
+    rmsResidualMm: rms,
+    maxResidualMm: max,
+    approved: max != null && residuals.length >= 3 && max <= APPROVAL_MM,
+  };
+  const [existing] = await db.select({ id: qualityReports.id }).from(qualityReports).where(eq(qualityReports.captureId, captureId));
+  if (existing) await db.update(qualityReports).set(values).where(eq(qualityReports.id, existing.id));
+  else await db.insert(qualityReports).values({ ...values, captureId });
+  refresh(siteId, captureId);
+  return values;
+}
+
+/** Publica o resultado: captura concluída (aparece para o cliente como pronta). */
+export async function publishResult(siteId: string, captureId: string) {
+  await guard(siteId, captureId, editors);
+  const [{ n }] = await db
+    .select({ n: sql<number>`count(*)::int` })
+    .from(schema.outputs)
+    .where(eq(schema.outputs.captureId, captureId));
+  if (!n) throw new Error("Envie pelo menos um arquivo de resultado antes de publicar.");
+  await db.update(captures).set({ status: "concluida" }).where(eq(captures.id, captureId));
+  refresh(siteId, captureId);
 }

@@ -1,9 +1,9 @@
 import "server-only";
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db, schema } from "@/lib/db";
 
-const { captures, campaigns, elements, captureFiles, controlDistances } = schema;
+const { captures, campaigns, elements, captureFiles, controlDistances, outputs, qualityReports } = schema;
 
 export type Capture = typeof captures.$inferSelect;
 export type CaptureFile = typeof captureFiles.$inferSelect;
@@ -25,11 +25,13 @@ export async function getCapture(siteId: string, captureId: string) {
 
 export async function getCaptureDetail(siteId: string, captureId: string) {
   const base = await getCapture(siteId, captureId);
-  const [files, distances] = await Promise.all([
+  const [files, distances, results, reports] = await Promise.all([
     db.select().from(captureFiles).where(eq(captureFiles.captureId, captureId)).orderBy(asc(captureFiles.createdAt)),
     db.select().from(controlDistances).where(eq(controlDistances.captureId, captureId)),
+    db.select().from(outputs).where(eq(outputs.captureId, captureId)).orderBy(desc(outputs.createdAt)),
+    db.select().from(qualityReports).where(eq(qualityReports.captureId, captureId)).limit(1),
   ]);
-  return { ...base, files, distances };
+  return { ...base, files, distances, results, report: reports[0] ?? null };
 }
 
 /** Itens do roteiro de campo (PRD §4 / protocolo de captura v1). */

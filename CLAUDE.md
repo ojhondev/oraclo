@@ -12,8 +12,10 @@ qualquer feature nova).
 - Next.js 16.4 (App Router, Server Actions, Turbopack). `cacheComponents` desligado:
   tudo é autenticado e dinâmico; mutações chamam `revalidatePath`.
 - Tailwind v4 + shadcn/ui (preset radix-nova). Tema em `src/app/globals.css`
-  em estilo minimalista de buscador (Perplexity como referência): papel `#fcfcf9`, tinta `#13343b`,
-  acento turquesa `#20808d`, fonte Geist em tudo, botões em pílula. Barra lateral recolhível
+  em estilo minimalista de buscador (Perplexity como referência), **só preto e branco** (cinzas
+  neutros), com tema claro/escuro/sistema (`next-themes`, classe `.dark`, seletor em Aparência).
+  Única cor permitida: a legenda de danos. Marca em `src/components/brand.tsx` + `public/brand`.
+  Fonte Geist em tudo, botões em pílula. Barra lateral recolhível
   (cookie `oraclo_sidebar`, ver `src/lib/ui-prefs.ts`).
 - Neon Postgres + Drizzle (`src/lib/db/schema.ts`). `npm run db:push` aplica o schema.
 - Dev: `npm run dev` → porta **3022** (entrada `oraclo` em `A:\Claude Code\Velo\.claude\launch.json`).

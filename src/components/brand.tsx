@@ -1,35 +1,22 @@
 import { cn } from "@/lib/utils";
 
 /**
- * Marca do Oraclo: um arco (portal de igreja) desenhado só com pontos —
- * o patrimônio visto como nuvem de pontos.
+ * Símbolo do Oraclo: elipse inclinada vazada num retângulo. Vetorizado do arquivo
+ * original (public/brand) — usa as cores do tema, então inverte sozinho no modo escuro.
  */
 export function BrandMark({ className }: { className?: string }) {
-  const dots: [number, number][] = [];
-  // pilares
-  for (let y = 38; y >= 18; y -= 5) {
-    dots.push([4, y], [32, y]);
-  }
-  // arco semicircular
-  for (let i = 0; i <= 8; i++) {
-    const a = Math.PI - (i * Math.PI) / 8;
-    dots.push([18 + 14 * Math.cos(a), 18 - 14 * Math.sin(a)]);
-  }
   return (
-    <svg viewBox="0 0 36 42" aria-hidden className={cn("h-6 w-auto", className)}>
-      {dots.map(([x, y], i) => (
-        <circle key={i} cx={x.toFixed(2)} cy={y.toFixed(2)} r="2.3" fill="var(--brand)" />
-      ))}
-      <circle cx="18" cy="30" r="3.2" fill="currentColor" />
+    <svg viewBox="0 0 723 508" aria-hidden className={cn("h-6 w-auto", className)}>
+      <rect width="723" height="508" fill="var(--foreground)" />
+      <ellipse cx="360.2" cy="253.5" rx="372.4" ry="193.7" transform="rotate(-24.82 360.2 253.5)" fill="var(--background)" />
     </svg>
   );
 }
 
+/** Logotipo "oraclo" (preto; invertido no tema escuro). */
 export function BrandLogo({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2.5", className)}>
-      <BrandMark className="h-7" />
-      <span className="text-[22px] font-medium leading-none tracking-tight">Oraclo</span>
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/logo.png" alt="Oraclo" width={468} height={120} className={cn("h-6 w-auto dark:invert", className)} />
   );
 }

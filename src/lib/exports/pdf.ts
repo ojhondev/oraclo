@@ -4,6 +4,7 @@ import { fmtArea, fmtLength } from "@/lib/geometry";
 import { fmtDate } from "@/lib/format";
 import { protectionLevels, severities } from "@/lib/labels";
 import { hexToRgb, pointsOf, type ExportData } from "./common";
+import { LOGO_PNG_BASE64 } from "./logo";
 
 const A3: [number, number] = [1190.55, 841.89]; // paisagem, em pontos
 const M = 28; // margem
@@ -11,7 +12,7 @@ const SIDE = 270; // coluna da legenda/carimbo
 const INK = rgb(0.086, 0.094, 0.106);
 const MUTED = rgb(0.4, 0.38, 0.36);
 const LINE = rgb(0.8, 0.78, 0.74);
-const BRAND = rgb(0.055, 0.486, 0.482);
+const BRAND = INK; // identidade em preto e branco
 
 const col = (hex: string) => {
   const [r, g, b] = hexToRgb(hex);
@@ -183,7 +184,7 @@ export async function buildPdf(data: ExportData, image: Uint8Array) {
     const n = approxScale(mPerPt / (0.352778 / 1000));
     page.drawText(`Aprox. 1:${Math.round(n).toLocaleString("pt-BR")} (impressão em A3)`, { x: sx, y: by - 24, size: 7.5, font, color: MUTED });
   } else {
-    page.drawText("Ortofoto sem escala definida — medidas indisponíveis.", { x: sx, y: by, size: 7.5, font, color: rgb(0.7, 0.14, 0.09) });
+    page.drawText("Ortofoto sem escala definida — medidas indisponíveis.", { x: sx, y: by, size: 7.5, font: bold, color: INK });
   }
 
   /* ── carimbo ── */
@@ -207,8 +208,10 @@ export async function buildPdf(data: ExportData, image: Uint8Array) {
   page.drawLine({ start: { x: sx, y: cy0 + 24 }, end: { x: sx + sw, y: cy0 + 24 }, color: INK, thickness: 0.6 });
   page.drawText(`DATA ${fmtDate(new Date())}`, { x: sx + 8, y: cy0 + 9, size: 7.5, font: bold, color: INK });
   page.drawText("FOLHA 01/01", { x: sx + sw / 2 - 20, y: cy0 + 9, size: 7.5, font: bold, color: INK });
-  const brand = "ORACLO";
-  page.drawText(brand, { x: sx + sw - 8 - bold.widthOfTextAtSize(brand, 8), y: cy0 + 9, size: 8, font: bold, color: BRAND });
+  const logo = await pdf.embedPng(Buffer.from(LOGO_PNG_BASE64, "base64"));
+  const lh = 9;
+  const lw = (logo.width / logo.height) * lh;
+  page.drawImage(logo, { x: sx + sw - 8 - lw, y: cy0 + 7.5, width: lw, height: lh });
 
   return pdf.save();
 }

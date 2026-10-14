@@ -52,7 +52,7 @@ export function HomeSearch({ sites, maps, canEdit, autoFocus }: { sites: HomeSit
         <h1 className="text-[28px] leading-tight font-normal tracking-[-0.015em] sm:text-[30px]">O que você quer documentar?</h1>
       </div>
 
-      <div className="rounded-2xl border bg-card shadow-[0_1px_2px_rgba(19,52,59,0.04),0_4px_16px_rgba(19,52,59,0.04)] transition-shadow focus-within:border-foreground/20 focus-within:shadow-[0_2px_24px_rgba(19,52,59,0.08)]">
+      <div className="rounded-2xl border bg-card shadow-(--shadow-soft) transition-shadow focus-within:border-foreground/25 focus-within:shadow-(--shadow-focus)">
         <textarea
           ref={inputRef}
           value={q}

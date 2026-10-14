@@ -122,7 +122,7 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
                 {orthos.map((o) => (
                   <li key={o.id}>
                     <Link href={`/bens/${site.id}/ortofotos/${o.id}`} className="group block overflow-hidden rounded-lg border transition-colors hover:border-brand/40">
-                      <div className="aspect-[4/3] bg-[#1b1d21]">
+                      <div className="aspect-[4/3] bg-canvas">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img src={o.url} alt="" loading="lazy" className="size-full object-contain" />
                       </div>

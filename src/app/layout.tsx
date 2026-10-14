@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/theme";
 import "./globals.css";
 
 const geist = Geist({
@@ -16,14 +17,21 @@ export const metadata: Metadata = {
     "Documentação digital do patrimônio histórico: captura pelo celular, nuvem de pontos, mapa de danos e pranchas prontas.",
 };
 
-export const viewport: Viewport = { themeColor: "#fcfcf9" };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${geist.variable} h-full antialiased`}>
+    <html lang="pt-BR" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
-        <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-        <Toaster position="bottom-right" />
+        <ThemeProvider>
+          <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
+          <Toaster position="bottom-right" />
+        </ThemeProvider>
       </body>
     </html>
   );

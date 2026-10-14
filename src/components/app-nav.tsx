@@ -17,7 +17,8 @@ import {
   UserRound,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BrandMark } from "@/components/brand";
+import { BrandLogo, BrandMark } from "@/components/brand";
+import { ThemeSwitcher } from "@/components/theme";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -120,6 +121,11 @@ function AccountMenu({ user, collapsed, onNavigate }: { user: SessionUser; colla
           {user.orgName} · {roles[user.role]}
         </div>
         <div className="mx-1 my-1 border-t" />
+        <div className="px-2.5 pt-1.5 pb-2">
+          <p className="mb-1.5 text-[12.5px] text-muted-foreground">Aparência</p>
+          <ThemeSwitcher />
+        </div>
+        <div className="mx-1 my-1 border-t" />
         <MenuLink href="/perfil" icon={UserRound} onClick={go}>Meu perfil</MenuLink>
         <MenuLink href="/biblioteca" icon={Layers} onClick={go}>Biblioteca de danos</MenuLink>
         <MenuLink href="/app-captura" icon={Smartphone} onClick={go}>App de captura</MenuLink>
@@ -159,8 +165,14 @@ function NavContent({
   return (
     <div className="flex h-full flex-col">
       <div className={cn("flex items-center px-3 pt-3.5 pb-4", collapsed ? "flex-col gap-2" : "justify-between")}>
-        <Link href="/" onClick={onNavigate} aria-label="Oraclo — início" className="grid size-9 place-items-center rounded-lg text-foreground hover:bg-sidebar-accent">
-          <BrandMark className="h-6" />
+        <Link
+          href="/"
+          onClick={onNavigate}
+          aria-label="Oraclo — início"
+          className={cn("flex h-9 items-center rounded-lg hover:bg-sidebar-accent", collapsed ? "w-9 justify-center" : "gap-2 px-2")}
+        >
+          <BrandMark className="h-[18px]" />
+          {!collapsed && <BrandLogo className="h-[17px]" />}
         </Link>
         <div className={cn("flex items-center gap-0.5", collapsed && "flex-col")}>
           <Link href="/?buscar=1" onClick={onNavigate} aria-label="Buscar" className="grid size-8 place-items-center rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground">
@@ -272,8 +284,8 @@ export function MobileBar({ user, recent }: { user: SessionUser; recent: Recent 
       <button aria-label="Menu" onClick={() => setOpen(true)} className="-ml-1 grid size-9 place-items-center rounded-lg hover:bg-muted">
         <Menu className="size-5" />
       </button>
-      <BrandMark className="h-5" />
-      <span className="text-[15px] font-medium">Oraclo</span>
+      <BrandMark className="h-4" />
+      <BrandLogo className="h-[17px]" />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 bg-sidebar p-0">
           <SheetTitle className="sr-only">Menu</SheetTitle>

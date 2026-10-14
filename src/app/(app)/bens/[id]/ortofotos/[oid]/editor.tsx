@@ -537,7 +537,7 @@ export function DamageMapEditor({
         </aside>
 
         {/* tela */}
-        <div className="relative min-w-0 flex-1 bg-[#1b1d21]">
+        <div className="relative min-w-0 flex-1 bg-canvas">
           <div ref={wrapRef} className="absolute inset-0">
             <svg
               ref={svgRef}
@@ -571,7 +571,7 @@ export function DamageMapEditor({
                     width={8 * unit}
                     height={8 * unit}
                     fill="#fff"
-                    stroke="#0e7c7b"
+                    stroke="#0a0a0a"
                     strokeWidth={1.5 * unit}
                     style={{ cursor: "move" }}
                     onPointerDown={(e) => {
@@ -585,9 +585,10 @@ export function DamageMapEditor({
               {/* linha de calibração */}
               {calLine && tool !== "calibrar" && (
                 <g pointerEvents="none">
-                  <line x1={calLine[0][0]} y1={calLine[0][1]} x2={calLine[1][0]} y2={calLine[1][1]} stroke="#facc15" strokeWidth={2} strokeDasharray="6 4" vectorEffect="non-scaling-stroke" />
+                  <line x1={calLine[0][0]} y1={calLine[0][1]} x2={calLine[1][0]} y2={calLine[1][1]} stroke="#000" strokeWidth={4} vectorEffect="non-scaling-stroke" />
+                  <line x1={calLine[0][0]} y1={calLine[0][1]} x2={calLine[1][0]} y2={calLine[1][1]} stroke="#ffffff" strokeWidth={2} strokeDasharray="6 4" vectorEffect="non-scaling-stroke" />
                   {calLine.map(([x, y], i) => (
-                    <circle key={i} cx={x} cy={y} r={4 * unit} fill="#facc15" />
+                    <circle key={i} cx={x} cy={y} r={4 * unit} fill="#ffffff" stroke="#000" strokeWidth={1.5 * unit} />
                   ))}
                 </g>
               )}
@@ -596,14 +597,14 @@ export function DamageMapEditor({
               {preview.length > 0 && (
                 <g pointerEvents="none">
                   {tool === "calibrar" ? (
-                    <polyline points={toPath(preview)} fill="none" stroke="#facc15" strokeWidth={2} strokeDasharray="6 4" vectorEffect="non-scaling-stroke" />
+                    <polyline points={toPath(preview)} fill="none" stroke="#ffffff" strokeWidth={2} strokeDasharray="6 4" vectorEffect="non-scaling-stroke" />
                   ) : draftType?.geometry === "area" ? (
                     <polygon points={toPath(preview)} fill={draftType.color} fillOpacity={0.25} stroke={draftType.color} strokeWidth={2} strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
                   ) : (
                     <polyline points={toPath(preview)} fill="none" stroke={draftType?.color ?? "#fff"} strokeWidth={2} strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
                   )}
                   {draft.map(([x, y], i) => (
-                    <circle key={i} cx={x} cy={y} r={3.5 * unit} fill="#fff" stroke={draftType?.color ?? "#facc15"} strokeWidth={1.5 * unit} />
+                    <circle key={i} cx={x} cy={y} r={3.5 * unit} fill="#fff" stroke={draftType?.color ?? "#ffffff"} strokeWidth={1.5 * unit} />
                   ))}
                 </g>
               )}

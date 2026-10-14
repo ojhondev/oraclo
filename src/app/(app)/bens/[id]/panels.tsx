@@ -1,7 +1,7 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useTransition } from "react";
-import { Camera, Loader2, Plus, Wand2 } from "lucide-react";
+import { useActionState, useEffect, useRef, useState, useTransition } from "react";
+import { Box, Camera, Images, Loader2, Plus, Wand2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/form";
@@ -68,24 +68,53 @@ export function AddCampaignForm({ siteId, today }: { siteId: string; today: stri
   );
 }
 
-/** Abre uma nova captura de fotos na campanha (escolhendo a parte do bem). */
-export function NewCaptureForm({ action, elements }: { action: (form: FormData) => Promise<void>; elements: { value: string; label: string }[] }) {
+type Origem = "celular" | "fotos" | "modelo";
+
+/**
+ * Três formas de alimentar uma campanha: capturar em campo com o celular, enviar fotos
+ * que o escritório já tem ou importar um modelo 3D pronto (laser, outro software).
+ */
+export function NewCaptureForm({
+  action,
+  elements,
+  canImportModel,
+}: {
+  action: (form: FormData) => Promise<void>;
+  elements: { value: string; label: string }[];
+  canImportModel: boolean;
+}) {
   const [pending, start] = useTransition();
+  const [origem, setOrigem] = useState<Origem>("celular");
+  // ref: o clique define a origem antes do envio (o estado só atualizaria no próximo render)
+  const origemRef = useRef<Origem>("celular");
+  const btn = (o: Origem, icon: React.ReactNode, label: string, variant: "default" | "outline") => (
+    <Button type="submit" size="sm" variant={variant} className="h-9" disabled={pending} onClick={() => {
+        origemRef.current = o;
+        setOrigem(o);
+      }}>
+      {pending && origem === o ? <Loader2 className="animate-spin" /> : icon} {label}
+    </Button>
+  );
   return (
     <form
-      action={(fd) => start(() => action(fd))}
-      className="mt-3 flex flex-wrap items-center gap-2 rounded-xl bg-muted/60 p-2"
+      action={(fd) => {
+        fd.set("origem", origemRef.current);
+        start(() => action(fd));
+      }}
+      className="mt-3 grid gap-2 rounded-xl bg-muted/60 p-2"
     >
       <SimpleSelect
         name="elementId"
         options={elements}
         allowNone
         noneLabel="Parte do bem (opcional)"
-        className="h-9 min-w-44 flex-1 bg-card"
+        className="h-9 w-full bg-card"
       />
-      <Button type="submit" size="sm" className="h-9" disabled={pending}>
-        {pending ? <Loader2 className="animate-spin" /> : <Camera />} Nova captura
-      </Button>
+      <div className="flex flex-wrap gap-1.5" data-tour="captura">
+        {btn("celular", <Camera />, "Capturar com celular", "default")}
+        {btn("fotos", <Images />, "Enviar fotos", "outline")}
+        {canImportModel && btn("modelo", <Box />, "Importar modelo 3D", "outline")}
+      </div>
     </form>
   );
 }

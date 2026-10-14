@@ -5,6 +5,9 @@ import { db, schema } from "@/lib/db";
 
 const { captures, campaigns, elements, captureFiles, controlDistances, outputs, qualityReports } = schema;
 
+/** Marca das capturas feitas enviando fotos que já existiam (em vez da câmera do celular). */
+export const IMPORT_DEVICE = "Importação de fotos";
+
 export type Capture = typeof captures.$inferSelect;
 export type CaptureFile = typeof captureFiles.$inferSelect;
 export type ControlDistance = typeof controlDistances.$inferSelect;

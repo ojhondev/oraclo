@@ -38,6 +38,8 @@ export const users = pgTable("users", {
   role: roleEnum("role").notNull().default("tecnico"),
   /** Registro profissional (CAU/CREA) — vai no carimbo das pranchas. */
   professionalId: text("professional_id"),
+  /** Quando concluiu (ou pulou) o tour guiado do primeiro acesso. */
+  onboardedAt: timestamp("onboarded_at", { withTimezone: true }),
   active: boolean("active").notNull().default(true),
   createdAt: createdAt(),
 }, (t) => [uniqueIndex("users_email_idx").on(t.email)]);

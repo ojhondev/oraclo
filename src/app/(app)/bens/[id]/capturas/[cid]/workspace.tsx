@@ -47,9 +47,9 @@ type FileRow = Pick<typeof schema.captureFiles.$inferSelect, "id" | "url" | "sha
 
 const MIN_PHOTOS = 20;
 
-function Step({ n, title, done, children, hint }: { n: number; title: string; done?: boolean; hint?: string; children: React.ReactNode }) {
+function Step({ n, title, done, children, hint, className }: { n: number; title: string; done?: boolean; hint?: string; children: React.ReactNode; className?: string }) {
   return (
-    <section className="rounded-2xl border bg-card p-4 sm:p-5">
+    <section className={cn("rounded-2xl border bg-card p-4 sm:p-5", className)}>
       <div className="mb-3 flex items-start gap-3">
         <span className={cn("grid size-7 shrink-0 place-items-center rounded-full border text-[13px] font-medium", done && "border-foreground bg-foreground text-background")}>
           {done ? <Check className="size-3.5" /> : n}
@@ -74,6 +74,7 @@ export function CaptureWorkspace({
   canCapture,
   canEdit,
   isAdmin,
+  importMode = false,
 }: {
   siteId: string;
   orgId: string;
@@ -84,6 +85,8 @@ export function CaptureWorkspace({
   canCapture: boolean;
   canEdit: boolean;
   isAdmin: boolean;
+  /** Fotos já existentes enviadas do computador (sem roteiro de campo nem câmera). */
+  importMode?: boolean;
 }) {
   const up = useUploader({ siteId, orgId, captureId: capture.id });
   const [checklist, setChecklist] = useState<Record<string, boolean>>(capture.checklist ?? {});
@@ -238,7 +241,8 @@ export function CaptureWorkspace({
         </section>
       ) : (
         canCapture && (
-          <>
+          <div className="grid gap-4">
+            {!importMode && (
             <Step n={1} title="Roteiro de campo" done={checklistDone} hint="Antes de fotografar, confira:">
               <ul className="grid gap-1">
                 {checklistItems.map((i) => (
@@ -251,12 +255,18 @@ export function CaptureWorkspace({
                 ))}
               </ul>
             </Step>
+            )}
 
             <Step
               n={2}
-              title="Medidas de controle"
+              title={importMode ? "Medidas de controle (opcional)" : "Medidas de controle"}
               done={distances.length >= 3}
-              hint="Com trena a laser, meça 3 a 10 distâncias entre pares de alvos. É o que dá escala ao 3D e mede o erro."
+              className={importMode ? "order-2" : undefined}
+              hint={
+                importMode
+                  ? "Se você mediu com trena distâncias entre pontos que aparecem nas fotos (cantos de janelas, alvos), informe aqui. Dá escala ao 3D e mede o erro."
+                  : "Com trena a laser, meça 3 a 10 distâncias entre pares de alvos. É o que dá escala ao 3D e mede o erro."
+              }
             >
               {distances.length > 0 && (
                 <ul className="mb-3 divide-y rounded-xl border">
@@ -293,7 +303,29 @@ export function CaptureWorkspace({
               </form>
             </Step>
 
-            <Step n={3} title="Fotos" done={total >= MIN_PHOTOS} hint="Duas voltas: de longe (conjunto) e de perto (detalhes). Quanto mais fotos com sobreposição, melhor o 3D.">
+            <Step
+              n={importMode ? 1 : 3}
+              title={importMode ? "Enviar fotos" : "Fotos"}
+              done={total >= MIN_PHOTOS}
+              className={importMode ? "order-1" : undefined}
+              hint={importMode ? "Fotos que você já tem (celular, câmera ou drone), com boa sobreposição entre uma e outra. Quanto mais, melhor o 3D." : "Duas voltas: de longe (conjunto) e de perto (detalhes). Quanto mais fotos com sobreposição, melhor o 3D."}
+            >
+              {importMode ? (
+                <label
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    void addFiles(e.dataTransfer.files);
+                  }}
+                  className="grid cursor-pointer place-items-center gap-2 rounded-2xl border border-dashed px-6 py-10 text-center transition-colors hover:border-foreground/40"
+                >
+                  <Images className="size-6 text-muted-foreground" />
+                  <span className="text-[15px] font-medium">Arraste as fotos aqui ou clique para escolher</span>
+                  <span className="text-[12.5px] text-muted-foreground">JPG, PNG ou HEIC — centenas de uma vez. Mantenha a página aberta até o envio terminar.</span>
+                  <input type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }} />
+                </label>
+              ) : (
+              <>
               <div className="mb-3 grid grid-cols-2 gap-1 rounded-full bg-muted p-1 text-[13px]">
                 {([1, 2] as const).map((p) => (
                   <button key={p} onClick={() => setPass(p)} className={cn("h-8 rounded-full", pass === p ? "bg-card shadow-sm ring-1 ring-border" : "text-muted-foreground")}>
@@ -319,9 +351,11 @@ export function CaptureWorkspace({
               </p>
               <input ref={hiResRef} type="file" accept="image/*" capture="environment" className="sr-only" onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }} />
               <input ref={galleryRef} type="file" accept="image/*" multiple className="sr-only" onChange={(e) => { void addFiles(e.target.files); e.target.value = ""; }} />
+              </>
+              )}
             </Step>
 
-            <Step n={4} title="Concluir" hint="Quando todas as fotos tiverem sido enviadas, mande para processamento.">
+            <Step n={importMode ? 3 : 4} title="Concluir" className={importMode ? "order-3" : undefined} hint="Quando todas as fotos tiverem sido enviadas, mande para processamento.">
               <Button size="lg" className="h-12 w-full" onClick={submit} disabled={busy || up.pending > 0 || total < MIN_PHOTOS}>
                 {busy ? <Loader2 className="animate-spin" /> : <Send />}
                 {up.pending > 0
@@ -341,7 +375,7 @@ export function CaptureWorkspace({
                 onBlur={(e) => start(() => saveNotes(siteId, capture.id, e.target.value))}
               />
             </Step>
-          </>
+          </div>
         )
       )}
 

@@ -13,7 +13,9 @@ import {
   PanelLeft,
   Plus,
   Search,
-  Smartphone,
+  Camera,
+  Box,
+  ImageIcon,
   UserRound,
   Users,
 } from "lucide-react";
@@ -31,9 +33,11 @@ import type { SessionUser } from "@/lib/auth";
 import type { Recent } from "@/lib/recent";
 
 const ITEMS = [
-  { href: "/", label: "Bens", icon: Landmark, match: (p: string) => p === "/" || p.startsWith("/bens") },
+  { href: "/", label: "Bens", icon: Landmark, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/capturas/") && !p.includes("/modelos/") && !p.includes("/ortofotos/")) },
+  { href: "/capturas", label: "Capturas", icon: Camera, match: (p: string) => p.startsWith("/capturas") || p.includes("/capturas/") },
+  { href: "/modelos", label: "Modelos 3D", icon: Box, match: (p: string) => p.startsWith("/modelos") || p.includes("/modelos/") },
+  { href: "/mapas", label: "Mapas de danos", icon: ImageIcon, match: (p: string) => p.startsWith("/mapas") || p.includes("/ortofotos/") },
   { href: "/biblioteca", label: "Biblioteca de danos", icon: Layers, match: (p: string) => p.startsWith("/biblioteca") },
-  { href: "/app-captura", label: "App de captura", icon: Smartphone, match: (p: string) => p.startsWith("/app-captura") },
   { href: "/equipe", label: "Equipe", icon: Users, match: (p: string) => p.startsWith("/equipe") },
 ];
 
@@ -131,7 +135,6 @@ function AccountMenu({ user, collapsed, onNavigate }: { user: SessionUser; colla
         <MenuLink href="/perfil" icon={UserRound} onClick={go}>Meu perfil</MenuLink>
         <MenuLink href="/equipe" icon={Users} onClick={go}>Equipe</MenuLink>
         <MenuLink href="/biblioteca" icon={Layers} onClick={go}>Biblioteca de danos</MenuLink>
-        <MenuLink href="/app-captura" icon={Smartphone} onClick={go}>App de captura</MenuLink>
         <div className="mx-1 my-1 border-t" />
         <form action={logout}>
           <button className="flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-[14px] hover:bg-muted">
@@ -193,6 +196,7 @@ function NavContent({
         <Link
           href="/bens/novo"
           onClick={onNavigate}
+          data-tour="novo"
           className={cn(
             "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] hover:bg-sidebar-accent",
             collapsed && "justify-center px-0",
@@ -210,6 +214,7 @@ function NavContent({
               href={href}
               onClick={onNavigate}
               title={label}
+              data-tour={href === "/" ? "nav-bens" : `nav-${href.slice(1)}`}
               className={cn(
                 "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] transition-colors hover:bg-sidebar-accent",
                 active && "bg-sidebar-accent",
@@ -224,7 +229,7 @@ function NavContent({
       </nav>
 
       <div className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-4">
-        <Group title="Bens" empty="Nenhum bem" collapsed={collapsed}>
+        <Group title="Bens recentes" empty="Nenhum bem" collapsed={collapsed}>
           {recent.sites.map((s) => (
             <Link
               key={s.id}
@@ -236,18 +241,6 @@ function NavContent({
               )}
             >
               {s.name}
-            </Link>
-          ))}
-        </Group>
-        <Group title="Mapas de danos" empty="Nenhum mapa recente" collapsed={collapsed}>
-          {recent.maps.map((m) => (
-            <Link
-              key={m.id}
-              href={`/bens/${m.siteId}/ortofotos/${m.id}`}
-              onClick={onNavigate}
-              className="truncate rounded-md px-2 py-1.5 text-[14px] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-            >
-              {m.name}
             </Link>
           ))}
         </Group>

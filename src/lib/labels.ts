@@ -41,7 +41,7 @@ export const captureModes = {
   video: "Vídeo",
   lidar: "LiDAR (iPhone)",
   drone: "Drone",
-  laser: "Laser scanner (importação)",
+  laser: "Modelo 3D importado",
 } as const;
 
 export const captureStatuses = {

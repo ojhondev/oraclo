@@ -29,6 +29,7 @@ export function CaptureResults({
   report,
   distances,
   canEdit,
+  imported = false,
 }: {
   siteId: string;
   orgId: string;
@@ -38,6 +39,8 @@ export function CaptureResults({
   report: Report | null;
   distances: Distance[];
   canEdit: boolean;
+  /** Modelo 3D trazido pronto (laser, outro software), sem fotos no Oraclo. */
+  imported?: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -101,7 +104,7 @@ export function CaptureResults({
   return (
     <section className="grid gap-5 rounded-2xl border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-[16px] font-medium">Resultado do processamento</h2>
+        <h2 className="text-[16px] font-medium">{imported ? "Modelo 3D importado" : "Resultado do processamento"}</h2>
         {report && (
           <Badge variant={report.approved ? "default" : "outline"} className="gap-1">
             {report.approved ? <BadgeCheck className="size-3.5" /> : <CircleAlert className="size-3.5" />}
@@ -114,7 +117,9 @@ export function CaptureResults({
       <div className="grid gap-2">
         {results.length === 0 ? (
           <p className="text-[13.5px] text-muted-foreground">
-            Nenhum arquivo ainda. Depois de processar as fotos (RealityScan, COLMAP…), envie aqui a nuvem de pontos e a malha.
+            {imported
+              ? "Envie a nuvem de pontos ou a malha que você já tem — de laser scanner, drone ou de outro software (RealityScan, Metashape, Pix4D…)."
+              : "Nenhum arquivo ainda. Depois de processar as fotos (RealityScan, COLMAP…), envie aqui a nuvem de pontos e a malha."}
             Para ver no navegador, inclua uma versão em <b className="font-medium text-foreground">PLY, LAS, XYZ ou GLB</b>; E57, LAZ e OBJ ficam para download.
           </p>
         ) : (

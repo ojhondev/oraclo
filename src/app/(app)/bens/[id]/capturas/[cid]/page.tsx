@@ -3,7 +3,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite } from "@/lib/sites";
-import { CHECKLIST, getCaptureDetail } from "@/lib/captures";
+import { CHECKLIST, getCaptureDetail, IMPORT_DEVICE } from "@/lib/captures";
 import { fmtBytes, fmtDate } from "@/lib/format";
 import { captureModes } from "@/lib/labels";
 import { CaptureWorkspace } from "./workspace";
@@ -28,10 +28,14 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
         </p>
         <h1 className="h-display text-[24px] sm:text-[28px]">{elementName ?? "Captura sem parte definida"}</h1>
         <p className="text-[13px] text-muted-foreground">
-          {captureModes[capture.mode]}
-          {capture.device && ` · ${capture.device}`} · {fmtBytes(capture.totalBytes)} enviados
+          {capture.mode === "laser"
+            ? "Modelo 3D importado (laser, drone ou outro software)"
+            : capture.device === IMPORT_DEVICE
+              ? `Fotos enviadas do computador · ${capture.fileCount} fotos · ${fmtBytes(capture.totalBytes)}`
+              : `${captureModes[capture.mode]}${capture.device ? ` · ${capture.device}` : ""} · ${capture.fileCount} fotos · ${fmtBytes(capture.totalBytes)}`}
         </p>
       </div>
+      {capture.mode !== "laser" && (
       <CaptureWorkspace
         siteId={id}
         orgId={user.orgId}
@@ -42,8 +46,10 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
         canCapture={capturers.includes(user.role)}
         canEdit={editors.includes(user.role)}
         isAdmin={user.role === "admin"}
+        importMode={capture.device === IMPORT_DEVICE}
       />
-      {(results.length > 0 || (editors.includes(user.role) && capture.status !== "rascunho")) && (
+      )}
+      {(results.length > 0 || capture.mode === "laser" || (editors.includes(user.role) && capture.status !== "rascunho")) && (
         <div className="mx-auto mt-4 max-w-2xl">
           <CaptureResults
             siteId={id}
@@ -54,6 +60,7 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
             report={report}
             distances={distances}
             canEdit={editors.includes(user.role)}
+            imported={capture.mode === "laser"}
           />
         </div>
       )}

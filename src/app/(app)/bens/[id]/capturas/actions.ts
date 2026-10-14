@@ -9,7 +9,7 @@ import { z } from "zod";
 import { db, schema } from "@/lib/db";
 import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite } from "@/lib/sites";
-import { getCapture } from "@/lib/captures";
+import { getCapture, IMPORT_DEVICE } from "@/lib/captures";
 import { formatOf, type OutputMeta } from "@/lib/model-formats";
 
 const { captures, captureFiles, controlDistances, campaigns, sites, qualityReports } = schema;
@@ -37,9 +37,15 @@ function deviceFrom(ua: string) {
   return null;
 }
 
-/** Abre uma nova captura (fotos) numa campanha e leva para a tela de captura. */
+/**
+ * Abre uma captura numa campanha. Origem:
+ *  - "celular": captura guiada em campo (roteiro, câmera, medidas)
+ *  - "fotos":   envio de fotos que o escritório já tem
+ *  - "modelo":  importação de um modelo 3D pronto (laser, outro software) — vai direto ao resultado
+ */
 export async function startCapture(siteId: string, campaignId: string, form: FormData) {
-  const user = await requireUser(capturers);
+  const origem = String(form.get("origem") || "celular");
+  const user = await requireUser(origem === "modelo" ? editors : capturers);
   await getSite(user.orgId, siteId);
   const [camp] = await db
     .select({ id: campaigns.id })
@@ -57,9 +63,15 @@ export async function startCapture(siteId: string, campaignId: string, form: For
     elementId = el?.id ?? null;
   }
   const ua = (await headers()).get("user-agent") ?? "";
+  const values =
+    origem === "modelo"
+      ? { mode: "laser" as const, status: "processando" as const, device: null }
+      : origem === "fotos"
+        ? { mode: "fotos" as const, status: "rascunho" as const, device: IMPORT_DEVICE }
+        : { mode: "fotos" as const, status: "rascunho" as const, device: deviceFrom(ua) };
   const [c] = await db
     .insert(captures)
-    .values({ campaignId, elementId, mode: "fotos", status: "rascunho", device: deviceFrom(ua), createdBy: user.id })
+    .values({ campaignId, elementId, ...values, createdBy: user.id })
     .returning({ id: captures.id });
   await db.update(sites).set({ updatedAt: new Date() }).where(eq(sites.id, siteId));
   refresh(siteId);

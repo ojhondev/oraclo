@@ -50,6 +50,7 @@ export type SessionUser = {
   name: string;
   email: string;
   role: Role;
+  onboarded: boolean;
 };
 
 /** Usuário logado (memoizado por request) ou null. */
@@ -66,13 +67,14 @@ export const getUser = cache(async (): Promise<SessionUser | null> => {
       email: schema.users.email,
       role: schema.users.role,
       active: schema.users.active,
+      onboardedAt: schema.users.onboardedAt,
     })
     .from(schema.users)
     .innerJoin(schema.organizations, eq(schema.organizations.id, schema.users.orgId))
     .where(eq(schema.users.id, userId))
     .limit(1);
   if (!u || !u.active) return null;
-  return { id: u.id, orgId: u.orgId, orgName: u.orgName, name: u.name, email: u.email, role: u.role };
+  return { id: u.id, orgId: u.orgId, orgName: u.orgName, name: u.name, email: u.email, role: u.role, onboarded: !!u.onboardedAt };
 });
 
 /** Exige login; opcionalmente restringe por papel. */

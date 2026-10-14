@@ -3,6 +3,8 @@ import { requireUser } from "@/lib/auth";
 import { listRecent } from "@/lib/recent";
 import { AppSidebar, MobileBar } from "@/components/app-nav";
 import { COLLAPSE_COOKIE } from "@/lib/ui-prefs";
+import { HelpCenter } from "@/components/help";
+import { Tour } from "@/components/tour";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const user = await requireUser();
@@ -14,6 +16,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <MobileBar user={user} recent={recent} />
         {children}
       </div>
+      <HelpCenter />
+      <Tour autoStart={!user.onboarded} />
     </div>
   );
 }

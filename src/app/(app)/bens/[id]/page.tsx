@@ -190,6 +190,7 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
                       <NewCaptureForm
                         action={startCapture.bind(null, site.id, c.id)}
                         elements={elements.map((e) => ({ value: e.id, label: e.name }))}
+                        canImportModel={canEdit}
                       />
                     )}
                   </li>

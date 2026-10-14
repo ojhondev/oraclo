@@ -6,7 +6,7 @@ import { useState } from "react";
 import {
   ChevronDown,
   ChevronsUpDown,
-  Landmark,
+  Building2,
   Layers,
   LogOut,
   Menu,
@@ -33,7 +33,7 @@ import type { SessionUser } from "@/lib/auth";
 import type { Recent } from "@/lib/recent";
 
 const ITEMS = [
-  { href: "/", label: "Bens", icon: Landmark, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/capturas/") && !p.includes("/modelos/") && !p.includes("/ortofotos/")) },
+  { href: "/", label: "Projetos", icon: Building2, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/capturas/") && !p.includes("/modelos/") && !p.includes("/ortofotos/")) },
   { href: "/capturas", label: "Capturas", icon: Camera, match: (p: string) => p.startsWith("/capturas") || p.includes("/capturas/") },
   { href: "/modelos", label: "Modelos 3D", icon: Box, match: (p: string) => p.startsWith("/modelos") || p.includes("/modelos/") },
   { href: "/mapas", label: "Mapas de danos", icon: ImageIcon, match: (p: string) => p.startsWith("/mapas") || p.includes("/ortofotos/") },
@@ -201,7 +201,7 @@ function NavContent({
             "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] hover:bg-sidebar-accent",
             collapsed && "justify-center px-0",
           )}
-          title="Novo bem"
+          title="Novo projeto"
         >
           <Plus className="size-[18px]" />
           {!collapsed && "Novo"}
@@ -229,7 +229,7 @@ function NavContent({
       </nav>
 
       <div className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-4">
-        <Group title="Bens recentes" empty="Nenhum bem" collapsed={collapsed}>
+        <Group title="Projetos recentes" empty="Nenhum projeto" collapsed={collapsed}>
           {recent.sites.map((s) => (
             <Link
               key={s.id}

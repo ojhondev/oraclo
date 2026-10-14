@@ -11,9 +11,9 @@ export default async function LoginPage() {
   if (await getUser()) redirect("/");
   return (
     <AuthShell
-      eyebrow="Documentação de patrimônio"
+      eyebrow="Levantamento 3D e BIM"
       title="Bem-vindo de volta."
-      description="Seus bens, capturas, nuvens de pontos e mapas de danos."
+      description="Seus projetos, capturas, nuvens de pontos e modelos."
       footer={
         <>
           Ainda não tem conta?{" "}

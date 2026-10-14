@@ -13,16 +13,17 @@ const { sites, elements, campaigns } = schema;
 
 type State = { error?: string } | null;
 
+// campos opcionais: vazio, "__none" (select sem escolha) ou ausente viram null
 const opt = z
   .string()
   .trim()
-  .transform((v) => (v === "" || v === "__none" ? null : v))
-  .nullable();
+  .nullish()
+  .transform((v) => (!v || v === "__none" ? null : v));
 
 const siteSchema = z.object({
   name: z.string().trim().min(2, "Informe o nome do bem."),
   // selects do Radix só enviam valor depois da hidratação — usa o padrão se vier vazio
-  kind: z.enum(schema.siteKindEnum.enumValues).catch("igreja"),
+  kind: z.enum(schema.siteKindEnum.enumValues).catch("outro"),
   protection: z.enum(schema.protectionEnum.enumValues).catch("nenhuma"),
   protectionBody: opt,
   processNumber: opt,
@@ -74,7 +75,7 @@ export async function addElement(siteId: string, _: State, form: FormData): Prom
   const user = await requireUser(editors);
   await getSite(user.orgId, siteId);
   const parsed = z
-    .object({ name: z.string().trim().min(2, "Dê um nome à parte do bem."), kind: z.enum(schema.elementKindEnum.enumValues).catch("fachada") })
+    .object({ name: z.string().trim().min(2, "Dê um nome à área."), kind: z.enum(schema.elementKindEnum.enumValues).catch("fachada") })
     .safeParse({ name: form.get("name"), kind: form.get("kind") });
   if (!parsed.success) return { error: parsed.error.issues[0]!.message };
   await db.insert(elements).values({ ...parsed.data, siteId });
@@ -82,11 +83,30 @@ export async function addElement(siteId: string, _: State, form: FormData): Prom
   return null;
 }
 
-/** Atalho: cria de uma vez as partes típicas de uma igreja. */
-export async function addChurchTemplate(siteId: string) {
-  const user = await requireUser(editors);
-  await getSite(user.orgId, siteId);
-  const tpl: { name: string; kind: (typeof schema.elementKindEnum.enumValues)[number] }[] = [
+type ElementKind = (typeof schema.elementKindEnum.enumValues)[number];
+
+/** Modelos de áreas para cadastrar de uma vez. */
+const AREA_TEMPLATES: Record<string, { name: string; kind: ElementKind }[]> = {
+  edificacao: [
+    { name: "Fachada frontal", kind: "fachada" },
+    { name: "Fachada posterior", kind: "fachada" },
+    { name: "Fachadas laterais", kind: "fachada" },
+    { name: "Subsolo", kind: "pavimento" },
+    { name: "Térreo", kind: "pavimento" },
+    { name: "Pavimento tipo", kind: "pavimento" },
+    { name: "Cobertura", kind: "cobertura" },
+    { name: "Área externa", kind: "terreno" },
+  ],
+  industria: [
+    { name: "Galpão principal", kind: "interior" },
+    { name: "Estrutura metálica", kind: "estrutura" },
+    { name: "Fachadas", kind: "fachada" },
+    { name: "Cobertura / telhado", kind: "cobertura" },
+    { name: "Mezanino", kind: "pavimento" },
+    { name: "Docas e pátio", kind: "terreno" },
+    { name: "Casa de máquinas / utilidades", kind: "interior" },
+  ],
+  igreja: [
     { name: "Fachada principal", kind: "fachada" },
     { name: "Fachadas laterais", kind: "fachada" },
     { name: "Fachada posterior", kind: "fachada" },
@@ -98,7 +118,15 @@ export async function addChurchTemplate(siteId: string) {
     { name: "Cobertura", kind: "cobertura" },
     { name: "Retábulo-mor", kind: "elemento_artistico" },
     { name: "Forro da nave", kind: "elemento_artistico" },
-  ];
+  ],
+};
+
+/** Atalho: cria de uma vez as áreas típicas de um tipo de projeto. */
+export async function addAreaTemplate(siteId: string, template: string) {
+  const user = await requireUser(editors);
+  await getSite(user.orgId, siteId);
+  const tpl = AREA_TEMPLATES[template];
+  if (!tpl) throw new Error("Modelo de áreas desconhecido.");
   await db.insert(elements).values(tpl.map((t, i) => ({ ...t, siteId, sortOrder: i })));
   await touch(siteId);
 }

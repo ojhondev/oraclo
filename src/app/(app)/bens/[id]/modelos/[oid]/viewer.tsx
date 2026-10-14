@@ -497,7 +497,7 @@ export function ModelViewer({
                         <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Ex.: Fachada principal" />
                       </label>
                       <label className="grid gap-1">
-                        <span className="text-muted-foreground">Parte do bem</span>
+                        <span className="text-muted-foreground">Área</span>
                         <SimpleSelect options={elements} value={form.elementId || "__none"} onValueChange={(v) => setForm({ ...form, elementId: v })} allowNone noneLabel="Nenhuma" />
                       </label>
                       <div className="grid grid-cols-3 gap-2">

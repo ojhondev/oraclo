@@ -119,7 +119,7 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
         <Field label="Nome" htmlFor="name" className="sm:col-span-2">
           <Input ref={nameRef} id="name" name="name" required placeholder="Ex.: Fachada principal — ortofoto" />
         </Field>
-        <Field label="Parte do bem">
+        <Field label="Área">
           <SimpleSelect name="elementId" options={elements.map((e) => ({ value: e.id, label: e.name }))} allowNone noneLabel="Nenhuma" />
         </Field>
         <Field

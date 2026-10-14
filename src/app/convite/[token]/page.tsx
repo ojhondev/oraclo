@@ -35,7 +35,7 @@ export default async function InvitePage({ params }: PageProps<"/convite/[token]
     <AuthShell
       eyebrow={`Convite · ${roles[inv.role]}`}
       title={`Entre na equipe ${inv.orgName}.`}
-      description="Crie sua senha para acessar os bens, capturas e mapas de danos da equipe."
+      description="Crie sua senha para acessar os projetos, capturas e modelos da equipe."
       footer={<>Já tem conta? <Link href="/login" className="font-medium text-foreground underline underline-offset-4">Entrar</Link></>}
     >
       <AcceptInviteForm token={token} email={inv.email} />

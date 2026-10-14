@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Oraclo",
     short_name: "Oraclo",
-    description: "Documentação digital do patrimônio histórico: captura pelo celular, mapa de danos e pranchas.",
+    description: "Do scan ao BIM: captura pelo celular, nuvem de pontos e modelo BIM.",
     lang: "pt-BR",
     start_url: "/",
     scope: "/",

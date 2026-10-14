@@ -18,7 +18,7 @@ export default async function ModelsPage() {
       <PageHeader
         eyebrow={user.orgName}
         title="Modelos 3D"
-        description="Nuvens de pontos e malhas de todos os bens. Abra no navegador para medir e gerar ortofotos em escala."
+        description="Nuvens de pontos e malhas de todos os projetos. Abra no navegador para medir e gerar ortofotos em escala."
       />
       <PageBody>
         {rows.length === 0 ? (

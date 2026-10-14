@@ -16,12 +16,12 @@ export default async function MapsPage() {
       <PageHeader
         eyebrow={user.orgName}
         title="Mapas de danos"
-        description="Ortofotos em escala de todos os bens, com os danos desenhados. Cada uma exporta prancha em PDF e DXF."
+        description="Ortofotos em escala de todos os projetos, com os danos desenhados. Cada uma exporta prancha em PDF e DXF."
       />
       <PageBody>
         {rows.length === 0 ? (
           <EmptyState icon={Layers} title="Nenhum mapa de danos ainda">
-            Gere uma ortofoto a partir de um modelo 3D ou envie uma imagem em escala na página do bem.
+            Gere uma ortofoto a partir de um modelo 3D ou envie uma imagem em escala na página do projeto.
           </EmptyState>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">

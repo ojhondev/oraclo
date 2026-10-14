@@ -14,7 +14,7 @@ const geist = Geist({
 export const metadata: Metadata = {
   title: { default: "Oraclo", template: "%s · Oraclo" },
   description:
-    "Documentação digital do patrimônio histórico: captura pelo celular, nuvem de pontos, mapa de danos e pranchas prontas.",
+    "Do scan ao BIM: capture com o celular, drone ou laser e receba nuvem de pontos e modelo BIM (Revit, Archicad, IFC).",
 };
 
 export const viewport: Viewport = {

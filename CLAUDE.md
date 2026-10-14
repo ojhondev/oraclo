@@ -1,12 +1,16 @@
 @AGENTS.md
 
-# Oraclo — documentação digital do patrimônio histórico
+# Oraclo — do scan ao BIM
 
-Plataforma (web) + app de captura (celular) para levantamento de bens históricos
-(igrejas, casarões, conjuntos): captura por fotogrametria com o celular → nuvem de
-pontos/malha → ortofotos → **mapa de danos** → pranchas e exportações para os softwares
-de arquitetura e engenharia. Escopo, fases e decisões em **`PRD.md`** (ler antes de
+Plataforma (web, com captura integrada para celular) de **scan-to-BIM** para qualquer
+edificação (reforma, retrofit, indústria, varejo, patrimônio): o cliente captura com o
+celular (fotos ou vídeo), drone ou laser — ou envia a nuvem pronta — e recebe nuvem de
+pontos validada, **modelo BIM (RVT, PLN, IFC)** modelado pela equipe/parceiros, ortofotos,
+mapa de danos e documentação. Escopo, fases e decisões em **`PRD.md`** (v0.2; ler antes de
 qualquer feature nova).
+
+**Nomenclatura:** na interface a entidade `sites` se chama **Projeto** e `elements` se chama
+**Área**; as rotas continuam em `/bens/...` (nome interno antigo).
 
 ## Stack
 - Next.js 16.4 (App Router, Server Actions, Turbopack). `cacheComponents` desligado:

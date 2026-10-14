@@ -30,7 +30,7 @@ export default async function TeamPage() {
 
   return (
     <>
-      <PageHeader eyebrow={me.orgName} title="Equipe" description="Quem acessa os bens, capturas e mapas de danos desta organização." />
+      <PageHeader eyebrow={me.orgName} title="Equipe" description="Quem acessa os projetos, capturas e modelos desta organização." />
       <PageBody className="grid max-w-4xl gap-5">
         {isAdmin && (
           <section className="grid gap-3 rounded-2xl border bg-card p-5">
@@ -43,7 +43,7 @@ export default async function TeamPage() {
             </div>
             <InviteForm />
             <dl className="grid gap-1 text-[12.5px] text-muted-foreground sm:grid-cols-2">
-              <div><dt className="inline font-medium text-foreground">Administrador</dt> — tudo, inclusive equipe e excluir bens.</div>
+              <div><dt className="inline font-medium text-foreground">Administrador</dt> — tudo, inclusive equipe e excluir projetos.</div>
               <div><dt className="inline font-medium text-foreground">Técnico</dt> — cadastra, captura, desenha danos e exporta.</div>
               <div><dt className="inline font-medium text-foreground">Equipe de campo</dt> — só faz capturas (fotos e medidas).</div>
               <div><dt className="inline font-medium text-foreground">Leitor</dt> — só visualiza e baixa.</div>

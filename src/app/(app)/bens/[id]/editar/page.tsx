@@ -6,7 +6,7 @@ import { ConfirmButton } from "@/components/confirm-button";
 import { deleteSite, updateSite } from "../../actions";
 import { SiteForm } from "../../site-form";
 
-export const metadata: Metadata = { title: "Editar bem" };
+export const metadata: Metadata = { title: "Editar projeto" };
 
 export default async function EditSitePage({ params }: PageProps<"/bens/[id]/editar">) {
   const { id } = await params;
@@ -16,14 +16,14 @@ export default async function EditSitePage({ params }: PageProps<"/bens/[id]/edi
     <>
       <PageHeader
         eyebrow={site.name}
-        title="Editar bem"
+        title="Editar projeto"
         actions={
           user.role === "admin" && (
             <ConfirmButton
               action={deleteSite.bind(null, id)}
-              title="Excluir este bem?"
-              description="Elementos, campanhas, capturas e danos registrados serão apagados. Não dá para desfazer."
-              label="Excluir bem"
+              title="Excluir este projeto?"
+              description="Áreas, campanhas, capturas, modelos e danos registrados serão apagados. Não dá para desfazer."
+              label="Excluir projeto"
             />
           )
         }

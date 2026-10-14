@@ -35,7 +35,7 @@ export function SignupForm() {
   const [state, action, pending] = useActionState(signup, null);
   return (
     <form action={action} className="grid gap-4">
-      <TextField id="org" label="Escritório, ateliê ou instituição" placeholder="Ex.: Ateliê de Restauro Aurora" autoComplete="organization" />
+      <TextField id="org" label="Empresa ou escritório" placeholder="Ex.: Silva Arquitetura e Engenharia" autoComplete="organization" />
       <TextField id="name" label="Seu nome" autoComplete="name" />
       <TextField id="email" label="E-mail" type="email" autoComplete="email" />
       <TextField id="password" label="Senha" type="password" autoComplete="new-password" minLength={8} />

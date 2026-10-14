@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ImageIcon, Landmark, MapPin, Plus, Search, ShieldCheck } from "lucide-react";
+import { ArrowRight, Building2, ImageIcon, MapPin, Plus, Search, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
@@ -48,8 +48,8 @@ export function HomeSearch({ sites, maps, canEdit, autoFocus }: { sites: HomeSit
   return (
     <div className="mx-auto w-full max-w-[640px]">
       <div className="mb-5 text-center">
-        <p className="mb-1.5 text-[13px] text-muted-foreground">Patrimônio</p>
-        <h1 className="text-[28px] leading-tight font-normal tracking-[-0.015em] sm:text-[30px]">O que você quer documentar?</h1>
+        <p className="mb-1.5 text-[13px] text-muted-foreground">Levantamento 3D e BIM</p>
+        <h1 className="text-[28px] leading-tight font-normal tracking-[-0.015em] sm:text-[30px]">O que vamos levantar hoje?</h1>
       </div>
 
       <div data-tour="busca" className="rounded-2xl border bg-card shadow-(--shadow-soft) transition-shadow focus-within:border-foreground/25 focus-within:shadow-(--shadow-focus)">
@@ -65,22 +65,22 @@ export function HomeSearch({ sites, maps, canEdit, autoFocus }: { sites: HomeSit
               submit();
             }
           }}
-          placeholder={mode === "bens" ? "Busque um bem, cidade ou órgão de proteção…" : "Busque um mapa de danos pelo nome ou pelo bem…"}
+          placeholder={mode === "bens" ? "Busque um projeto, cidade ou endereço…" : "Busque um mapa de danos pelo nome ou pelo projeto…"}
           className="block w-full resize-none bg-transparent px-5 pt-4 text-[16px] outline-none placeholder:text-muted-foreground/80"
         />
         <div className="flex items-center gap-1.5 px-3 pt-1 pb-3">
           {canEdit && (
             <Tooltip>
               <TooltipTrigger asChild>
-                <Link href="/bens/novo" aria-label="Cadastrar bem" className="grid size-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground">
+                <Link href="/bens/novo" aria-label="Novo projeto" className="grid size-9 place-items-center rounded-full text-muted-foreground hover:bg-muted hover:text-foreground">
                   <Plus className="size-[18px]" />
                 </Link>
               </TooltipTrigger>
-              <TooltipContent>Cadastrar bem</TooltipContent>
+              <TooltipContent>Novo projeto</TooltipContent>
             </Tooltip>
           )}
           <div className="flex items-center rounded-full bg-muted p-0.5">
-            <ModeChip active={mode === "bens"} onClick={() => setMode("bens")} icon={Landmark}>Bens</ModeChip>
+            <ModeChip active={mode === "bens"} onClick={() => setMode("bens")} icon={Building2}>Projetos</ModeChip>
             <ModeChip active={mode === "mapas"} onClick={() => setMode("mapas")} icon={ImageIcon}>Mapas de danos</ModeChip>
           </div>
           <button
@@ -97,25 +97,25 @@ export function HomeSearch({ sites, maps, canEdit, autoFocus }: { sites: HomeSit
       <div className="mt-6">
         {results.length === 0 ? (
           <p className="text-center text-[14px] text-muted-foreground">
-            {q ? "Nada encontrado." : mode === "bens" ? "Nenhum bem cadastrado ainda." : "Nenhum mapa de danos ainda."}
+            {q ? "Nada encontrado." : mode === "bens" ? "Nenhum projeto ainda." : "Nenhum mapa de danos ainda."}
             {canEdit && mode === "bens" && !q && (
               <>
                 {" "}
-                <Link href="/bens/novo" className="text-brand hover:underline">Cadastrar o primeiro bem</Link>
+                <Link href="/bens/novo" className="text-brand hover:underline">Criar o primeiro projeto</Link>
               </>
             )}
           </p>
         ) : (
           <>
             <p className="mb-2 flex items-center gap-1.5 px-1 text-[13px] text-muted-foreground">
-              <Search className="size-3.5" /> {q ? `${results.length} resultado${results.length > 1 ? "s" : ""}` : mode === "bens" ? "Seus bens" : "Mapas de danos recentes"}
+              <Search className="size-3.5" /> {q ? `${results.length} resultado${results.length > 1 ? "s" : ""}` : mode === "bens" ? "Seus projetos" : "Mapas de danos recentes"}
             </p>
             <ul className="divide-y rounded-2xl border bg-card">
               {results.slice(0, 12).map((r) => (
                 <li key={r.key}>
                   <Link href={r.href} className="group flex items-center gap-3 px-4 py-3 first:rounded-t-2xl last:rounded-b-2xl hover:bg-muted/60">
                     <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-brand-soft text-brand">
-                      {mode === "bens" ? <Landmark className="size-4" /> : <ImageIcon className="size-4" />}
+                      {mode === "bens" ? <Building2 className="size-4" /> : <ImageIcon className="size-4" />}
                     </span>
                     <span className="grid min-w-0 flex-1 leading-tight">
                       <span className="truncate text-[15px]">{r.title}</span>

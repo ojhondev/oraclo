@@ -411,7 +411,7 @@ export function DamageMapEditor({
     <div className="flex h-[calc(100svh-3.5rem)] min-h-0 flex-col lg:h-svh">
       {/* barra superior */}
       <header className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-2 sm:px-4">
-        <Button variant="ghost" size="icon-sm" asChild aria-label="Voltar ao bem">
+        <Button variant="ghost" size="icon-sm" asChild aria-label="Voltar ao projeto">
           <Link href={`/bens/${siteId}`}>
             <ArrowLeft />
           </Link>

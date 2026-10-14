@@ -1,54 +1,59 @@
 # Oraclo — PRD (Product Requirements Document)
 
-> **Versão:** 0.1 · **Data:** 2026-10-14 · **Status:** rascunho para validação
-> **Pasta:** `A:\Claude Code\Oraclo` · **Porta de dev (reservada):** 3022
+> **Versão:** 0.2 · **Data:** 2026-10-14 · **Status:** em construção (MVP no ar em oraclo-app.vercel.app)
+> **Pasta:** `A:\Claude Code\Oraclo` · **Porta de dev:** 3022
+
+> **Revisão 0.2 — reposicionamento (2026-10-14).** O objetivo deixou de ser documentação de
+> patrimônio histórico e passou a ser **scan-to-BIM para qualquer edificação**, como a Teiva:
+> **o cliente envia a nuvem de pontos (ou captura com o celular, drone ou laser) e o Oraclo
+> entrega o modelo BIM** em **Revit (RVT), Archicad (PLN) e IFC aberto**. Mercado: **reforma,
+> retrofit, indústria**, varejo, corporativo, institucional e também patrimônio (HBIM).
+> A modelagem é feita por **equipe própria e parceiros**. Mapa de danos, ortofotos e pranchas
+> continuam como entregáveis complementares. As seções 2–3 e 5.6–5.7 foram reescritas; o
+> restante do documento (escrito para o foco anterior) segue válido onde não conflitar.
 
 ---
 
 ## 1. Visão
 
-**O Oraclo é a plataforma de documentação digital do patrimônio histórico brasileiro.**
-Qualquer arquiteto, restaurador, paróquia ou prefeitura captura um bem (igreja, casarão,
-claustro, retábulo) **com o celular**, e a plataforma devolve a nuvem de pontos, a malha
-3D, as ortofotos e — principalmente — o **mapa de danos, as pranchas e os relatórios** no
-formato que os órgãos de proteção e os editais pedem.
+**O Oraclo é a plataforma "do scan ao BIM".** Arquitetos, engenheiros, construtoras,
+indústrias e gestores de imóveis trazem a realidade construída — capturada com o
+**celular (fotos ou vídeo)**, drone ou laser scanner — e recebem **nuvem de pontos, modelo
+BIM, ortofotos e documentação**, num só lugar.
 
-> Em uma frase: **captura → modelo 3D → mapa de danos → pranchas e relatórios →
-> monitoramento**, tudo a partir do celular.
+> Em uma frase: **captura (ou nuvem) → nuvem de pontos validada → modelo BIM (RVT/PLN/IFC)
+> → medição, ortofotos e documentação**, com acompanhamento de cada pedido na plataforma.
 
 **Princípio de produto: plataforma completa e agnóstica de origem.** O celular é a porta
 de entrada barata, mas o Oraclo **importa, converte e integra tudo** o que uma empresa de
 levantamento entrega hoje — laser scanner terrestre, LiDAR aéreo e fotogrametria de
 drone, nuvem de pontos, BIM (Revit/Archicad/IFC), CAD (DWG/DXF), levantamento cadastral,
-as-built por fases e planialtimétrico georreferenciado em SIRGAS 2000. Quem tem laser
-sobe o E57; quem não tem, usa o celular; tudo vira o mesmo projeto, no mesmo
-visualizador, com as mesmas saídas. Ver seção 5.4.
+as-built por fases e planialtimétrico georreferenciado em SIRGAS 2000. Ver seção 5.4.
 
 ### Diferença em relação ao mercado
 
-| | Empresas de serviço (ex.: Teiva) | Apps genéricos (Polycam, Scaniverse, Matterport) | **Oraclo** |
+| | Empresas de scan-to-BIM (ex.: Teiva) | Apps de celular (Polycam, Scaniverse, Matterport) | **Oraclo** |
 |---|---|---|---|
-| Quem captura | Equipe técnica com laser Leica / drone LiDAR | O usuário, com celular | O usuário, com celular + kit barato (e aceita laser) |
-| Custo de entrada | Alto (orçamento por projeto) | Baixo | Baixo |
-| Foco | Nuvem + BIM + DWG genérico | Captura e visualização | **Patrimônio**: mapa de danos, inventário, monitoramento, editais |
-| Plataforma própria | Não (entrega arquivos) | Sim, genérica | Sim, vertical para patrimônio, em português |
+| Quem captura | Equipe técnica com laser / drone LiDAR | O usuário, com celular | O cliente (celular, vídeo, drone) **ou** laser próprio/parceiro |
+| Entrega BIM | Sim (RVT/PLN), por orçamento | Não (só malha/planta simples) | **Sim: RVT, PLN e IFC**, pedido e acompanhado na plataforma |
+| Custo e prazo | Altos (mobilização de equipe e equipamento) | Baixos | **Baixos para LOD 200** (captura do cliente); laser quando o projeto exige |
+| Controle de precisão | Relatório do serviço | Nenhum | **Relatório com medidas de controle e selo de aptidão** |
+| Plataforma própria | Não (entrega arquivos) | Sim, genérica | **Sim**: projetos, capturas, modelos, pedidos, equipe, histórico |
 
 ---
 
 ## 2. Problema
 
-1. **O levantamento métrico é caro e trava o restauro.** Paróquias, pequenos
-   proprietários e prefeituras de cidades históricas precisam de levantamento cadastral
-   para *pedir* recursos (Lei Rouanet, editais estaduais, BNDES, aprovação no IPHAN e nos
-   órgãos estaduais), mas não têm verba para contratar laser antes de ter a verba.
-2. **O mapeamento de danos é manual e lento.** Fissuras, umidade, perda de reboco,
-   cupim e biodeterioração ainda são desenhados à mão no CAD, sobre fotos.
-3. **Não existe histórico.** Ninguém sabe se a fissura cresceu desde o ano passado; o
-   monitoramento depende de visitas e fotos soltas.
-4. **Documentação do restauro é exigida e dispersa.** O antes/durante/depois para o
-   órgão de proteção vive em pastas, WhatsApp e PDFs.
-5. **Risco de perda total.** Incêndios (Museu Nacional, 2018; Notre-Dame, 2019) mostraram
-   o valor de ter um registro digital fiel do bem antes da catástrofe.
+1. **Levantar o existente é caro e lento.** Para reforma, retrofit, ampliação ou
+   manutenção, o projeto precisa partir do que está construído — e as plantas antigas
+   raramente batem com a realidade. Contratar laser + modelagem custa caro e tem fila.
+2. **Nuvem de pontos sozinha não resolve.** O escritório recebe gigabytes de nuvem e ainda
+   precisa de dias (ou de um modelador especializado) para chegar a um modelo BIM usável.
+3. **Não há visibilidade do serviço.** Pedido, prazo, revisões e entregas ficam em e-mail,
+   WhatsApp e links de download que expiram.
+4. **Precisão é uma caixa-preta.** Quem recebe o modelo raramente sabe quanto ele erra.
+5. **Documentação complementar é manual.** Ortofotos, mapas de patologias e quantitativos
+   para orçamento ainda são feitos à mão no CAD.
 
 ---
 
@@ -56,14 +61,16 @@ visualizador, com as mesmas saídas. Ver seção 5.4.
 
 | Persona | Quem é | O que quer do Oraclo | Pagador? |
 |---|---|---|---|
-| **Restauradora / arquiteta de patrimônio** | Escritório ou ateliê de restauro (ex.: Estúdio Restaura) | Levantamento rápido, mapa de danos, pranchas para o projeto | **Sim — cliente principal do SaaS** |
-| **Ecônomo / responsável pelo patrimônio da diocese** | Mitra diocesana com dezenas de templos | Inventário digital de todas as igrejas, priorizar intervenções | Sim — plano institucional |
-| **Pároco / conselho paroquial** | Igreja isolada | Documentação para edital, visita virtual para campanha de doação | Às vezes (via projeto/edital) |
-| **Técnico de prefeitura / órgão de patrimônio** | Cidade histórica, órgão estadual | Inventário e monitoramento do conjunto tombado | Sim — licitação/convênio |
-| **Proponente de edital / Lei Rouanet** | Produtor cultural, associação | Pacote de documentação técnica que entra no orçamento do projeto | Sim (verba do projeto) |
-| **Técnico de campo** | Estagiário, fotógrafo, mestre de obras | App que diga exatamente como fotografar | Não (usuário) |
+| **Arquiteto(a) de reforma / retrofit** | Escritório pequeno ou médio | Modelo BIM do existente rápido e barato para começar o projeto | **Sim — cliente principal** |
+| **Engenheiro(a) / construtora** | Obras de retrofit, ampliação, manutenção | As-built e as-is em BIM, quantitativos, acompanhamento por etapas | Sim |
+| **Indústria / facilities** | Plantas industriais, galpões, utilidades | Nuvem + BIM de instalações para ampliações e manutenção (laser quando preciso) | Sim — contratos maiores |
+| **Varejo / corporativo / gestor de imóveis** | Redes de lojas, administradoras | Levantar muitos imóveis padronizados com equipe própria (celular) | Sim — volume |
+| **Patrimônio histórico** | Restauradores, dioceses, órgãos | HBIM, ortofotos e mapa de danos | Sim — vertical de nicho |
+| **Modelador(a) BIM (equipe/parceiro)** | Interno ou terceirizado | Fila de pedidos clara, nuvem validada, entrega e revisões organizadas | Recebe (custo) |
+| **Técnico de campo** | Equipe do cliente | App que diga exatamente como capturar | Não (usuário) |
 
-**Persona primária do MVP:** a restauradora/arquiteta de patrimônio.
+**Persona primária do MVP:** arquiteto(a)/engenheiro(a) de reforma e retrofit.
+
 
 ---
 
@@ -216,6 +223,52 @@ convertendo** dados de equipamentos profissionais.
   software do fabricante; SDKs dos fabricantes avaliados por demanda.
 - **Georreferência:** toda nuvem/projeto guarda o sistema de coordenadas (EPSG) e pode
   ser reprojetado (PROJ); padrão brasileiro = SIRGAS 2000.
+
+### 5.6 Modelagem BIM como serviço (núcleo da revisão 0.2)
+
+**Entregáveis:** **Revit (RVT)**, **Archicad (PLN)** e **IFC aberto** — o cliente escolhe um
+ou mais. Nuvem de pontos (E57/RCP/LAS) e relatório de precisão acompanham a entrega.
+
+**Quem modela:** equipe própria do Oraclo **e** parceiros credenciados (modeladores
+terceirizados), com a mesma fila e o mesmo padrão de entrega.
+
+**Fluxo do pedido (a construir):**
+
+1. **Base:** captura concluída (celular/vídeo/drone) ou nuvem importada (laser).
+2. **Pedido:** área (m²), nível de detalhe (**LOD 200** volumes/paredes/aberturas · **LOD 300**
+   elementos com dimensões e tipos · LOD 350 sob consulta), disciplinas (arquitetura,
+   estrutura, MEP aparente), software(s) de entrega, prazo desejado, observações e anexos
+   (plantas antigas, fotos).
+3. **Orçamento:** preço por m² × LOD × disciplinas (tabela + ajuste manual), prazo; cliente
+   aprova na plataforma.
+4. **Modelagem:** pedido atribuído a um modelador (equipe ou parceiro); status visível ao
+   cliente (fila → em modelagem → em revisão interna).
+5. **Entrega:** arquivos RVT/PLN/IFC + visualização do IFC no navegador; cliente comenta
+   (pinos no modelo) e pede revisão; aprovação final encerra o pedido.
+6. **Histórico:** versões do modelo por campanha (as-built por etapas).
+
+**Precisão × LOD:** captura por celular/vídeo atende **LOD 200** com folga e LOD 300 em
+ambientes pequenos com medidas de controle; **LOD 300 em áreas grandes e indústria → laser**
+(o Oraclo importa E57/LAS e o pedido segue igual).
+
+**A construir na plataforma:** papel de operador Oraclo (vê pedidos de todas as
+organizações), papel de parceiro modelador (vê só os pedidos atribuídos), tabela de preços,
+visualizador IFC (web-ifc / That Open Components), comentários com pinos, versões.
+
+**Aceleração da modelagem (roadmap):** detecção automática de pisos, paredes e aberturas
+na nuvem para pré-modelar o LOD 200; o modelador faz o acabamento.
+
+### 5.7 Captura por vídeo (implementada)
+
+- Gravar com a câmera nativa (4K, foco/exposição travados, sem estabilização
+  cinematográfica, lente 1×, andar devagar, duas passadas) ou escolher um vídeo pronto.
+- O navegador percorre o vídeo e mantém ~2,5 quadros/s: avalia 3 candidatos por janela e
+  fica com o mais nítido; descarta **tremidos** (nitidez < 45% da mediana recente) e
+  **repetidos** (miniatura quase igual à anterior — pessoa parada).
+- Só os quadros escolhidos (JPEG na resolução do vídeo) entram na fila de envio offline;
+  o vídeo não sobe. Funciona também no modo "Enviar fotos" (vídeo de drone/câmera).
+- Vídeo: melhor cobertura e captura mais rápida, ideal para LOD 200; fotos seguem melhores
+  para detalhe fino — o ideal é combinar.
 
 ---
 

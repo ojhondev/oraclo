@@ -26,7 +26,7 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
         <p className="label">
           {campaign.name} · {fmtDate(campaign.date)}
         </p>
-        <h1 className="h-display text-[24px] sm:text-[28px]">{elementName ?? "Captura sem parte definida"}</h1>
+        <h1 className="h-display text-[24px] sm:text-[28px]">{elementName ?? "Captura sem área definida"}</h1>
         <p className="text-[13px] text-muted-foreground">
           {capture.mode === "laser"
             ? "Modelo 3D importado (laser, drone ou outro software)"

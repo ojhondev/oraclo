@@ -1,6 +1,15 @@
 /** Rótulos em português dos enums do schema. */
 
 export const siteKinds = {
+  residencial: "Residencial",
+  comercial: "Comercial / varejo",
+  corporativo: "Corporativo / escritórios",
+  industrial: "Industrial / galpão",
+  institucional: "Institucional (saúde, educação, público)",
+  infraestrutura: "Infraestrutura",
+  patrimonio: "Patrimônio histórico",
+  outro: "Outro",
+  // tipos antigos, ainda exibidos nos projetos cadastrados com eles
   igreja: "Igreja",
   capela: "Capela",
   convento: "Convento / mosteiro",
@@ -8,8 +17,13 @@ export const siteKinds = {
   edificio_publico: "Edifício público",
   conjunto: "Conjunto arquitetônico",
   monumento: "Monumento",
-  outro: "Outro",
 } as const;
+
+/** Tipos oferecidos no cadastro de projeto. */
+export const SITE_KIND_OPTIONS = ["residencial", "comercial", "corporativo", "industrial", "institucional", "infraestrutura", "patrimonio", "outro"] as const;
+
+/** Tipos que pedem os campos de proteção legal (tombamento). */
+export const HERITAGE_KINDS = ["patrimonio", "igreja", "capela", "convento", "casarao", "edificio_publico", "conjunto", "monumento"];
 
 export const protectionLevels = {
   federal: "Tombamento federal",
@@ -21,11 +35,13 @@ export const protectionLevels = {
 
 export const elementKinds = {
   fachada: "Fachada",
-  interior: "Interior",
-  cobertura: "Cobertura",
+  pavimento: "Pavimento",
+  interior: "Ambiente interno",
+  cobertura: "Cobertura / telhado",
+  estrutura: "Estrutura",
   torre: "Torre / cúpula",
-  elemento_artistico: "Elemento artístico",
-  terreno: "Terreno / entorno",
+  elemento_artistico: "Elemento decorativo / artístico",
+  terreno: "Terreno / área externa",
   outro: "Outro",
 } as const;
 

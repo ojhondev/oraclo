@@ -30,7 +30,7 @@ export function AuthShell({
         <p className="mt-6 text-center text-[14px] text-muted-foreground">{footer}</p>
       </div>
       <p className="mt-10 max-w-sm text-center text-[12.5px] text-muted-foreground/80">
-        Oraclo · documentação digital do patrimônio histórico — captura pelo celular, mapa de danos e pranchas.
+        Oraclo · do scan ao BIM — captura pelo celular ou laser, nuvem de pontos e modelo BIM pronto.
       </p>
     </div>
   );

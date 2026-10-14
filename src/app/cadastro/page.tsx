@@ -13,7 +13,7 @@ export default async function SignupPage() {
     <AuthShell
       eyebrow="Comece agora"
       title="Crie sua conta."
-      description="Para escritórios de restauro, arquitetos, dioceses e órgãos de patrimônio."
+      description="Para escritórios de arquitetura e engenharia, construtoras, indústrias e gestores de imóveis."
       footer={
         <>
           Já tem conta?{" "}

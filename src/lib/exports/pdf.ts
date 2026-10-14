@@ -2,7 +2,7 @@ import "server-only";
 import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { fmtArea, fmtLength } from "@/lib/geometry";
 import { fmtDate } from "@/lib/format";
-import { protectionLevels, severities } from "@/lib/labels";
+import { protectionLevels, severities, siteKinds } from "@/lib/labels";
 import { hexToRgb, pointsOf, type ExportData } from "./common";
 import { LOGO_PNG_BASE64 } from "./logo";
 
@@ -189,16 +189,20 @@ export async function buildPdf(data: ExportData, image: Uint8Array) {
 
   /* ── carimbo ── */
   const cy0 = M;
-  const ch = 170;
-  page.drawRectangle({ x: sx, y: cy0, width: sw, height: ch, borderColor: INK, borderWidth: 0.8 });
   const rows: [string, string][] = [
-    ["BEM", site.name],
+    ["PROJETO", site.name],
     ["LOCAL", [site.address, site.city, site.state].filter(Boolean).join(", ") || "—"],
-    ["PROTEÇÃO", site.protection === "nenhuma" ? protectionLevels.nenhuma : `${site.protectionBody ?? protectionLevels[site.protection]}${site.processNumber ? ` · ${site.processNumber}` : ""}`],
-    ["PARTE", element?.name ?? "—"],
+    // proteção legal só aparece quando o projeto é patrimônio tombado
+    ...(site.protection === "nenhuma"
+      ? []
+      : ([["PROTEÇÃO", `${site.protectionBody ?? protectionLevels[site.protection]}${site.processNumber ? ` · ${site.processNumber}` : ""}`]] as [string, string][])),
+    ["TIPO", siteKinds[site.kind]],
+    ["ÁREA", element?.name ?? "—"],
     ["RESPONSÁVEL", `${author.name}${author.professionalId ? ` · ${author.professionalId}` : ""}`],
     ["ORGANIZAÇÃO", user.orgName],
   ];
+  const ch = 38 + rows.length * 23; // altura acompanha o número de linhas
+  page.drawRectangle({ x: sx, y: cy0, width: sw, height: ch, borderColor: INK, borderWidth: 0.8 });
   let ry = cy0 + ch - 14;
   for (const [k2, v] of rows) {
     page.drawText(k2, { x: sx + 8, y: ry, size: 6.2, font: bold, color: MUTED });

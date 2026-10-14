@@ -44,21 +44,23 @@ export const users = pgTable("users", {
   createdAt: createdAt(),
 }, (t) => [uniqueIndex("users_email_idx").on(t.email)]);
 
-/* ───────────────────────── Bens ───────────────────────── */
+/* ───────────────────────── Projetos ───────────────────────── */
 
 export const siteKindEnum = pgEnum("site_kind", [
-  "igreja", "capela", "convento", "casarao", "edificio_publico", "conjunto", "monumento", "outro",
+  "residencial", "comercial", "corporativo", "industrial", "institucional", "infraestrutura", "patrimonio", "outro",
+  // valores antigos (foco inicial em patrimônio) — mantidos para os dados existentes
+  "igreja", "capela", "convento", "casarao", "edificio_publico", "conjunto", "monumento",
 ]);
 export const protectionEnum = pgEnum("protection_level", [
   "federal", "estadual", "municipal", "em_estudo", "nenhuma",
 ]);
 
-/** Bem patrimonial (igreja, casarão, conjunto…). */
+/** Projeto: a edificação, obra ou instalação levantada (residência, loja, galpão, igreja…). */
 export const sites = pgTable("sites", {
   id: id(),
   orgId: uuid("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
   name: text("name").notNull(),
-  kind: siteKindEnum("kind").notNull().default("igreja"),
+  kind: siteKindEnum("kind").notNull().default("outro"),
   address: text("address"),
   city: text("city"),
   state: text("state"),
@@ -75,10 +77,10 @@ export const sites = pgTable("sites", {
 }, (t) => [index("sites_org_idx").on(t.orgId)]);
 
 export const elementKindEnum = pgEnum("element_kind", [
-  "fachada", "interior", "cobertura", "torre", "elemento_artistico", "terreno", "outro",
+  "fachada", "pavimento", "interior", "cobertura", "estrutura", "torre", "elemento_artistico", "terreno", "outro",
 ]);
 
-/** Parte do bem: fachada principal, nave, sacristia, retábulo-mor… */
+/** Área do projeto: fachada, pavimento, ambiente, cobertura, estrutura… */
 export const elements = pgTable("elements", {
   id: id(),
   siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),

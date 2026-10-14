@@ -35,7 +35,7 @@ export default async function CapturesPage({ searchParams }: PageProps<"/captura
       <PageHeader
         eyebrow={user.orgName}
         title="Capturas"
-        description="Fotos de campo, fotos enviadas e modelos importados de todos os bens — e o que está esperando processamento."
+        description="Fotos de campo, fotos enviadas e modelos importados de todos os projetos — e o que está esperando processamento."
       />
       <PageBody className="grid gap-4">
         <nav className="flex flex-wrap gap-1.5">
@@ -54,7 +54,7 @@ export default async function CapturesPage({ searchParams }: PageProps<"/captura
         </nav>
         {rows.length === 0 ? (
           <EmptyState icon={Camera} title="Nenhuma captura aqui">
-            Abra um bem, crie uma campanha e escolha Capturar com celular, Enviar fotos ou Importar modelo 3D.
+            Abra um projeto, crie uma campanha e escolha Capturar com celular, Enviar fotos ou Importar modelo 3D.
           </EmptyState>
         ) : (
           <ul className="divide-y rounded-2xl border bg-card">

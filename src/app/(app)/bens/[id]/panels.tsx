@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/form";
 import { elementKinds, purposes } from "@/lib/labels";
-import { addCampaign, addChurchTemplate, addElement } from "../actions";
+import { addAreaTemplate, addCampaign, addElement } from "../actions";
 
 const toOptions = (o: Record<string, string>) => Object.entries(o).map(([value, label]) => ({ value, label }));
 
@@ -36,15 +36,27 @@ export function AddElementForm({ siteId, empty }: { siteId: string; empty: boole
       </form>
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
       {empty && (
-        <button
-          type="button"
-          onClick={() => start(() => addChurchTemplate(siteId))}
-          disabled={tplPending}
-          className="flex w-fit items-center gap-1.5 text-[13px] font-medium text-brand hover:underline"
-        >
-          {tplPending ? <Loader2 className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />}
-          Usar as partes típicas de uma igreja
-        </button>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px]">
+          <span className="flex items-center gap-1.5 text-muted-foreground">
+            {tplPending ? <Loader2 className="size-3.5 animate-spin" /> : <Wand2 className="size-3.5" />}
+            Usar áreas típicas de:
+          </span>
+          {([
+            ["edificacao", "Edificação"],
+            ["industria", "Indústria / galpão"],
+            ["igreja", "Igreja / patrimônio"],
+          ] as const).map(([k, label]) => (
+            <button
+              key={k}
+              type="button"
+              disabled={tplPending}
+              onClick={() => start(() => addAreaTemplate(siteId, k))}
+              className="font-medium underline-offset-4 hover:underline"
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       )}
     </div>
   );
@@ -107,7 +119,7 @@ export function NewCaptureForm({
         name="elementId"
         options={elements}
         allowNone
-        noneLabel="Parte do bem (opcional)"
+        noneLabel="Área (opcional)"
         className="h-9 w-full bg-card"
       />
       <div className="flex flex-wrap gap-1.5" data-tour="captura">

@@ -64,10 +64,14 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
 
   const facts: [string, string | null][] = [
     ["Tipo", siteKinds[site.kind]],
-    ["Período", site.period],
-    ["Proteção", protectionLevels[site.protection]],
-    ["Órgão", site.protectionBody],
-    ["Processo / inscrição", site.processNumber],
+    ["Ano / período", site.period],
+    ...(site.protection !== "nenhuma" || site.protectionBody
+      ? ([
+          ["Proteção", protectionLevels[site.protection]],
+          ["Órgão", site.protectionBody],
+          ["Processo / inscrição", site.processNumber],
+        ] as [string, string | null][])
+      : []),
     ["Endereço", [site.address, site.city, site.state].filter(Boolean).join(", ") || null],
   ];
 
@@ -176,7 +180,7 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
                               className="-mx-2 flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 text-[13px] hover:bg-muted"
                             >
                               <Camera className="size-3.5 text-muted-foreground" />
-                              <span>{k.elementId ? elementName[k.elementId] : "Sem parte definida"}</span>
+                              <span>{k.elementId ? elementName[k.elementId] : "Sem área definida"}</span>
                               <span className="text-muted-foreground">· {k.fileCount} fotos ({fmtBytes(k.totalBytes)})</span>
                               <Badge variant={k.status === "concluida" ? "default" : "secondary"} className="ml-auto">
                                 {captureStatuses[k.status]}
@@ -201,7 +205,7 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
 
           <Section
             title="Modelos e arquivos"
-            description="Nuvens de pontos, malhas, ortofotos, pranchas e exportações deste bem."
+            description="Nuvens de pontos, malhas, ortofotos, pranchas e exportações deste projeto."
           >
             {outputs.length === 0 ? (
               <div className="grid gap-3">
@@ -250,7 +254,7 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
         </div>
 
         <div className="grid content-start gap-5">
-          <Section title="Partes do bem" description="Fachadas, ambientes e elementos artísticos — cada captura e cada dano fica ligado a uma parte.">
+          <Section title="Áreas" description="Fachadas, pavimentos, ambientes, cobertura, estrutura — cada captura e cada modelo fica ligado a uma área.">
             {canEdit && <AddElementForm siteId={site.id} empty={elements.length === 0} />}
             {elements.length > 0 && (
               <ul className="grid divide-y rounded-lg border">
@@ -271,7 +275,7 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
             )}
           </Section>
 
-          <Section title="Ficha do bem">
+          <Section title="Ficha do projeto">
             <dl className="grid gap-3 text-[13.5px]">
               {facts.map(([k, v]) => (
                 <div key={k} className="grid grid-cols-[130px_1fr] gap-3">

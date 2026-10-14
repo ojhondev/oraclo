@@ -17,7 +17,7 @@ export async function GET(_: Request, ctx: RouteContext<"/bens/[id]/ortofotos/[o
   const readme = [
     "Oraclo - mapa de danos em DXF",
     "",
-    `Bem: ${data.site.name}`,
+    `Projeto: ${data.site.name}`,
     `Ortofoto: ${data.ortho.name}`,
     data.ortho.mmPerPixel
       ? `Escala: ${data.ortho.mmPerPixel.toFixed(3)} mm/pixel - desenho em METROS, origem no canto inferior esquerdo da ortofoto.`

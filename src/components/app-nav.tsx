@@ -49,14 +49,24 @@ function NavList({ user, onNavigate }: { user: SessionUser; onNavigate?: () => v
         })}
       </nav>
 
-      <div className="mt-auto flex items-center gap-2.5 p-3 px-5">
-        <Avatar className="size-8">
-          <AvatarFallback className="bg-secondary text-[11px] font-medium">{initials(user.name)}</AvatarFallback>
-        </Avatar>
-        <div className="grid min-w-0 flex-1 leading-tight">
-          <span className="truncate text-[13px] font-medium">{user.name}</span>
-          <span className="truncate text-[11.5px] text-muted-foreground">{roles[user.role]}</span>
-        </div>
+      <div className="mt-auto flex items-center gap-1 p-3">
+        <Link
+          href="/perfil"
+          onClick={onNavigate}
+          title="Meu perfil"
+          className={cn(
+            "flex min-w-0 flex-1 items-center gap-2.5 rounded-md px-2 py-1.5 hover:bg-sidebar-accent",
+            pathname.startsWith("/perfil") && "bg-sidebar-accent",
+          )}
+        >
+          <Avatar className="size-8">
+            <AvatarFallback className="bg-secondary text-[11px] font-medium">{initials(user.name)}</AvatarFallback>
+          </Avatar>
+          <span className="grid min-w-0 flex-1 leading-tight">
+            <span className="truncate text-[13px] font-medium">{user.name}</span>
+            <span className="truncate text-[11.5px] text-muted-foreground">Meu perfil · {roles[user.role]}</span>
+          </span>
+        </Link>
         <form action={logout}>
           <button
             aria-label="Sair"

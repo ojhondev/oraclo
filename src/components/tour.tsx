@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BrandLogo } from "@/components/brand";
+import { BrandMark } from "@/components/brand";
 import { markOnboarded } from "@/app/(app)/tour-actions";
 import { TOUR_EVENT } from "@/components/help";
 
@@ -111,7 +111,7 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
         <button onClick={finish} aria-label="Fechar tour" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
           <X className="size-4" />
         </button>
-        {i === 0 && <BrandLogo className="mb-3 h-6" />}
+        {i === 0 && <BrandMark className="mb-3 h-6" />}
         <p className="mb-1 text-[12px] text-muted-foreground">
           {i + 1} de {STEPS.length}
         </p>

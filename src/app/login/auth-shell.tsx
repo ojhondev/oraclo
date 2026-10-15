@@ -1,4 +1,4 @@
-import { BrandLogo } from "@/components/brand";
+import { BrandLogo, BrandMark } from "@/components/brand";
 
 /** Moldura das telas de entrada: cartão central minimalista sobre o papel claro. */
 export function AuthShell({
@@ -18,7 +18,10 @@ export function AuthShell({
     <div className="flex min-h-svh flex-col items-center justify-center px-4 py-10">
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
-          <BrandLogo className="mb-6 h-8" />
+          <span className="mb-6 flex items-center gap-3">
+            <BrandMark className="h-7" />
+            <BrandLogo className="h-7" />
+          </span>
           <p className="mb-1 text-[13px] text-muted-foreground">{eyebrow}</p>
           <h1 className="text-[26px] leading-tight font-normal tracking-[-0.015em]">{title}</h1>
           <p className="mt-2 text-[14px] text-muted-foreground">{description}</p>

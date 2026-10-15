@@ -12,6 +12,10 @@ import {
   Loader2,
   Maximize,
   Ruler,
+  PanelLeftClose,
+  PanelLeftOpen,
+  PanelRightClose,
+  PanelRightOpen,
   Search,
   Trash2,
   Undo2,
@@ -38,6 +42,8 @@ type Damage = typeof schema.damages.$inferSelect;
 type DamageType = typeof schema.damageTypes.$inferSelect;
 type View = { x: number; y: number; w: number; h: number };
 type Tool = "mover" | "desenhar" | "calibrar";
+
+const PANELS_KEY = "archray:editor-paineis";
 
 const pts = (d: Damage) => (d.geometry?.points ?? []) as Pt[];
 const toPath = (p: Pt[]) => p.map(([x, y]) => `${x},${y}`).join(" ");
@@ -78,6 +84,27 @@ export function DamageMapEditor({
   const [box, setBox] = useState({ w: 1, h: 1 });
   const [calLine, setCalLine] = useState<[Pt, Pt] | null>(ortho.calibration ? [ortho.calibration.a, ortho.calibration.b] : null);
   const [calOpen, setCalOpen] = useState(false);
+  // painéis recolhíveis (biblioteca à esquerda, orçamento à direita), lembrados neste aparelho
+  const [panels, setPanels] = useState({ lib: true, side: true });
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(PANELS_KEY) ?? "null");
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- lê o navegador só depois de montar
+      if (saved) setPanels({ lib: saved.lib !== false, side: saved.side !== false });
+    } catch {
+      // sem armazenamento: painéis abertos
+    }
+  }, []);
+  const togglePanel = (k: "lib" | "side") =>
+    setPanels((p) => {
+      const n = { ...p, [k]: !p[k] };
+      try {
+        localStorage.setItem(PANELS_KEY, JSON.stringify(n));
+      } catch {
+        // sem armazenamento: vale só nesta visita
+      }
+      return n;
+    });
   const [busy, startBusy] = useTransition();
   const [drag, setDrag] = useState<{ index: number; points: Pt[] } | null>(null);
 
@@ -429,6 +456,9 @@ export function DamageMapEditor({
             <ArrowLeft />
           </Link>
         </Button>
+        <Button variant="ghost" size="icon-sm" className="hidden md:inline-flex" onClick={() => togglePanel("lib")} aria-label={panels.lib ? "Recolher biblioteca de danos" : "Mostrar biblioteca de danos"} title={panels.lib ? "Recolher biblioteca de danos" : "Mostrar biblioteca de danos"}>
+          {panels.lib ? <PanelLeftClose /> : <PanelLeftOpen />}
+        </Button>
         <div className="mr-auto grid min-w-0 leading-tight">
           <span className="truncate text-[11.5px] text-muted-foreground">{siteName} · mapa de danos</span>
           <span className="truncate text-[16px] font-medium">{ortho.name}</span>
@@ -512,11 +542,25 @@ export function DamageMapEditor({
             size="icon-sm"
           />
         )}
+        <Button variant="ghost" size="icon-sm" className="hidden lg:inline-flex" onClick={() => togglePanel("side")} aria-label={panels.side ? "Recolher painel de orçamento" : "Mostrar painel de orçamento"} title={panels.side ? "Recolher painel de orçamento" : "Mostrar painel de orçamento"}>
+          {panels.side ? <PanelRightClose /> : <PanelRightOpen />}
+        </Button>
       </header>
 
       <div className="flex min-h-0 flex-1">
         {/* biblioteca */}
-        <aside className="thin-scroll hidden w-64 shrink-0 overflow-y-auto border-r bg-sidebar md:block">
+        {!panels.lib && (
+          <button
+            onClick={() => togglePanel("lib")}
+            aria-label="Mostrar biblioteca de danos"
+            className="hidden w-10 shrink-0 flex-col items-center gap-3 border-r bg-sidebar pt-3 text-muted-foreground hover:text-foreground md:flex"
+          >
+            <PanelLeftOpen className="size-4" />
+            {typeId && typeById.get(typeId) && <Swatch type={typeById.get(typeId)!} />}
+            <span className="text-[12px] [writing-mode:vertical-rl] rotate-180">Biblioteca de danos</span>
+          </button>
+        )}
+        <aside className={cn("thin-scroll hidden w-64 shrink-0 overflow-y-auto border-r bg-sidebar", panels.lib && "md:block")}>
           <div className="sticky top-0 z-10 border-b bg-sidebar p-3">
             <p className="label mb-2">Biblioteca de danos</p>
             <div className="relative">
@@ -658,7 +702,18 @@ export function DamageMapEditor({
         </div>
 
         {/* painel direito */}
-        <aside className="thin-scroll hidden w-80 shrink-0 overflow-y-auto border-l bg-background lg:block">
+        {!panels.side && !selDamage && (
+          <button
+            onClick={() => togglePanel("side")}
+            aria-label="Mostrar painel de orçamento"
+            className="hidden w-10 shrink-0 flex-col items-center gap-3 border-l bg-background pt-3 text-muted-foreground hover:text-foreground lg:flex"
+          >
+            <PanelRightOpen className="size-4" />
+            <span className="text-[12px] tabular-nums [writing-mode:vertical-rl] rotate-180">Orçamento · {fmtBRL(orc.totalCents)}</span>
+          </button>
+        )}
+        {/* com um dano selecionado o painel abre mesmo recolhido, para editar; ao fechar o dano ele recolhe de novo */}
+        <aside className={cn("thin-scroll hidden w-80 shrink-0 overflow-y-auto border-l bg-background", (panels.side || selDamage) && "lg:block")}>
           {selDamage ? (
             <DamagePanel
               key={selDamage.id}

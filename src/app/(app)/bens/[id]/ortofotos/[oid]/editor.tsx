@@ -28,6 +28,7 @@ import { ConfirmButton } from "@/components/confirm-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { fmtArea, fmtLength, fmtMmPerPixel, measure, minPoints, scaleFromCalibration, type Pt } from "@/lib/geometry";
 import { geometryKinds, severities } from "@/lib/labels";
+import { TREND_LABELS, URGENCY_LABELS, budget, damageCostCents, fmtBRL, gut, priority, unitLabels, type Price } from "@/lib/pricing";
 import type { schema } from "@/lib/db";
 import { calibrate, createDamage, deleteDamage, deleteOrthophoto, setScale, updateDamage } from "../actions";
 import { DamagePattern, lineStyle } from "./patterns";
@@ -48,6 +49,7 @@ export function DamageMapEditor({
   types,
   initialDamages,
   canEdit,
+  prices,
 }: {
   siteId: string;
   siteName: string;
@@ -55,6 +57,7 @@ export function DamageMapEditor({
   types: DamageType[];
   initialDamages: Damage[];
   canEdit: boolean;
+  prices: Record<string, Price>;
 }) {
   const W = ortho.widthPx;
   const H = ortho.heightPx;
@@ -156,6 +159,8 @@ export function DamageMapEditor({
         typeId: activeType.id,
         geometry: { points: clean },
         severity: "media",
+        urgency: 3,
+        trend: 3,
         ...measure(activeType.geometry, clean, mm),
       } as Damage;
       setDamages((list) => [...list, temp]);
@@ -226,7 +231,11 @@ export function DamageMapEditor({
 
   /* ── ponteiro ── */
   function onPointerDown(e: React.PointerEvent) {
-    (e.target as Element).setPointerCapture?.(e.pointerId);
+    try {
+      (e.target as Element).setPointerCapture(e.pointerId);
+    } catch {
+      // ponteiro sem captura (ex.: caneta que saiu da tela) — segue sem
+    }
     const v = viewRef.current;
     panRef.current = { sx: e.clientX, sy: e.clientY, vx: v.x, vy: v.y, moved: false, button: e.button };
   }
@@ -346,6 +355,8 @@ export function DamageMapEditor({
     return [...m.values()].sort((a, b) => a.type.sortOrder - b.type.sortOrder);
   }, [damages, typeById]);
   const usedTypes = summary.map((s) => s.type);
+  const orc = useMemo(() => budget(damages, prices), [damages, prices]);
+  const costByType = new Map(orc.rows.map((r) => [r.typeId, r]));
 
   const cursor = tool === "desenhar" || tool === "calibrar" ? "crosshair" : panRef.current?.moved ? "grabbing" : "grab";
 
@@ -651,6 +662,7 @@ export function DamageMapEditor({
               key={selDamage.id}
               damage={selDamage}
               types={types}
+              price={prices[selDamage.typeId]}
               type={typeById.get(selDamage.typeId)!}
               canEdit={canEdit && !selDamage.id.startsWith("tmp-")}
               onClose={() => setSelected(null)}
@@ -659,6 +671,17 @@ export function DamageMapEditor({
             />
           ) : (
             <div className="grid gap-5 p-4">
+              <div className="rounded-xl border bg-card p-3">
+                <p className="label">Orçamento estimado</p>
+                <p className="mt-1 text-[22px] font-medium tabular-nums">{fmtBRL(orc.totalCents)}</p>
+                <p className="text-[11.5px] text-muted-foreground">
+                  {damages.length === 0
+                    ? "Marque danos para orçar o tratamento."
+                    : orc.missing > 0
+                      ? `${orc.missing} dano(s) sem medida — defina a escala para orçar.`
+                      : "Quantidade × preço da tabela do escritório (Biblioteca)."}
+                </p>
+              </div>
               <div>
                 <p className="label mb-2">Quantitativos</p>
                 {summary.length === 0 ? (
@@ -672,6 +695,7 @@ export function DamageMapEditor({
                         <span className="text-[12px] text-muted-foreground tabular-nums">
                           {s.type.geometry === "area" ? fmtArea(mm ? s.area : null) : s.type.geometry === "linha" ? fmtLength(mm ? s.length : null) : `${s.count} un.`}
                         </span>
+                        <span className="w-20 text-right text-[12px] tabular-nums">{fmtBRL(costByType.get(s.type.id)?.cents ?? 0)}</span>
                         <button
                           aria-label={hidden.has(s.type.id) ? "Mostrar" : "Ocultar"}
                           onClick={() =>
@@ -768,6 +792,7 @@ function DamagePanel({
   damage,
   type,
   types,
+  price,
   canEdit,
   onClose,
   onPatch,
@@ -776,12 +801,16 @@ function DamagePanel({
   damage: Damage;
   type: DamageType;
   types: DamageType[];
+  price?: Price;
   canEdit: boolean;
   onClose: () => void;
   onPatch: (p: Parameters<typeof updateDamage>[3]) => void;
   onDelete: () => void;
 }) {
   const sameGeometry = types.filter((t) => t.geometry === type.geometry);
+  const score = gut(damage);
+  const prio = priority(score);
+  const cost = price ? damageCostCents(damage, { [damage.typeId]: price }) : null;
   const saveText = (field: "cause" | "recommendation" | "notes") => (e: React.FocusEvent<HTMLTextAreaElement>) => {
     const v = e.target.value.trim();
     if (v !== (damage[field] ?? "")) onPatch({ [field]: v || null });
@@ -824,13 +853,48 @@ function DamagePanel({
           onValueChange={(v) => canEdit && onPatch({ severity: v as Damage["severity"] })}
         />
       </label>
+      <div className="grid grid-cols-2 gap-2">
+        <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+          Urgência
+          <SimpleSelect
+            options={Object.entries(URGENCY_LABELS).map(([value, label]) => ({ value, label: `${value} · ${label}` }))}
+            value={String(damage.urgency)}
+            onValueChange={(v) => canEdit && onPatch({ urgency: Number(v) })}
+          />
+        </label>
+        <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+          Tendência
+          <SimpleSelect
+            options={Object.entries(TREND_LABELS).map(([value, label]) => ({ value, label: `${value} · ${label}` }))}
+            value={String(damage.trend)}
+            onValueChange={(v) => canEdit && onPatch({ trend: Number(v) })}
+          />
+        </label>
+      </div>
+      <div className="grid gap-1 rounded-xl border bg-card p-3 text-[12.5px]">
+        <div className="flex items-baseline justify-between">
+          <span className="text-muted-foreground">GUT</span>
+          <span className="font-medium tabular-nums">{score}</span>
+        </div>
+        <div className="text-[12px]">{prio.label}</div>
+        <div className="mt-1 flex items-baseline justify-between border-t pt-1.5">
+          <span className="text-muted-foreground">Custo do tratamento</span>
+          <span className="font-medium tabular-nums">{cost == null ? "sem escala" : fmtBRL(cost)}</span>
+        </div>
+        {price && (
+          <div className="text-[11.5px] text-muted-foreground">
+            {price.treatment || "Tratamento"} · {fmtBRL(price.priceCents)}/{unitLabels[price.unit]}
+            {price.suggested && " (valor sugerido)"}
+          </div>
+        )}
+      </div>
       <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Causa provável
         <Textarea defaultValue={damage.cause ?? ""} onBlur={saveText("cause")} readOnly={!canEdit} rows={2} />
       </label>
       <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Recomendação
-        <Textarea defaultValue={damage.recommendation ?? ""} onBlur={saveText("recommendation")} readOnly={!canEdit} rows={2} />
+        <Textarea defaultValue={damage.recommendation ?? ""} onBlur={saveText("recommendation")} readOnly={!canEdit} rows={2} placeholder={price?.treatment || undefined} />
       </label>
       <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Observações

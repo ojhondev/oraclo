@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { asc, eq, isNull, or } from "drizzle-orm";
-import { requireUser } from "@/lib/auth";
+import { editors, requireUser } from "@/lib/auth";
+import { loadPrices } from "@/lib/prices";
+import { PriceRow } from "./price-row";
 import { db, schema } from "@/lib/db";
 import { ensureDefaultDamageTypes } from "@/lib/damage-library";
 import { geometryKinds } from "@/lib/labels";
@@ -20,13 +22,15 @@ export default async function LibraryPage() {
     types = await load();
   }
   const categories = [...new Set(types.map((x) => x.category))];
+  const prices = await loadPrices(user.orgId, types);
+  const canEdit = editors.includes(user.role);
 
   return (
     <>
       <PageHeader
         eyebrow="Mapa de danos"
         title="Biblioteca de danos"
-        description="Legenda padronizada usada no mapa de danos, nas pranchas em PDF e nas camadas do DXF."
+        description="Legenda dos danos e a tabela de preços do escritório: cada tipo tem um tratamento e um preço unitário que viram o orçamento automático. Os valores marcados como sugeridos são só um ponto de partida — ajuste para a sua realidade."
       />
       <PageBody className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {categories.map((cat) => (
@@ -48,6 +52,7 @@ export default async function LibraryPage() {
                         <code className="rounded bg-muted px-1.5 text-[11px] font-normal text-muted-foreground">{x.code}</code>
                       </span>
                       {x.description && <span className="text-[12.5px] text-muted-foreground">{x.description}</span>}
+                      <PriceRow typeId={x.id} price={prices[x.id]!} canEdit={canEdit} />
                     </div>
                     <Badge variant="outline" className="shrink-0">{geometryKinds[x.geometry]}</Badge>
                   </li>

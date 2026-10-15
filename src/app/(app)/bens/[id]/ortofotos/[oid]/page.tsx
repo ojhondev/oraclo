@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { editors, requireUser } from "@/lib/auth";
 import { getSite } from "@/lib/sites";
 import { getOrthophoto, listDamages, loadDamageTypes } from "@/lib/orthophotos";
+import { loadPrices } from "@/lib/prices";
 import { DamageMapEditor } from "./editor";
 
 export async function generateMetadata({ params }: PageProps<"/bens/[id]/ortofotos/[oid]">): Promise<Metadata> {
@@ -18,6 +19,7 @@ export default async function OrthophotoEditorPage({ params }: PageProps<"/bens/
   const site = await getSite(user.orgId, id);
   const ortho = await getOrthophoto(id, oid);
   const [types, damages] = await Promise.all([loadDamageTypes(user.orgId), listDamages(oid)]);
+  const prices = await loadPrices(user.orgId, types);
   return (
     <DamageMapEditor
       siteId={site.id}
@@ -26,6 +28,7 @@ export default async function OrthophotoEditorPage({ params }: PageProps<"/bens/
       types={types}
       initialDamages={damages}
       canEdit={editors.includes(user.role)}
+      prices={prices}
     />
   );
 }

@@ -1,0 +1,236 @@
+/*
+ * Site público do ArchRay: tema próprio (escuro por padrão, claro opcional) e movimento.
+ * Os tokens são redefinidos no invólucro .site-theme, então valem só para o site,
+ * independentemente do tema escolhido dentro do app.
+ */
+
+.site-theme {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #0d0d0d;
+  --card-foreground: #ffffff;
+  --popover: #111111;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #000000;
+  --secondary: #161616;
+  --secondary-foreground: #ffffff;
+  --muted: #121212;
+  --muted-foreground: #9b9b9b;
+  --accent: #1c1c1c;
+  --accent-foreground: #ffffff;
+  --border: #242424;
+  --input: #2e2e2e;
+  --ring: #ffffff;
+  --site-elev: #0b0b0b;
+  --site-grid: rgb(255 255 255 / 0.07);
+  color-scheme: dark;
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.site-theme.site-light {
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+  --primary: #0a0a0a;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f4;
+  --secondary-foreground: #0a0a0a;
+  --muted: #f3f3f3;
+  --muted-foreground: #6b6b6b;
+  --accent: #ececec;
+  --accent-foreground: #0a0a0a;
+  --border: #e6e6e6;
+  --input: #dcdcdc;
+  --ring: #0a0a0a;
+  --site-elev: #f7f7f7;
+  --site-grid: rgb(0 0 0 / 0.06);
+  color-scheme: light;
+}
+
+html:has(.site-theme) {
+  background: #000;
+}
+html:has(.site-theme.site-light) {
+  background: #fff;
+}
+
+/* ── revelar ao rolar (só depois que o JS marca .motion-ready; sem JS tudo aparece) ── */
+.motion-ready [data-reveal] {
+  opacity: 0;
+  transform: translate3d(0, 28px, 0);
+  filter: blur(6px);
+  transition:
+    opacity 0.9s cubic-bezier(0.2, 0.7, 0.2, 1),
+    transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1),
+    filter 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.motion-ready [data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+  filter: none;
+}
+.motion-ready [data-reveal="fade"] {
+  transform: none;
+}
+.motion-ready [data-reveal="scale"] {
+  transform: scale(0.96);
+}
+
+/* paralaxe: o JS só escreve --py; o elemento é um pouco maior que a moldura */
+[data-parallax] {
+  transform: translate3d(0, var(--py, 0px), 0) scale(1.12);
+  will-change: transform;
+}
+
+/* ── mapa de danos: polígonos "desenhados" quando o bloco entra na tela ── */
+.motion-ready [data-reveal] .dm-shape {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  fill-opacity: 0;
+  transition:
+    stroke-dashoffset 1.4s cubic-bezier(0.6, 0, 0.2, 1),
+    fill-opacity 0.8s ease;
+  transition-delay: calc(300ms + var(--i, 0) * 160ms), calc(1000ms + var(--i, 0) * 160ms);
+}
+.motion-ready [data-reveal].is-in .dm-shape {
+  stroke-dashoffset: 0;
+  fill-opacity: 0.38;
+}
+.motion-ready [data-reveal] .dm-dot,
+.motion-ready [data-reveal] .dm-label {
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  transform: scale(0.4);
+  transition:
+    opacity 0.5s ease,
+    transform 0.5s cubic-bezier(0.3, 1.5, 0.5, 1);
+  transition-delay: calc(900ms + var(--i, 0) * 160ms);
+}
+.motion-ready [data-reveal].is-in .dm-dot,
+.motion-ready [data-reveal].is-in .dm-label {
+  opacity: 1;
+  transform: none;
+}
+
+/* ── título do hero: palavras sobem em sequência ── */
+@keyframes site-rise {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.5em, 0);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+    filter: none;
+  }
+}
+.site-rise > span {
+  display: inline-block;
+  animation: site-rise 0.9s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--w, 0) * 70ms + 80ms);
+}
+.site-fade-in {
+  animation: site-rise 1s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: var(--d, 400ms);
+}
+
+/* ── faixa contínua de públicos ── */
+@keyframes site-marquee {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+.site-marquee {
+  display: flex;
+  width: max-content;
+  animation: site-marquee 38s linear infinite;
+}
+.site-marquee-mask {
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+/* ── zoom lento (efeito "vídeo") nas imagens de destaque ── */
+@keyframes site-kenburns {
+  from {
+    transform: scale(1.02) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(-1.5%, -1%, 0);
+  }
+}
+.site-kenburns {
+  animation: site-kenburns 22s ease-in-out infinite alternate;
+}
+
+/* cursor piscando do campo de "prompt" */
+@keyframes site-caret {
+  50% {
+    opacity: 0;
+  }
+}
+.site-caret {
+  animation: site-caret 1s steps(1) infinite;
+}
+
+/* brilho que percorre a borda do campo de prompt */
+@keyframes site-sheen {
+  to {
+    background-position: 200% 0;
+  }
+}
+.site-sheen {
+  background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.14) 50%, transparent 70%) 0 0 / 200% 100%;
+  animation: site-sheen 6s linear infinite;
+}
+.site-light .site-sheen {
+  background-image: linear-gradient(110deg, transparent 30%, rgb(0 0 0 / 0.06) 50%, transparent 70%);
+}
+
+/* "Reduzir movimento": mantém fades e o desenho dos contornos; tira deslocamentos, zoom, desfoque e paralaxe */
+@media (prefers-reduced-motion: reduce) {
+  .motion-ready [data-reveal],
+  .motion-ready [data-reveal="scale"] {
+    transform: none;
+    filter: none;
+  }
+  .motion-ready [data-reveal] .dm-dot,
+  .motion-ready [data-reveal] .dm-label {
+    transform: none;
+  }
+  .site-rise > span,
+  .site-fade-in {
+    animation-name: site-fade;
+  }
+  .site-marquee,
+  .site-kenburns,
+  .site-sheen {
+    animation: none;
+  }
+  [data-parallax] {
+    transform: scale(1.12);
+  }
+}
+@keyframes site-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* logotipo em PNG preto: inverte no tema escuro do site (independe do tema do app) */
+.site-theme .site-logo {
+  filter: invert(1);
+}
+.site-theme.site-light .site-logo {
+  filter: none;
+}

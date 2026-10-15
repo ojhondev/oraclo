@@ -29,6 +29,9 @@ export function DamageMap({
         d.geometry === "area" ? (
           <polygon
             key={i}
+            className="dm-shape"
+            pathLength={1}
+            style={{ "--i": i } as React.CSSProperties}
             points={d.points.map((p) => p.join(",")).join(" ")}
             fill={d.color}
             fillOpacity={0.38}
@@ -37,7 +40,7 @@ export function DamageMap({
             strokeLinejoin="round"
           />
         ) : d.geometry === "ponto" ? (
-          <g key={i}>
+          <g key={i} className="dm-dot" style={{ "--i": i } as React.CSSProperties}>
             <circle cx={d.points[0]![0]} cy={d.points[0]![1]} r={9 * u} fill={d.color} stroke="#fff" strokeWidth={2 * u} />
           </g>
         ) : null,
@@ -48,6 +51,7 @@ export function DamageMap({
           const label = d.code;
           return (
             <g key={`l${i}`} transform={`translate(${x} ${y})`}>
+              <g className="dm-label" style={{ "--i": i } as React.CSSProperties}>
               <rect x={-17 * u} y={d.geometry === "ponto" ? -32 * u : -10 * u} width={34 * u} height={20 * u} rx={10 * u} fill="#0a0a0a" fillOpacity={0.82} />
               <text
                 y={d.geometry === "ponto" ? -18 * u : 4 * u}
@@ -59,6 +63,7 @@ export function DamageMap({
               >
                 {label}
               </text>
+              </g>
             </g>
           );
         })}

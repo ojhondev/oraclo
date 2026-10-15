@@ -64,19 +64,19 @@ const TEAM = [
 export default function EmpresasPage() {
   return (
     <>
-      <section className="px-4 pt-16 pb-16 sm:px-8 sm:pt-24 lg:px-12">
-        <p className="text-[14px] font-medium text-muted-foreground">ArchRay para empresas</p>
-        <h1 className="mt-4 max-w-[18ch] text-[42px] leading-[1.03] font-medium tracking-[-0.04em] text-balance sm:text-[68px]">
+      <section className="px-4 pt-20 pb-20 sm:px-6 sm:pt-28 lg:px-8">
+        <p className="site-fade-in text-[14px] font-medium text-muted-foreground">ArchRay para empresas</p>
+        <h1 className="site-fade-in mt-4 max-w-[18ch] text-[42px] leading-[1.03] font-medium tracking-[-0.045em] text-balance sm:text-[80px]" style={{ "--d": "120ms" } as React.CSSProperties}>
           Diagnóstico de edificações para o escritório inteiro
         </h1>
-        <p className="mt-6 max-w-2xl text-[17px] leading-7 text-muted-foreground sm:text-[19px] sm:leading-8">
+        <p className="site-fade-in mt-6 max-w-2xl text-[17px] leading-7 text-muted-foreground sm:text-[19px] sm:leading-8" style={{ "--d": "260ms" } as React.CSSProperties}>
           Do campo ao laudo, a mesma plataforma para quem fotografa, quem desenha os danos e quem aprova o orçamento.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="site-fade-in mt-8 flex flex-wrap gap-3" style={{ "--d": "380ms" } as React.CSSProperties}>
           <Link href="/cadastro" className="inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
             Criar a conta do escritório
           </Link>
-          <Link href="/#produto" className="inline-flex h-11 items-center rounded-full border px-6 text-[15px] font-medium hover:bg-muted">
+          <Link href="/#produto" className="inline-flex h-11 items-center rounded-full border px-6 text-[15px] font-medium hover:bg-secondary">
             Conhecer o produto
           </Link>
         </div>
@@ -84,12 +84,12 @@ export default function EmpresasPage() {
 
       <section className="border-t">
         {SEGMENTS.map((s, i) => (
-          <div key={s.id} id={s.id} className="grid scroll-mt-16 gap-8 border-b px-4 py-14 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:gap-20 lg:px-12 lg:py-20">
-            <div>
+          <div key={s.id} id={s.id} className="grid scroll-mt-16 gap-8 border-b px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-20 lg:px-8 lg:py-24">
+            <div data-reveal>
               <span className="text-[13px] text-muted-foreground tabular-nums">0{i + 1}</span>
               <h2 className="mt-2 text-[30px] leading-[1.1] font-medium tracking-[-0.025em] sm:text-[40px]">{s.title}</h2>
             </div>
-            <div>
+            <div data-reveal data-reveal-delay={120}>
               <p className="text-[18px] leading-8 text-balance sm:text-[20px]">{s.pain}</p>
               <ul className="mt-6 grid gap-3 border-t pt-6 text-[15.5px]">
                 {s.gain.map((g) => (
@@ -104,11 +104,11 @@ export default function EmpresasPage() {
         ))}
       </section>
 
-      <section className="bg-muted px-4 py-20 sm:px-8 sm:py-24 lg:px-12">
-        <h2 className="max-w-[20ch] text-[32px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[44px]">Feito para trabalhar em equipe</h2>
-        <ul className="mt-12 grid gap-px overflow-hidden rounded-2xl border bg-border sm:grid-cols-2 lg:grid-cols-3">
-          {TEAM.map((t) => (
-            <li key={t.title} className="bg-background p-6 sm:p-7">
+      <section className="px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
+        <h2 className="max-w-[20ch] text-[32px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[56px]" data-reveal>Feito para trabalhar em equipe</h2>
+        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {TEAM.map((t, i) => (
+            <li key={t.title} className="rounded-lg border bg-[var(--site-elev)] p-6 sm:p-7" data-reveal data-reveal-delay={(i % 3) * 100}>
               <t.icon className="size-[18px]" strokeWidth={1.6} />
               <h3 className="mt-4 text-[17px] font-medium">{t.title}</h3>
               <p className="mt-1.5 text-[14.5px] leading-6 text-muted-foreground">{t.text}</p>
@@ -117,19 +117,19 @@ export default function EmpresasPage() {
         </ul>
       </section>
 
-      <section className="px-4 py-20 sm:px-8 sm:py-24 lg:px-12">
+      <section className="px-4 pb-24 sm:px-6 lg:px-8">
         <SectionHead title="Histórias" href="/historias" />
         <ul className="mt-8 grid gap-8 md:grid-cols-3">
           {STORIES.map((s) => (
-            <li key={s.slug}>
-              <StoryCard story={s} />
+            <li key={s.slug} className={STORIES.length === 1 ? "md:col-span-3" : undefined}>
+              <StoryCard story={s} large={STORIES.length === 1} />
             </li>
           ))}
         </ul>
       </section>
 
-      <section className="px-4 pb-24 sm:px-8 lg:px-12">
-        <div className="rounded-3xl bg-foreground px-6 py-16 text-center text-background sm:py-24">
+      <section className="px-4 pb-24 sm:px-6 lg:px-8">
+        <div className="rounded-lg bg-foreground px-6 py-20 text-center text-background sm:py-28" data-reveal="scale">
           <h2 className="mx-auto max-w-[20ch] text-[32px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[48px]">
             Traga o próximo projeto do escritório
           </h2>

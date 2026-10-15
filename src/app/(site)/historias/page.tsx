@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 export default function HistoriasPage() {
   const [first, ...rest] = STORIES;
   return (
-    <div className="px-4 pt-14 pb-24 sm:px-8 sm:pt-20 lg:px-12">
-      <h1 className="text-[44px] leading-[1.05] font-medium tracking-[-0.03em] sm:text-[60px]">Histórias</h1>
-      <p className="mt-3 max-w-xl text-[17px] leading-7 text-muted-foreground">
+    <div className="px-4 pt-16 pb-24 sm:px-6 sm:pt-24 lg:px-8">
+      <h1 className="site-fade-in text-[44px] leading-[1.05] font-medium tracking-[-0.04em] sm:text-[72px]">Histórias</h1>
+      <p className="site-fade-in mt-4 max-w-xl text-[17px] leading-7 text-muted-foreground" style={{ "--d": "200ms" } as React.CSSProperties}>
         Imóveis reais, do levantamento ao orçamento. Cada história mostra os dados e as imagens usados, com os créditos.
       </p>
       {first && (

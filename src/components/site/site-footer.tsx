@@ -40,12 +40,12 @@ const COLS: { title: string; links: { href: string; label: string }[] }[] = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t px-4 pt-14 pb-10 sm:px-8 lg:px-12">
+    <footer className="px-4 pt-20 pb-10 sm:px-6 lg:px-8">
       <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
         <div>
           <Link href="/" className="flex items-center gap-2" aria-label="ArchRay">
             <BrandMark className="h-[18px]" />
-            <BrandLogo className="h-[17px]" />
+            <BrandLogo className="site-logo h-[17px]" />
           </Link>
           <p className="mt-4 max-w-xs text-[14px] leading-6 text-muted-foreground">
             Mapa de danos com IA. Aponte os danos, e o orçamento e o laudo saem prontos.

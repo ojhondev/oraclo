@@ -1,15 +1,8 @@
-import { SiteFooter } from "@/components/site/site-footer";
-import { SiteHeader } from "@/components/site/site-header";
+import { SiteShell } from "@/components/site/site-shell";
 
 export const metadata = { title: { default: "Index", template: "%s · ArchRay" } };
 
-/** Index: área pública de publicações sobre o ArchRay, com o cabeçalho do site. */
+/** Index: área pública de publicações sobre o ArchRay, dentro do site (mesmo tema e cabeçalho). */
 export default function IndexLayout({ children }: LayoutProps<"/">) {
-  return (
-    <div className="flex min-h-svh flex-col bg-background">
-      <SiteHeader />
-      <main className="flex-1">{children}</main>
-      <SiteFooter />
-    </div>
-  );
+  return <SiteShell>{children}</SiteShell>;
 }

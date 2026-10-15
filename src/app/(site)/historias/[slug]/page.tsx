@@ -30,20 +30,22 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
 
   return (
     <article className="pb-24">
-      <header className="px-4 pt-12 sm:px-8 sm:pt-16 lg:px-12">
+      <header className="px-4 pt-14 sm:px-6 sm:pt-20 lg:px-8">
         <Link href="/historias" className="inline-flex items-center gap-1.5 text-[14px] text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-3.5" /> Histórias
         </Link>
-        <p className="mt-8 text-[14px]">
+        <p className="site-fade-in mt-8 text-[14px]">
           <span className="font-medium">{story.segment}</span>
           <span className="ml-2 text-muted-foreground">{fmtStoryDate(story.date)}</span>
         </p>
-        <h1 className="mt-3 max-w-[22ch] text-[36px] leading-[1.06] font-medium tracking-[-0.035em] text-balance sm:text-[58px]">{story.title}</h1>
-        <p className="mt-5 max-w-2xl text-[17px] leading-8 text-muted-foreground sm:text-[19px]">{story.summary}</p>
+        <h1 className="site-fade-in mt-3 max-w-[22ch] text-[36px] leading-[1.04] font-medium tracking-[-0.04em] text-balance sm:text-[64px]" style={{ "--d": "120ms" } as React.CSSProperties}>{story.title}</h1>
+        <p className="site-fade-in mt-5 max-w-2xl text-[17px] leading-8 text-muted-foreground sm:text-[19px]" style={{ "--d": "240ms" } as React.CSSProperties}>{story.summary}</p>
       </header>
 
-      <div className="relative mt-10 aspect-[16/9] overflow-hidden bg-muted sm:mx-8 sm:rounded-3xl lg:mx-12">
-        <Image src={story.cover} alt={story.coverAlt} fill priority sizes="100vw" className="object-cover" />
+      <div className="site-fade-in relative mt-12 aspect-[16/9] overflow-hidden bg-secondary sm:mx-6 sm:rounded-lg lg:mx-8" style={{ "--d": "360ms" } as React.CSSProperties}>
+        <div className="absolute inset-0" data-parallax="0.1">
+          <Image src={story.cover} alt={story.coverAlt} fill priority sizes="100vw" className="object-cover" />
+        </div>
       </div>
 
       {/* números */}
@@ -54,16 +56,16 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
           ["Orçamento estimado", fmtBRL(CARMO.totalCents)],
           ["Prioridade alta (GUT ≥ 64)", String(urgent)],
         ].map(([k, v]) => (
-          <div key={k} className="bg-background px-4 py-6 sm:px-8 lg:px-12">
+          <div key={k} className="bg-background px-4 py-6 sm:px-6 lg:px-8" data-reveal>
             <dt className="text-[13px] text-muted-foreground">{k}</dt>
             <dd className="mt-1 text-[26px] font-medium tracking-[-0.02em] tabular-nums sm:text-[32px]">{v}</dd>
           </div>
         ))}
       </dl>
 
-      <div className="grid gap-16 px-4 pt-16 sm:px-8 lg:grid-cols-[1fr_minmax(0,640px)_1fr] lg:px-12">
+      <div className="grid gap-16 px-4 pt-20 sm:px-6 lg:grid-cols-[1fr_minmax(0,680px)_1fr] lg:px-8">
         <div className="hidden lg:block" />
-        <div className="grid gap-6 text-[17px] leading-8">
+        <div className="grid gap-6 text-[17px] leading-8" data-reveal>
           <h2 className="text-[26px] leading-tight font-medium tracking-[-0.02em]">O imóvel</h2>
           <p>
             A Igreja de Nossa Senhora do Carmo, na cidade da Horta (ilha do Faial, Açores), foi o primeiro templo carmelita português erguido fora do continente.
@@ -84,7 +86,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
             Os danos de área foram contornados com o Contorno IA, que roda no navegador; os de vegetação foram marcados como pontos. Cada dano recebeu gravidade,
             urgência e tendência, e o orçamento saiu da tabela de preços sugerida.
           </p>
-          <p className="rounded-2xl bg-muted p-5 text-[15px] leading-7">
+          <p className="rounded-lg border bg-[var(--site-elev)] p-5 text-[15px] leading-7">
             As medidas são estimadas — ninguém foi a campo. Num trabalho real, uma cota medida com trena calibra a vista em segundos e todas as áreas e custos se
             recalculam.
           </p>
@@ -93,15 +95,15 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
       </div>
 
       {/* vistas */}
-      <div className="mt-16 grid gap-6 px-4 sm:px-8 lg:grid-cols-[1.35fr_1fr] lg:px-12">
-        <figure>
-          <div className="overflow-hidden rounded-2xl bg-[#1a1a1a]">
+      <div className="mt-20 grid gap-6 px-4 sm:px-6 lg:grid-cols-[1.35fr_1fr] lg:px-8">
+        <figure data-reveal="fade">
+          <div className="overflow-hidden rounded-lg bg-[#1a1a1a]">
             <DamageMap {...CARMO.convento} alt="Convento do Carmo com os danos mapeados" className="block h-auto w-full" />
           </div>
           <figcaption className="mt-2 text-[13px] text-muted-foreground">Convento — fachada do pátio (2010), 7 danos.</figcaption>
         </figure>
-        <figure>
-          <div className="overflow-hidden rounded-2xl bg-[#1a1a1a]">
+        <figure data-reveal="fade" data-reveal-delay={200}>
+          <div className="overflow-hidden rounded-lg bg-[#1a1a1a]">
             <DamageMap {...CARMO.igreja} alt="Fachada da igreja retificada com os danos mapeados" className="block h-auto w-full" />
           </div>
           <figcaption className="mt-2 text-[13px] text-muted-foreground">Fachada principal retificada (2010), 4 danos.</figcaption>
@@ -109,11 +111,11 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
       </div>
 
       {/* prioridades */}
-      <div className="mt-16 px-4 sm:px-8 lg:px-12">
+      <div className="mt-20 px-4 sm:px-6 lg:px-8" data-reveal>
         <h2 className="text-[26px] leading-tight font-medium tracking-[-0.02em]">Prioridades e orçamento</h2>
-        <div className="mt-6 overflow-x-auto rounded-2xl border">
+        <div className="mt-6 overflow-x-auto rounded-lg border">
           <table className="w-full min-w-[560px] text-[14px]">
-            <thead className="bg-muted/60 text-left text-[12.5px] text-muted-foreground">
+            <thead className="bg-secondary text-left text-[12.5px] text-muted-foreground">
               <tr>
                 <th className="px-4 py-3 font-medium">Dano</th>
                 <th className="px-3 py-3 text-right font-medium">Quantidade</th>
@@ -139,7 +141,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
               ))}
             </tbody>
             <tfoot>
-              <tr className="border-t bg-muted/40 font-medium">
+              <tr className="border-t bg-secondary font-medium">
                 <td className="px-4 py-3" colSpan={3}>
                   Total
                 </td>
@@ -151,22 +153,22 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
       </div>
 
       {/* depois */}
-      <div className="mt-16 grid gap-6 px-4 sm:px-8 lg:grid-cols-2 lg:px-12">
-        <figure>
-          <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-muted">
+      <div className="mt-20 grid gap-6 px-4 sm:px-6 lg:grid-cols-2 lg:px-8">
+        <figure data-reveal>
+          <div className="relative aspect-[3/2] overflow-hidden rounded-lg bg-secondary">
             <Image src="/site/carmo-igreja-2010.jpg" alt="Igreja do Carmo em 2010, antes do restauro" fill sizes="(min-width:1024px) 50vw, 100vw" className="object-cover" />
           </div>
           <figcaption className="mt-2 text-[13px] text-muted-foreground">2010 — antes do restauro.</figcaption>
         </figure>
-        <figure>
-          <div className="relative aspect-[3/2] overflow-hidden rounded-2xl bg-muted">
+        <figure data-reveal data-reveal-delay={150}>
+          <div className="relative aspect-[3/2] overflow-hidden rounded-lg bg-secondary">
             <Image src="/site/carmo-igreja-2021.jpg" alt="Igreja do Carmo em 2021, restaurada" fill sizes="(min-width:1024px) 50vw, 100vw" className="object-cover" />
           </div>
           <figcaption className="mt-2 text-[13px] text-muted-foreground">2021 — restaurada e reaberta ao culto.</figcaption>
         </figure>
       </div>
 
-      <footer className="mt-16 border-t px-4 pt-8 sm:px-8 lg:px-12">
+      <footer className="mt-20 border-t px-4 pt-8 sm:px-6 lg:px-8">
         <p className="text-[13px] font-medium">Fontes e créditos</p>
         <ul className="mt-2 grid gap-1 text-[13px] leading-6 text-muted-foreground">
           {story.credits.map((c) => (

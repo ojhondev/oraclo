@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { POSTS, fmtPostDate } from "@/lib/updates";
-import { Cover, PostCard } from "./post-card";
+import { Cover, PostCard } from "../post-card";
 
 export const metadata = { title: "Index", description: "Novidades e melhorias da plataforma ArchRay." };
 

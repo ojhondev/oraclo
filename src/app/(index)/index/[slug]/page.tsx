@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { POSTS, fmtPostDate, getPost, type PostBlock } from "@/lib/updates";
-import { PostCard } from "../post-card";
+import { PostCard } from "../../post-card";
 import { ShareButton, Toc } from "./toc";
 
 export function generateStaticParams() {

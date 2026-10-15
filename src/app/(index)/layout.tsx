@@ -5,7 +5,7 @@ import { getUser } from "@/lib/auth";
 export const metadata = { title: { default: "Index", template: "%s · ArchRay" } };
 
 /** Index: área pública de publicações sobre o ArchRay. */
-export default async function IndexLayout({ children }: LayoutProps<"/index">) {
+export default async function IndexLayout({ children }: LayoutProps<"/">) {
   const user = await getUser();
   return (
     <div className="flex min-h-svh flex-col bg-background">

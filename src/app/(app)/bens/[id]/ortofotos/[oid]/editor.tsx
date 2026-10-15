@@ -19,6 +19,7 @@ import {
   Search,
   Trash2,
   Undo2,
+  WandSparkles,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -36,12 +37,16 @@ import { TREND_LABELS, URGENCY_LABELS, budget, damageCostCents, fmtBRL, gut, pri
 import type { schema } from "@/lib/db";
 import { calibrate, createDamage, deleteDamage, deleteOrthophoto, setScale, updateDamage } from "../actions";
 import { DamagePattern, lineStyle } from "./patterns";
+import { getSam, type SamProgress } from "@/lib/sam/client";
+import type { SamMask, SamRegion } from "@/lib/sam/protocol";
 
 type Orthophoto = typeof schema.orthophotos.$inferSelect;
 type Damage = typeof schema.damages.$inferSelect;
 type DamageType = typeof schema.damageTypes.$inferSelect;
 type View = { x: number; y: number; w: number; h: number };
-type Tool = "mover" | "desenhar" | "calibrar";
+type Tool = "mover" | "desenhar" | "calibrar" | "contorno";
+type AiPoint = { p: Pt; label: 0 | 1 };
+type AiStatus = "idle" | "loading" | "encoding" | "decoding";
 
 const PANELS_KEY = "archray:editor-paineis";
 
@@ -107,6 +112,15 @@ export function DamageMapEditor({
     });
   const [busy, startBusy] = useTransition();
   const [drag, setDrag] = useState<{ index: number; points: Pt[] } | null>(null);
+  // contorno IA (SlimSAM no navegador)
+  const [aiPoints, setAiPoints] = useState<AiPoint[]>([]);
+  const [aiMasks, setAiMasks] = useState<SamMask[]>([]);
+  const [aiIndex, setAiIndex] = useState(0);
+  const [aiStatus, setAiStatus] = useState<AiStatus>("idle");
+  const [aiProgress, setAiProgress] = useState<SamProgress | null>(null);
+  const [aiInfo, setAiInfo] = useState<string | null>(null);
+  const encodedRef = useRef<{ region: SamRegion; job: Promise<void> } | null>(null);
+  const aiSeq = useRef(0);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -164,11 +178,139 @@ export function DamageMapEditor({
     zoomAt([v.x + v.w / 2, v.y + v.h / 2], f);
   };
 
+  /* ── contorno IA ── */
+  const clearAi = useCallback(() => {
+    aiSeq.current++;
+    setAiPoints([]);
+    setAiMasks([]);
+    setAiIndex(0);
+  }, []);
+
+  /** Região da imagem visível na tela (o que o usuário vê é o que a IA analisa), unida aos pontos. */
+  const visibleRegion = useCallback(
+    (extra: Pt[] = []): SamRegion => {
+      const v = viewRef.current;
+      const s = Math.min(box.w / v.w, box.h / v.h);
+      const vw = box.w / s;
+      const vh = box.h / s;
+      const cx = v.x + v.w / 2;
+      const cy = v.y + v.h / 2;
+      let x0 = cx - vw / 2;
+      let y0 = cy - vh / 2;
+      let x1 = cx + vw / 2;
+      let y1 = cy + vh / 2;
+      for (const [x, y] of extra) {
+        x0 = Math.min(x0, x - 8);
+        y0 = Math.min(y0, y - 8);
+        x1 = Math.max(x1, x + 8);
+        y1 = Math.max(y1, y + 8);
+      }
+      x0 = Math.max(0, Math.floor(x0));
+      y0 = Math.max(0, Math.floor(y0));
+      x1 = Math.min(W, Math.ceil(x1));
+      y1 = Math.min(H, Math.ceil(y1));
+      return { x: x0, y: y0, w: Math.max(16, x1 - x0), h: Math.max(16, y1 - y0) };
+    },
+    [box, W, H],
+  );
+
+  const failAi = useCallback((e: unknown) => {
+    console.error("[contorno IA]", e);
+    setAiStatus("idle");
+    setAiProgress(null);
+    encodedRef.current = null;
+    toast.error("Contorno IA indisponível neste navegador/computador. Use o desenho manual (clique ponto a ponto).", {
+      description: (e as Error)?.message,
+    });
+    setTool("desenhar");
+  }, []);
+
+  /** Garante que a região visível (com os pontos) está codificada; reaproveita se ainda serve. */
+  const ensureEncoded = useCallback(
+    (points: Pt[]) => {
+      const want = visibleRegion(points);
+      const cur = encodedRef.current;
+      const covers =
+        cur &&
+        points.every(([x, y]) => x >= cur.region.x && y >= cur.region.y && x <= cur.region.x + cur.region.w && y <= cur.region.y + cur.region.h);
+      // reaproveita se cobre os pontos e não ficou muito mais grosseira que o zoom atual
+      if (cur && covers && Math.max(cur.region.w, cur.region.h) <= Math.max(want.w, want.h) * 1.6) return cur.job;
+      const sam = getSam();
+      sam.onProgress = setAiProgress;
+      const job = (async () => {
+        setAiStatus("loading");
+        await sam.load();
+        setAiStatus("encoding");
+        setAiProgress(null);
+        const ms = await sam.encode(ortho.url, want);
+        setAiInfo(`${sam.backend === "webgpu" ? "WebGPU" : `CPU · ${sam.threads} thread${sam.threads > 1 ? "s" : ""}`} · análise ${(ms / 1000).toFixed(1)} s`);
+      })();
+      encodedRef.current = { region: want, job };
+      job.catch(() => {
+        if (encodedRef.current?.job === job) encodedRef.current = null;
+      });
+      return job;
+    },
+    [ortho.url, visibleRegion],
+  );
+
+  const runAi = useCallback(
+    async (points: AiPoint[]) => {
+      const seq = ++aiSeq.current;
+      if (!points.length) {
+        setAiMasks([]);
+        return;
+      }
+      try {
+        await ensureEncoded(points.map((a) => a.p));
+        if (seq !== aiSeq.current) return;
+        setAiStatus("decoding");
+        const masks = await getSam().decode(points.map((a) => a.p), points.map((a) => a.label));
+        if (seq !== aiSeq.current) return;
+        setAiStatus("idle");
+        const valid = masks.filter((m) => m.points.length >= 3);
+        if (!valid.length) {
+          setAiMasks([]);
+          toast.info("A IA não encontrou uma região aqui. Tente clicar mais ao centro da mancha ou aproximar o zoom.");
+          return;
+        }
+        // opções vêm do contorno mais justo ao mais amplo; ao refinar, mantém o nível escolhido.
+        // No primeiro clique, o mais justo que a IA considere razoável (dano costuma ser local).
+        setAiMasks(valid);
+        setAiIndex((cur) => {
+          if (points.length > 1 && cur < valid.length) return cur;
+          const i = valid.findIndex((m) => m.score >= 0.5);
+          return i >= 0 ? i : 0;
+        });
+      } catch (e) {
+        if (seq === aiSeq.current) failAi(e);
+      }
+    },
+    [ensureEncoded, failAi],
+  );
+
+  const startAi = useCallback(() => {
+    setTool("contorno");
+    setDraft([]);
+    setSelected(null);
+    clearAi();
+    if (activeType?.geometry !== "area") {
+      const first = types.find((t) => t.geometry === "area");
+      if (activeType && first) toast.info(`Contorno IA é para danos de área — usando "${first.name}".`);
+      setTypeId(first?.id ?? null);
+    }
+    // já baixa o modelo e analisa a vista atual, para o primeiro clique ser rápido
+    ensureEncoded([])
+      .then(() => setAiStatus((s) => (s === "encoding" ? "idle" : s)))
+      .catch(failAi);
+  }, [activeType, types, clearAi, ensureEncoded, failAi]);
+
   /* ── desenho ── */
   const cancelDraft = useCallback(() => {
     setDraft([]);
+    clearAi();
     if (tool === "calibrar") setTool("mover");
-  }, [tool]);
+  }, [tool, clearAi]);
 
   const finishDraft = useCallback(
     (points: Pt[]) => {
@@ -207,6 +349,20 @@ export function DamageMapEditor({
     [activeType, mm, ortho.id, siteId, scale],
   );
 
+  const aiPolygon = aiMasks[aiIndex]?.points ?? null;
+  const saveAi = useCallback(() => {
+    if (!aiPolygon || aiStatus !== "idle") return;
+    finishDraft(aiPolygon as Pt[]);
+    clearAi();
+  }, [aiPolygon, aiStatus, finishDraft, clearAi]);
+  const cycleAi = () => aiMasks.length > 1 && setAiIndex((i) => (i + 1) % aiMasks.length);
+  const undoAi = () => {
+    const next = aiPoints.slice(0, -1);
+    setAiPoints(next);
+    if (next.length) runAi(next);
+    else clearAi();
+  };
+
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       const t = e.target;
@@ -215,6 +371,15 @@ export function DamageMapEditor({
       if (e.key === "Escape") {
         cancelDraft();
         setSelected(null);
+      }
+      if (tool === "contorno" && aiPoints.length) {
+        if (e.key === "Enter") saveAi();
+        if (e.key === "Backspace") undoAi();
+        if (e.key === "Tab") {
+          e.preventDefault();
+          cycleAi();
+        }
+        return;
       }
       if (e.key === "Enter" && draft.length) finishDraft(draft);
       if (e.key === "Backspace" && draft.length) setDraft((d) => d.slice(0, -1));
@@ -315,6 +480,13 @@ export function DamageMapEditor({
       else setDraft((d) => [...d, p]);
       return;
     }
+    if (tool === "contorno" && activeType?.geometry === "area" && canEdit) {
+      // Shift ou Alt + clique = "não é isso" (ponto negativo)
+      const next = [...aiPoints, { p, label: e.shiftKey || e.altKey ? 0 : 1 } as AiPoint];
+      setAiPoints(next);
+      runAi(next);
+      return;
+    }
     if ((e.target as Element).getAttribute("data-damage") === null) setSelected(null);
   }
 
@@ -324,6 +496,9 @@ export function DamageMapEditor({
 
   function pickType(id: string) {
     setTypeId(id);
+    // no Contorno IA, trocar para outro tipo de área mantém a ferramenta (e o rascunho)
+    if (tool === "contorno" && typeById.get(id)?.geometry === "area") return;
+    clearAi();
     setTool("desenhar");
     setDraft([]);
     setSelected(null);
@@ -387,7 +562,7 @@ export function DamageMapEditor({
   const orc = useMemo(() => budget(damages, prices), [damages, prices]);
   const costByType = new Map(orc.rows.map((r) => [r.typeId, r]));
 
-  const cursor = tool === "desenhar" || tool === "calibrar" ? "crosshair" : panRef.current?.moved ? "grabbing" : "grab";
+  const cursor = tool === "desenhar" || tool === "calibrar" || tool === "contorno" ? (aiStatus !== "idle" && tool === "contorno" ? "progress" : "crosshair") : panRef.current?.moved ? "grabbing" : "grab";
 
   /* ── render ── */
   function renderDamage(d: Damage) {
@@ -581,7 +756,7 @@ export function DamageMapEditor({
                     onClick={() => pickType(t.id)}
                     className={cn(
                       "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] hover:bg-sidebar-accent disabled:cursor-default disabled:hover:bg-transparent",
-                      typeId === t.id && tool === "desenhar" && "bg-sidebar-accent font-medium ring-1 ring-brand/40",
+                      typeId === t.id && (tool === "desenhar" || tool === "contorno") && "bg-sidebar-accent font-medium ring-1 ring-brand/40",
                     )}
                   >
                     <Swatch type={t} />
@@ -665,22 +840,84 @@ export function DamageMapEditor({
                   ))}
                 </g>
               )}
+
+              {/* rascunho do contorno IA */}
+              {tool === "contorno" && (aiPolygon || aiPoints.length > 0) && (
+                <g pointerEvents="none">
+                  {aiPolygon && activeType && (
+                    <>
+                      <polygon points={toPath(aiPolygon as Pt[])} fill="none" stroke="#000" strokeOpacity={0.6} strokeWidth={4} vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+                      <polygon points={toPath(aiPolygon as Pt[])} fill={activeType.color} fillOpacity={0.3} stroke={activeType.color} strokeWidth={2} strokeDasharray="6 3" vectorEffect="non-scaling-stroke" strokeLinejoin="round" />
+                    </>
+                  )}
+                  {aiPoints.map(({ p: [x, y], label }, i) => (
+                    <g key={i}>
+                      <circle cx={x} cy={y} r={7 * unit} fill={label ? "#fff" : "#0a0a0a"} stroke={label ? "#0a0a0a" : "#fff"} strokeWidth={1.5 * unit} />
+                      <path
+                        d={label ? `M${x - 3.5 * unit},${y}H${x + 3.5 * unit}M${x},${y - 3.5 * unit}V${y + 3.5 * unit}` : `M${x - 3.5 * unit},${y}H${x + 3.5 * unit}`}
+                        stroke={label ? "#0a0a0a" : "#fff"}
+                        strokeWidth={1.8 * unit}
+                      />
+                    </g>
+                  ))}
+                </g>
+              )}
             </svg>
           </div>
 
           {/* ferramentas flutuantes */}
           <div className="absolute top-3 left-3 flex items-center gap-1 rounded-lg border border-white/10 bg-black/60 p-1 text-white backdrop-blur">
-            <ToolBtn active={tool === "mover"} onClick={() => { setTool("mover"); setDraft([]); }} label="Mover e selecionar (espaço + arrastar em qualquer modo)">
+            <ToolBtn active={tool === "mover"} onClick={() => { setTool("mover"); setDraft([]); clearAi(); }} label="Mover e selecionar (espaço + arrastar em qualquer modo)">
               <Hand className="size-4" />
             </ToolBtn>
             <ToolBtn onClick={() => zoomCenter(1 / 1.4)} label="Aproximar"><ZoomIn className="size-4" /></ToolBtn>
             <ToolBtn onClick={() => zoomCenter(1.4)} label="Afastar"><ZoomOut className="size-4" /></ToolBtn>
             <ToolBtn onClick={fit} label="Enquadrar"><Maximize className="size-4" /></ToolBtn>
+            {canEdit && (
+              <ToolBtn
+                active={tool === "contorno"}
+                onClick={() => (tool === "contorno" ? (clearAi(), setTool("mover")) : startAi())}
+                label="Contorno IA: clique sobre a mancha e a IA contorna (roda no seu navegador)"
+              >
+                <WandSparkles className="size-4" />
+              </ToolBtn>
+            )}
             {draft.length > 0 && (
               <ToolBtn onClick={() => setDraft((d) => d.slice(0, -1))} label="Desfazer último ponto (Backspace)"><Undo2 className="size-4" /></ToolBtn>
             )}
             {busy && <Loader2 className="mx-1.5 size-4 animate-spin opacity-70" />}
           </div>
+
+          {/* ações do rascunho do contorno IA */}
+          {tool === "contorno" && (aiPoints.length > 0 || aiInfo) && (
+            <div className="absolute right-3 bottom-14 left-3 flex justify-center">
+              <div className="flex flex-wrap items-center justify-center gap-1.5 rounded-full border border-white/10 bg-black/70 p-1 pl-3 text-[12px] text-white backdrop-blur">
+                {aiStatus !== "idle" && <Loader2 className="size-3.5 animate-spin opacity-80" />}
+                <span className="text-white/70">{aiInfo ?? "IA no navegador"}</span>
+                {aiPoints.length > 0 && (
+                  <>
+                    {aiMasks.length > 1 && (
+                      <button type="button" onClick={cycleAi} className="rounded-full px-2.5 py-1 hover:bg-white/15" title="Tab">
+                        Contorno: {aiMasks.length === 3 ? ["justo", "médio", "amplo"][aiIndex] : `${aiIndex + 1}/${aiMasks.length}`}
+                      </button>
+                    )}
+                    <button type="button" onClick={clearAi} className="rounded-full px-2.5 py-1 hover:bg-white/15" title="Esc">
+                      Descartar
+                    </button>
+                    <button
+                      type="button"
+                      onClick={saveAi}
+                      disabled={!aiPolygon || aiStatus !== "idle"}
+                      className="rounded-full bg-white px-3 py-1 font-medium text-black hover:bg-white/90 disabled:opacity-40"
+                      title="Enter"
+                    >
+                      Salvar dano
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* dica de uso */}
           <div className="pointer-events-none absolute right-3 bottom-3 left-3 flex justify-center">
@@ -689,6 +926,20 @@ export function DamageMapEditor({
                 ? draft.length
                   ? "Clique no segundo extremo da medida."
                   : "Clique no primeiro extremo de uma medida conhecida."
+                : tool === "contorno"
+                  ? aiStatus === "loading"
+                    ? aiProgress?.total
+                      ? `Baixando a IA (${aiProgress.label}) · ${(aiProgress.loaded / 1e6).toFixed(1)} de ${(aiProgress.total / 1e6).toFixed(1)} MB · só na primeira vez`
+                      : "Carregando a IA no navegador…"
+                    : aiStatus === "encoding"
+                      ? "Analisando a área visível da imagem…"
+                      : aiStatus === "decoding"
+                        ? "Contornando…"
+                        : !activeType || activeType.geometry !== "area"
+                          ? "Contorno IA: escolha na biblioteca um dano de área (mancha, perda de reboco…)"
+                          : aiPolygon
+                            ? `${activeType.name}: clique para incluir mais · Shift+clique exclui · Enter salva · Tab outra opção · Esc descarta`
+                            : `${activeType.name}: clique sobre a mancha para contornar · aproxime o zoom para mais detalhe`
                 : tool === "desenhar" && activeType
                   ? activeType.geometry === "ponto"
                     ? `${activeType.name}: clique para marcar. Esc para sair.`

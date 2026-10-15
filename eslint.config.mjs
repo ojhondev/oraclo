@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // caches e scripts locais (fora do git)
     ".cache/**",
     ".tmp/**",
+    // runtime do onnxruntime-web copiado por scripts/copy-ort.mjs
+    "public/ort/**",
   ]),
 ]);
 

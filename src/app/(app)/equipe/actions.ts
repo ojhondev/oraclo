@@ -35,12 +35,12 @@ async function deliverInvite(inviteId: string, inviterName: string) {
   const url = `${await appUrl()}/convite/${token}`;
   const { html, text } = emailLayout({
     title: `Convite para ${inv.orgName}`,
-    intro: `${inviterName} convidou você para documentar patrimônio no Oraclo como ${roles[inv.role].toLowerCase()}. Crie sua senha para entrar.`,
+    intro: `${inviterName} convidou você para documentar patrimônio no ArchRay como ${roles[inv.role].toLowerCase()}. Crie sua senha para entrar.`,
     button: "Aceitar convite",
     url,
     footer: `O convite vale por ${INVITE_DAYS} dias. Se você não esperava este e-mail, pode ignorá-lo.`,
   });
-  const r = await sendEmail({ to: inv.email, subject: `Convite para ${inv.orgName} no Oraclo`, html, text });
+  const r = await sendEmail({ to: inv.email, subject: `Convite para ${inv.orgName} no ArchRay`, html, text });
   return { sent: r.sent, url };
 }
 
@@ -57,7 +57,7 @@ export async function inviteMember(_: Result, form: FormData): Promise<Result> {
 
   const [existing] = await db.select({ orgId: users.orgId }).from(users).where(eq(users.email, email)).limit(1);
   if (existing?.orgId === me.orgId) return { error: "Essa pessoa já faz parte da equipe." };
-  if (existing) return { error: "Esse e-mail já tem conta no Oraclo em outra organização." };
+  if (existing) return { error: "Esse e-mail já tem conta no ArchRay em outra organização." };
 
   // um convite pendente por e-mail: revoga os anteriores
   await db

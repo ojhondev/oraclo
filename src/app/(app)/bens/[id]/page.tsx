@@ -214,7 +214,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
                 <div className="grid gap-2 rounded-xl border border-dashed p-6 text-center">
                   <p className="text-[14px] font-medium">Nenhuma vista {dx.campaign ? "nesta vistoria" : "ainda"}</p>
                   <p className="text-[13px] text-muted-foreground">
-                    Tire uma foto da fachada com o celular, marque os 4 cantos e informe as medidas: o Oraclo corrige a
+                    Tire uma foto da fachada com o celular, marque os 4 cantos e informe as medidas: o ArchRay corrige a
                     perspectiva e você aponta os danos em escala.
                   </p>
                   {canEdit && (

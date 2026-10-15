@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-/** Permite "Adicionar à tela inicial" no celular — abre o Oraclo como app, sem a barra do navegador. */
+/** Permite "Adicionar à tela inicial" no celular — abre o ArchRay como app, sem a barra do navegador. */
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Oraclo",
-    short_name: "Oraclo",
+    name: "ArchRay",
+    short_name: "ArchRay",
     description: "Mapa de danos com IA: diagnóstico, orçamento e laudo de edificações.",
     lang: "pt-BR",
     start_url: "/",

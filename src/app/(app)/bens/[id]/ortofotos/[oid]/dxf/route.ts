@@ -15,13 +15,13 @@ export async function GET(_: Request, ctx: RouteContext<"/bens/[id]/ortofotos/[o
   const image = await fetchImage(data.ortho.url);
 
   const readme = [
-    "Oraclo - mapa de danos em DXF",
+    "ArchRay - mapa de danos em DXF",
     "",
     `Projeto: ${data.site.name}`,
     `Ortofoto: ${data.ortho.name}`,
     data.ortho.mmPerPixel
       ? `Escala: ${data.ortho.mmPerPixel.toFixed(3)} mm/pixel - desenho em METROS, origem no canto inferior esquerdo da ortofoto.`
-      : "ATENÇÃO: ortofoto sem escala - o desenho está em PIXELS. Calibre no Oraclo e exporte de novo.",
+      : "ATENÇÃO: ortofoto sem escala - o desenho está em PIXELS. Calibre no ArchRay e exporte de novo.",
     "",
     "Como abrir:",
     "1. Extraia o ZIP mantendo os dois arquivos na MESMA pasta.",

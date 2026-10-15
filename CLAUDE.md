@@ -1,6 +1,8 @@
 @AGENTS.md
 
-# Oraclo — mapa de danos com IA
+# ArchRay (ex-Oraclo) — mapa de danos com IA
+
+Nome do produto: **ArchRay** (logotipo em `public/brand`). Pasta, repositório GitHub (ojhondev/oraclo), projeto Vercel e identificadores internos (cookies `oraclo_*`, IndexedDB `oraclo-capturas`) continuam com o nome antigo de propósito.
 
 Central visual de **diagnóstico de edificações existentes**: o imóvel aparece na tela
 (fachadas retificadas, plantas, imagens em escala, modelo 3D opcional), os danos são
@@ -65,7 +67,7 @@ As rotas continuam em `/bens/...` e `/ortofotos/...` (nomes internos antigos).
 
 ## Env (Vercel + `.env.local`)
 `DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`. (`PLATFORM_OPERATORS` era do fluxo BIM e não é mais usado.)
-E-mail (convites e nova senha): `RESEND_API_KEY` + `EMAIL_FROM` (ex.: "Oraclo <nao-responda@dominio>"); sem eles roda em
+E-mail (convites e nova senha): `RESEND_API_KEY` + `EMAIL_FROM` (ex.: "ArchRay <nao-responda@dominio>"); sem eles roda em
 **modo simulado** (`src/lib/email.ts`): nada é enviado, o texto vai para o log e o admin vê o link para copiar.
 `APP_URL` opcional (base dos links; senão usa o host da requisição).
 

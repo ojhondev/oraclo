@@ -32,7 +32,7 @@ const createSchema = z.object({
   width: z.number().int().positive(),
   height: z.number().int().positive(),
   mmPerPixel: z.number().positive().nullable(),
-  /** Quando gerada a partir de um modelo 3D do Oraclo. */
+  /** Quando gerada a partir de um modelo 3D do ArchRay. */
   outputId: z.string().uuid().nullable().optional(),
   plane: z.object({ origin: z.array(z.number()).length(3), normal: z.array(z.number()).length(3), up: z.array(z.number()).length(3) }).nullable().optional(),
   kind: z.enum(schema.vistaKindEnum.enumValues).catch("imagem").optional(),

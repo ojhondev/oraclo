@@ -457,7 +457,7 @@ export function ModelViewer({
                 </label>
               )}
               {info && Math.max(...info.dims) > 2000 && (
-                <p className="rounded-lg bg-muted p-3">As dimensões parecem grandes demais — o arquivo pode estar em milímetros. O Oraclo considera metros.</p>
+                <p className="rounded-lg bg-muted p-3">As dimensões parecem grandes demais — o arquivo pode estar em milímetros. O ArchRay considera metros.</p>
               )}
             </div>
           )}

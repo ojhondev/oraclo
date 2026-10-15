@@ -58,8 +58,8 @@ export async function buildPdf(data: ExportData, image: Uint8Array) {
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Mapa de danos — ${site.name} — ${ortho.name}`);
   pdf.setAuthor(author.name);
-  pdf.setCreator("Oraclo");
-  pdf.setProducer("Oraclo");
+  pdf.setCreator("ArchRay");
+  pdf.setProducer("ArchRay");
   const page = pdf.addPage(A3);
   const [PW, PH] = A3;
   const font = await pdf.embedFont(StandardFonts.Helvetica);

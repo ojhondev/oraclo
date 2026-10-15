@@ -40,8 +40,8 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
   const pdf = await PDFDocument.create();
   pdf.setTitle(`Laudo de estado de conservação — ${site.name}`);
   pdf.setAuthor(author.name);
-  pdf.setCreator("Oraclo");
-  pdf.setProducer("Oraclo");
+  pdf.setCreator("ArchRay");
+  pdf.setProducer("ArchRay");
   const font = await pdf.embedFont(StandardFonts.Helvetica);
   const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
   const logo = await pdf.embedPng(Buffer.from(LOGO_PNG_BASE64, "base64"));

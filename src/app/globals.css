@@ -54,7 +54,7 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Oraclo — só preto e branco (e cinzas neutros entre eles), no tema claro e no escuro.
+/* ArchRay — só preto e branco (e cinzas neutros entre eles), no tema claro e no escuro.
    As únicas cores fora disso são as da legenda de danos, que fazem parte do desenho técnico. */
 :root {
   --background: #ffffff;

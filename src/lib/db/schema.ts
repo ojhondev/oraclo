@@ -22,7 +22,7 @@ const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull(
 export const roleEnum = pgEnum("role", ["admin", "tecnico", "campo", "leitor"]);
 export type Role = (typeof roleEnum.enumValues)[number];
 
-/** Papel na operação do Oraclo (fora das organizações clientes). */
+/** Papel na operação do ArchRay (fora das organizações clientes). */
 export const platformRoleEnum = pgEnum("platform_role", ["operador", "parceiro"]);
 export type PlatformRole = (typeof platformRoleEnum.enumValues)[number];
 
@@ -40,7 +40,7 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   passwordHash: text("password_hash").notNull(),
   role: roleEnum("role").notNull().default("tecnico"),
-  /** Papel na operação do Oraclo (equipe interna ou parceiro modelador). */
+  /** Papel na operação do ArchRay (equipe interna ou parceiro modelador). */
   platformRole: platformRoleEnum("platform_role"),
   /** Registro profissional (CAU/CREA) — vai no carimbo das pranchas. */
   professionalId: text("professional_id"),
@@ -265,7 +265,7 @@ export const orthophotos = pgTable("orthophotos", {
 export const geometryKindEnum = pgEnum("geometry_kind", ["area", "linha", "ponto"]);
 export type GeometryKind = (typeof geometryKindEnum.enumValues)[number];
 
-/** Biblioteca de danos. orgId nulo = padrão do Oraclo; com orgId = personalizado. */
+/** Biblioteca de danos. orgId nulo = padrão do ArchRay; com orgId = personalizado. */
 export const damageTypes = pgTable("damage_types", {
   id: id(),
   orgId: uuid("org_id").references(() => organizations.id, { onDelete: "cascade" }),

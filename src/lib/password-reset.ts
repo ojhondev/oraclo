@@ -14,11 +14,11 @@ export async function createResetFor(userId: string, email: string, name: string
   const url = `${await appUrl()}/redefinir-senha/${token}`;
   const { html, text } = emailLayout({
     title: "Redefinir sua senha",
-    intro: `Olá, ${name.split(" ")[0]}. Recebemos um pedido para criar uma nova senha para a sua conta no Oraclo.`,
+    intro: `Olá, ${name.split(" ")[0]}. Recebemos um pedido para criar uma nova senha para a sua conta no ArchRay.`,
     button: "Criar nova senha",
     url,
     footer: "O link vale por 1 hora e só pode ser usado uma vez. Se não foi você, ignore este e-mail — sua senha atual continua valendo.",
   });
-  const r = await sendEmail({ to: email, subject: "Redefinir sua senha no Oraclo", html, text });
+  const r = await sendEmail({ to: email, subject: "Redefinir sua senha no ArchRay", html, text });
   return { sent: r.sent, url };
 }

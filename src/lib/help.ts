@@ -10,11 +10,11 @@ export const HELP_TOPICS: HelpTopic[] = [
   {
     id: "por-que",
     category: "Começar",
-    title: "Por que usar o Oraclo",
+    title: "Por que usar o ArchRay",
     summary: "Do dano apontado ao orçamento e ao laudo.",
     routes: [/^\/$/],
     blocks: [
-      { p: "Montar um mapa de danos com quantitativos, orçamento e laudo costuma levar dias entre fotos, CAD, planilha e editor de texto. No Oraclo tudo acontece sobre a imagem do imóvel:" },
+      { p: "Montar um mapa de danos com quantitativos, orçamento e laudo costuma levar dias entre fotos, CAD, planilha e editor de texto. No ArchRay tudo acontece sobre a imagem do imóvel:" },
       {
         list: [
           "Foto comum da fachada vira imagem plana e em escala (4 cliques nos cantos + as medidas reais).",

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BrandMark } from "@/components/brand";
+import { BrandLogo } from "@/components/brand";
 import { markOnboarded } from "@/app/(app)/tour-actions";
 import { TOUR_EVENT } from "@/components/help";
 
@@ -12,8 +12,8 @@ type Step = { target?: string; title: string; body: string };
 /** Alvos marcados com data-tour="…" na interface. Sem alvo visível, o passo aparece centralizado. */
 const STEPS: Step[] = [
   {
-    title: "Bem-vindo ao Oraclo",
-    body: "Mapa de danos com IA: o imóvel aparece na tela, você aponta os danos em cima e o Oraclo mede, orça o tratamento, prioriza e gera o laudo. Vamos ver onde fica cada coisa — leva 1 minuto.",
+    title: "Bem-vindo ao ArchRay",
+    body: "Mapa de danos com IA: o imóvel aparece na tela, você aponta os danos em cima e o ArchRay mede, orça o tratamento, prioriza e gera o laudo. Vamos ver onde fica cada coisa — leva 1 minuto.",
   },
   { target: "novo", title: "Comece por um projeto", body: "Em Novo você cadastra o imóvel — casa, prédio, igreja, galpão — e divide em áreas (fachadas, pavimentos, cobertura…)." },
   { target: "busca", title: "Encontre qualquer coisa", body: "Busque projetos por nome, cidade ou endereço — ou troque para Mapas de danos." },
@@ -111,7 +111,7 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
         <button onClick={finish} aria-label="Fechar tour" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
           <X className="size-4" />
         </button>
-        {i === 0 && <BrandMark className="mb-3 h-6" />}
+        {i === 0 && <BrandLogo className="mb-3 h-6" />}
         <p className="mb-1 text-[12px] text-muted-foreground">
           {i + 1} de {STEPS.length}
         </p>

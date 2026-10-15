@@ -23,7 +23,7 @@ export default async function InvitePage({ params }: PageProps<"/convite/[token]
 
   if (user) {
     return (
-      <AuthShell eyebrow={inv.orgName} title="Você já está conectado." description={`Este convite é para ${inv.email}. Saia da conta atual (${user.email}) para aceitá-lo.`} footer={<Link href="/" className="font-medium text-foreground underline underline-offset-4">Voltar ao Oraclo</Link>}>
+      <AuthShell eyebrow={inv.orgName} title="Você já está conectado." description={`Este convite é para ${inv.email}. Saia da conta atual (${user.email}) para aceitá-lo.`} footer={<Link href="/" className="font-medium text-foreground underline underline-offset-4">Voltar ao ArchRay</Link>}>
         <form action={logoutToInvite.bind(null, token)}>
           <button className="h-11 w-full rounded-full bg-primary text-[14px] font-medium text-primary-foreground">Sair e aceitar o convite</button>
         </form>

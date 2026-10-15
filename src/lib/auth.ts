@@ -51,7 +51,7 @@ export type SessionUser = {
   email: string;
   role: Role;
   onboarded: boolean;
-  /** Operação do Oraclo: "operador" (equipe interna) ou "parceiro" (modelador). */
+  /** Operação do ArchRay: "operador" (equipe interna) ou "parceiro" (modelador). */
   platformRole: PlatformRole | null;
 };
 
@@ -102,7 +102,7 @@ export const editors: Role[] = ["admin", "tecnico"];
 /** Papéis que podem fazer capturas em campo (fotos, medidas, roteiro). */
 export const capturers: Role[] = ["admin", "tecnico", "campo"];
 
-/** Exige papel na operação do Oraclo (operador; ou parceiro quando permitido). */
+/** Exige papel na operação do ArchRay (operador; ou parceiro quando permitido). */
 export async function requireOps(allowPartner = false) {
   const user = await requireUser();
   if (user.platformRole === "operador" || (allowPartner && user.platformRole === "parceiro")) return user;

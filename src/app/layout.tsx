@@ -12,7 +12,7 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: { default: "Oraclo", template: "%s · Oraclo" },
+  title: { default: "ArchRay", template: "%s · ArchRay" },
   description:
     "Mapa de danos com IA: aponte os danos sobre fachadas e plantas em escala e receba quantitativos, orçamento do tratamento e laudo prontos.",
 };

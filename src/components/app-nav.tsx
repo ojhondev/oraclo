@@ -170,11 +170,10 @@ function NavContent({
         <Link
           href="/"
           onClick={onNavigate}
-          aria-label="Oraclo — início"
+          aria-label="ArchRay — início"
           className={cn("flex h-9 items-center rounded-lg hover:bg-sidebar-accent", collapsed ? "w-9 justify-center" : "gap-2 px-2")}
         >
-          <BrandMark className="h-[18px]" />
-          {!collapsed && <BrandLogo className="h-[17px]" />}
+          {collapsed ? <BrandMark className="h-[15px]" /> : <BrandLogo className="h-[18px]" />}
         </Link>
         <div className={cn("flex items-center gap-0.5", collapsed && "flex-col")}>
           <Link href="/?buscar=1" onClick={onNavigate} aria-label="Buscar" className="grid size-8 place-items-center rounded-lg text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground">
@@ -276,8 +275,7 @@ export function MobileBar({ user, recent }: { user: SessionUser; recent: Recent 
       <button aria-label="Menu" onClick={() => setOpen(true)} className="-ml-1 grid size-9 place-items-center rounded-lg hover:bg-muted">
         <Menu className="size-5" />
       </button>
-      <BrandMark className="h-4" />
-      <BrandLogo className="h-[17px]" />
+      <BrandLogo className="h-[18px]" />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 bg-sidebar p-0">
           <SheetTitle className="sr-only">Menu</SheetTitle>

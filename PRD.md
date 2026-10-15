@@ -1,4 +1,4 @@
-# Oraclo — PRD (Product Requirements Document)
+# ArchRay (ex-Oraclo) — PRD (Product Requirements Document)
 
 > **Versão:** 0.3 · **Data:** 2026-10-14 · **Status:** v0.3 publicada (fase 1: vistas, editor manual, orçamento, GUT, painel e laudo)
 > **Pasta:** `A:\Claude Code\Oraclo` · **Porta de dev:** 3022 · **Produção:** oraclo-app.vercel.app
@@ -12,7 +12,7 @@
 > Aponte os danos sobre a imagem do imóvel — a IA ajuda a contornar e medir — e o
 > orçamento e o laudo saem prontos.
 
-O Oraclo é uma **central visual de diagnóstico de edificações existentes**: o imóvel
+O ArchRay é uma **central visual de diagnóstico de edificações existentes**: o imóvel
 aparece na tela (fachadas retificadas, plantas, fotos 360°, modelo 3D opcional), os danos
 são apontados em cima — à mão ou com ajuda da IA — e a plataforma calcula quantitativos,
 **orçamento do tratamento**, prioridades e gera o **laudo de estado de conservação**.
@@ -108,6 +108,6 @@ roda em qualquer computador, de graça.
 
 ## 7. Validação
 1. Medir com o Estúdio Restaura o tempo atual de um mapa de danos com orçamento.
-2. Fazer 2–3 trabalhos reais no Oraclo e comparar tempo e conversão em obra.
+2. Fazer 2–3 trabalhos reais no ArchRay e comparar tempo e conversão em obra.
 3. Entrevistar 5–10 profissionais (restauro e inspeção predial) sobre frequência, tempo e
    quanto pagariam por laudo.

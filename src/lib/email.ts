@@ -50,7 +50,7 @@ export function emailLayout({ title, intro, button, url, footer }: { title: stri
   const html = `<!doctype html><html lang="pt-BR"><body style="margin:0;background:#ffffff;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#0a0a0a">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 16px">
 <table role="presentation" width="100%" style="max-width:480px" cellpadding="0" cellspacing="0">
-<tr><td style="font-size:22px;font-weight:600;letter-spacing:-0.02em;padding-bottom:28px">oraclo</td></tr>
+<tr><td style="font-size:22px;font-weight:600;letter-spacing:-0.02em;padding-bottom:28px">archray</td></tr>
 <tr><td style="font-size:20px;font-weight:500;padding-bottom:12px">${esc(title)}</td></tr>
 <tr><td style="font-size:15px;line-height:1.55;color:#3a3a3a;padding-bottom:24px">${esc(intro)}</td></tr>
 <tr><td style="padding-bottom:24px"><a href="${esc(url)}" style="display:inline-block;background:#0a0a0a;color:#ffffff;text-decoration:none;font-size:15px;padding:12px 22px;border-radius:999px">${esc(button)}</a></td></tr>

@@ -103,3 +103,10 @@ export const severities = {
   alta: "Alta",
   critica: "Crítica",
 } as const;
+
+export const vistaKinds = {
+  fachada: "Fachada retificada",
+  planta: "Planta",
+  imagem: "Imagem em escala",
+  modelo_3d: "Do modelo 3D",
+} as const;

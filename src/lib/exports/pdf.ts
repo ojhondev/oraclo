@@ -14,13 +14,13 @@ const MUTED = rgb(0.4, 0.38, 0.36);
 const LINE = rgb(0.8, 0.78, 0.74);
 const BRAND = INK; // identidade em preto e branco
 
-const col = (hex: string) => {
+export const col = (hex: string) => {
   const [r, g, b] = hexToRgb(hex);
   return rgb(r / 255, g / 255, b / 255);
 };
 
 /** Corta o texto para caber na largura (fonte padrão WinAnsi). */
-function fit(font: PDFFont, text: string, size: number, width: number) {
+export function fit(font: PDFFont, text: string, size: number, width: number) {
   const clean = text.replace(/[^\u0000-ÿ–—•·]/g, "");
   if (font.widthOfTextAtSize(clean, size) <= width) return clean;
   let t = clean;
@@ -28,7 +28,7 @@ function fit(font: PDFFont, text: string, size: number, width: number) {
   return `${t}…`;
 }
 
-function wrap(font: PDFFont, text: string, size: number, width: number) {
+export function wrap(font: PDFFont, text: string, size: number, width: number) {
   const words = text.replace(/[^\u0000-ÿ–—•·]/g, "").split(/\s+/);
   const lines: string[] = [];
   let cur = "";
@@ -85,31 +85,7 @@ export async function buildPdf(data: ExportData, image: Uint8Array) {
   page.drawImage(img, { x: ix, y: iy, width: iw, height: ih });
   page.drawRectangle({ x: ix, y: iy, width: iw, height: ih, borderColor: LINE, borderWidth: 0.5 });
 
-  const PX = (x: number) => ix + x * k;
-  const PY = (y: number) => iy + (H - y) * k;
-
-  damages.forEach((d, i) => {
-    const t = typeById.get(d.typeId)!;
-    const p = pointsOf(d);
-    if (!p.length) return;
-    const c = col(t.color);
-    if (t.geometry === "area" && p.length >= 3) {
-      const path = `M ${p.map(([x, y]) => `${x * k} ${y * k}`).join(" L ")} Z`;
-      page.drawSvgPath(path, { x: ix, y: iy + ih, color: c, opacity: 0.32, borderColor: c, borderWidth: 1, borderOpacity: 1 });
-      const cx = p.reduce((a, q) => a + q[0], 0) / p.length;
-      const cy = p.reduce((a, q) => a + q[1], 0) / p.length;
-      label(page, bold, `${t.code}-${i + 1}`, PX(cx), PY(cy), c);
-    } else if (t.geometry === "linha" && p.length >= 2) {
-      const path = `M ${p.map(([x, y]) => `${x * k} ${y * k}`).join(" L ")}`;
-      const w = t.pattern === "linha-grossa" ? 2.4 : t.pattern === "linha-dupla" ? 1.8 : 1.2;
-      page.drawSvgPath(path, { x: ix, y: iy + ih, borderColor: rgb(1, 1, 1), borderWidth: w + 1.4, borderOpacity: 0.7 });
-      page.drawSvgPath(path, { x: ix, y: iy + ih, borderColor: c, borderWidth: w });
-      label(page, bold, `${t.code}-${i + 1}`, PX(p[0]![0]), PY(p[0]![1]) + 5, c);
-    } else {
-      page.drawCircle({ x: PX(p[0]![0]), y: PY(p[0]![1]), size: 3.5, color: c, borderColor: rgb(1, 1, 1), borderWidth: 0.8 });
-      label(page, bold, `${t.code}-${i + 1}`, PX(p[0]![0]) + 9, PY(p[0]![1]), c);
-    }
-  });
+  drawDamages(page, bold, damages, typeById, { ix, iy, k, ih, H });
 
   /* ── coluna lateral ── */
   const sx = PW - M - SIDE;
@@ -218,6 +194,43 @@ export async function buildPdf(data: ExportData, image: Uint8Array) {
   page.drawImage(logo, { x: sx + sw - 8 - lw, y: cy0 + 7.5, width: lw, height: lh });
 
   return pdf.save();
+}
+
+type DamageRow = ExportData["damages"][number];
+
+/** Desenha os danos (vetor) sobre a imagem já posicionada em (ix, iy) com k pontos por pixel. */
+export function drawDamages(
+  page: PDFPage,
+  bold: PDFFont,
+  damages: DamageRow[],
+  typeById: ExportData["typeById"],
+  { ix, iy, k, ih, H }: { ix: number; iy: number; k: number; ih: number; H: number },
+) {
+  const PX = (x: number) => ix + x * k;
+  const PY = (y: number) => iy + (H - y) * k;
+
+  damages.forEach((d, i) => {
+    const t = typeById.get(d.typeId)!;
+    const p = pointsOf(d);
+    if (!p.length) return;
+    const c = col(t.color);
+    if (t.geometry === "area" && p.length >= 3) {
+      const path = `M ${p.map(([x, y]) => `${x * k} ${y * k}`).join(" L ")} Z`;
+      page.drawSvgPath(path, { x: ix, y: iy + ih, color: c, opacity: 0.32, borderColor: c, borderWidth: 1, borderOpacity: 1 });
+      const cx = p.reduce((a, q) => a + q[0], 0) / p.length;
+      const cy = p.reduce((a, q) => a + q[1], 0) / p.length;
+      label(page, bold, `${t.code}-${i + 1}`, PX(cx), PY(cy), c);
+    } else if (t.geometry === "linha" && p.length >= 2) {
+      const path = `M ${p.map(([x, y]) => `${x * k} ${y * k}`).join(" L ")}`;
+      const w = t.pattern === "linha-grossa" ? 2.4 : t.pattern === "linha-dupla" ? 1.8 : 1.2;
+      page.drawSvgPath(path, { x: ix, y: iy + ih, borderColor: rgb(1, 1, 1), borderWidth: w + 1.4, borderOpacity: 0.7 });
+      page.drawSvgPath(path, { x: ix, y: iy + ih, borderColor: c, borderWidth: w });
+      label(page, bold, `${t.code}-${i + 1}`, PX(p[0]![0]), PY(p[0]![1]) + 5, c);
+    } else {
+      page.drawCircle({ x: PX(p[0]![0]), y: PY(p[0]![1]), size: 3.5, color: c, borderColor: rgb(1, 1, 1), borderWidth: 0.8 });
+      label(page, bold, `${t.code}-${i + 1}`, PX(p[0]![0]) + 9, PY(p[0]![1]), c);
+    }
+  });
 }
 
 function label(page: PDFPage, font: PDFFont, text: string, x: number, y: number, color: ReturnType<typeof rgb>) {

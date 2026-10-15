@@ -13,8 +13,9 @@ export async function generateMetadata({ params }: PageProps<"/bens/[id]/ortofot
   return { title: `Mapa de danos · ${o.name}` };
 }
 
-export default async function OrthophotoEditorPage({ params }: PageProps<"/bens/[id]/ortofotos/[oid]">) {
+export default async function OrthophotoEditorPage({ params, searchParams }: PageProps<"/bens/[id]/ortofotos/[oid]">) {
   const { id, oid } = await params;
+  const { dano } = await searchParams;
   const user = await requireUser();
   const site = await getSite(user.orgId, id);
   const ortho = await getOrthophoto(id, oid);
@@ -29,6 +30,7 @@ export default async function OrthophotoEditorPage({ params }: PageProps<"/bens/
       initialDamages={damages}
       canEdit={editors.includes(user.role)}
       prices={prices}
+      initialSelected={typeof dano === "string" && damages.some((d) => d.id === dano) ? dano : null}
     />
   );
 }

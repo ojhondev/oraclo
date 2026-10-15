@@ -50,6 +50,7 @@ export function DamageMapEditor({
   initialDamages,
   canEdit,
   prices,
+  initialSelected,
 }: {
   siteId: string;
   siteName: string;
@@ -58,6 +59,7 @@ export function DamageMapEditor({
   initialDamages: Damage[];
   canEdit: boolean;
   prices: Record<string, Price>;
+  initialSelected?: string | null;
 }) {
   const W = ortho.widthPx;
   const H = ortho.heightPx;
@@ -69,7 +71,7 @@ export function DamageMapEditor({
   const [typeId, setTypeId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Pt[]>([]);
   const [hover, setHover] = useState<Pt | null>(null);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<string | null>(initialSelected ?? null);
   const [hidden, setHidden] = useState<Set<string>>(new Set());
   const [query, setQuery] = useState("");
   const [view, setView] = useState<View>({ x: 0, y: 0, w: W, h: H });

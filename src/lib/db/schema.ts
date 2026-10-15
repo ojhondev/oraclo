@@ -10,6 +10,7 @@ import {
   timestamp,
   date,
   jsonb,
+  serial,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
@@ -21,6 +22,10 @@ const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull(
 
 export const roleEnum = pgEnum("role", ["admin", "tecnico", "campo", "leitor"]);
 export type Role = (typeof roleEnum.enumValues)[number];
+
+/** Papel na operação do Oraclo (fora das organizações clientes). */
+export const platformRoleEnum = pgEnum("platform_role", ["operador", "parceiro"]);
+export type PlatformRole = (typeof platformRoleEnum.enumValues)[number];
 
 export const organizations = pgTable("organizations", {
   id: id(),
@@ -36,6 +41,8 @@ export const users = pgTable("users", {
   email: text("email").notNull(),
   passwordHash: text("password_hash").notNull(),
   role: roleEnum("role").notNull().default("tecnico"),
+  /** Papel na operação do Oraclo (equipe interna ou parceiro modelador). */
+  platformRole: platformRoleEnum("platform_role"),
   /** Registro profissional (CAU/CREA) — vai no carimbo das pranchas. */
   professionalId: text("professional_id"),
   /** Quando concluiu (ou pulou) o tour guiado do primeiro acesso. */
@@ -308,3 +315,90 @@ export const passwordResets = pgTable("password_resets", {
   usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: createdAt(),
 }, (t) => [uniqueIndex("password_resets_token_idx").on(t.tokenHash), index("password_resets_user_idx").on(t.userId)]);
+
+/* ───────────────────────── Modelos BIM (pedidos) ───────────────────────── */
+
+export const bimStatusEnum = pgEnum("bim_status", [
+  "solicitado", // aguardando orçamento
+  "orcado", // orçamento enviado, aguardando aprovação do cliente
+  "aprovado", // na fila de modelagem
+  "em_modelagem",
+  "em_revisao_interna", // conferência da equipe antes de liberar
+  "entregue", // aguardando aceite do cliente
+  "revisao_solicitada",
+  "concluido",
+  "cancelado",
+]);
+export type BimStatus = (typeof bimStatusEnum.enumValues)[number];
+
+export const lodEnum = pgEnum("bim_lod", ["200", "300", "350"]);
+
+export const bimOrders = pgTable("bim_orders", {
+  id: id(),
+  number: serial("number").notNull(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
+  /** Base da modelagem: captura (fotos/vídeo processados ou nuvem importada). */
+  captureId: uuid("capture_id").references(() => captures.id, { onDelete: "set null" }),
+  status: bimStatusEnum("status").notNull().default("solicitado"),
+  areaM2: real("area_m2").notNull(),
+  lod: lodEnum("lod").notNull().default("200"),
+  disciplines: jsonb("disciplines").$type<string[]>().notNull(),
+  formats: jsonb("formats").$type<string[]>().notNull(),
+  softwareVersions: text("software_versions"),
+  desiredDate: date("desired_date"),
+  notes: text("notes"),
+  estimateCents: integer("estimate_cents"),
+  // orçamento
+  priceCents: integer("price_cents"),
+  deliveryDays: integer("delivery_days"),
+  quoteNotes: text("quote_notes"),
+  quotedAt: timestamp("quoted_at", { withTimezone: true }),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  // execução
+  assigneeId: uuid("assignee_id").references(() => users.id, { onDelete: "set null" }),
+  dueDate: date("due_date"),
+  deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  requestedBy: uuid("requested_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: createdAt(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("bim_orders_org_idx").on(t.orgId), index("bim_orders_status_idx").on(t.status)]);
+
+export const bimEventKindEnum = pgEnum("bim_event_kind", ["status", "comentario", "orcamento", "atribuicao", "entrega", "revisao"]);
+
+/** Linha do tempo do pedido: mudanças de status, comentários, orçamento, entregas. */
+export const bimEvents = pgTable("bim_events", {
+  id: id(),
+  orderId: uuid("order_id").notNull().references(() => bimOrders.id, { onDelete: "cascade" }),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  kind: bimEventKindEnum("kind").notNull(),
+  body: text("body"),
+  /** Nota interna da operação (equipe/parceiros) — o cliente não vê. */
+  internal: boolean("internal").notNull().default(false),
+  meta: jsonb("meta").$type<Record<string, unknown>>(),
+  createdAt: createdAt(),
+}, (t) => [index("bim_events_order_idx").on(t.orderId)]);
+
+/** Versão entregue do modelo (v1, v2…), com seus arquivos. */
+export const bimDeliveries = pgTable("bim_deliveries", {
+  id: id(),
+  orderId: uuid("order_id").notNull().references(() => bimOrders.id, { onDelete: "cascade" }),
+  version: integer("version").notNull(),
+  notes: text("notes"),
+  /** Liberada para o cliente (parceiro envia → operação confere → libera). */
+  released: boolean("released").notNull().default(false),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: createdAt(),
+}, (t) => [index("bim_deliveries_order_idx").on(t.orderId)]);
+
+export const bimDeliveryFiles = pgTable("bim_delivery_files", {
+  id: id(),
+  deliveryId: uuid("delivery_id").notNull().references(() => bimDeliveries.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  format: text("format").notNull(),
+  url: text("url").notNull(),
+  storageKey: text("storage_key").notNull(),
+  bytes: bigint("bytes", { mode: "number" }).notNull().default(0),
+  createdAt: createdAt(),
+});

@@ -15,6 +15,8 @@ import {
   Search,
   Camera,
   Box,
+  Boxes,
+  Workflow,
   ImageIcon,
   UserRound,
   Users,
@@ -36,6 +38,7 @@ const ITEMS = [
   { href: "/", label: "Projetos", icon: Building2, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/capturas/") && !p.includes("/modelos/") && !p.includes("/ortofotos/")) },
   { href: "/capturas", label: "Capturas", icon: Camera, match: (p: string) => p.startsWith("/capturas") || p.includes("/capturas/") },
   { href: "/modelos", label: "Modelos 3D", icon: Box, match: (p: string) => p.startsWith("/modelos") || p.includes("/modelos/") },
+  { href: "/bim", label: "Modelos BIM", icon: Boxes, match: (p: string) => p.startsWith("/bim") },
   { href: "/mapas", label: "Mapas de danos", icon: ImageIcon, match: (p: string) => p.startsWith("/mapas") || p.includes("/ortofotos/") },
   { href: "/biblioteca", label: "Biblioteca de danos", icon: Layers, match: (p: string) => p.startsWith("/biblioteca") },
   { href: "/equipe", label: "Equipe", icon: Users, match: (p: string) => p.startsWith("/equipe") },
@@ -226,6 +229,21 @@ function NavContent({
             </Link>
           );
         })}
+        {user.platformRole && (
+          <Link
+            href="/operacao"
+            onClick={onNavigate}
+            title="Operação"
+            className={cn(
+              "mt-2 flex h-10 items-center gap-3 rounded-lg border border-dashed px-2.5 text-[15px] transition-colors hover:bg-sidebar-accent",
+              pathname.startsWith("/operacao") && "bg-sidebar-accent",
+              collapsed && "justify-center px-0",
+            )}
+          >
+            <Workflow className="size-[18px] text-sidebar-foreground/80" />
+            {!collapsed && (user.platformRole === "parceiro" ? "Meus pedidos" : "Operação")}
+          </Link>
+        )}
       </nav>
 
       <div className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-4">

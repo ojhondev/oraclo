@@ -31,6 +31,12 @@ qualquer feature nova).
 - Papéis: `admin` (tudo, inclusive excluir bem), `tecnico` (edita), `campo` (só captura),
   `leitor` (só vê). `editors` em `src/lib/auth.ts`. Toda server action revalida o papel.
 - Consultas que não são actions ficam em `src/lib/*` — nunca exportar consulta de um arquivo `"use server"`.
+- **Pedidos de modelo BIM** (`/bim`, `/operacao`; lógica em `src/lib/bim.ts`, `src/lib/bim-orders.ts`, ações em
+  `src/app/(app)/bim/actions.ts`). Fluxo: solicitado → orçado → aprovado → em modelagem → conferência interna →
+  entregue → (revisão) → concluído. Acesso por `accessOf()`: organização cliente, **operador** (vê tudo) ou
+  **parceiro** atribuído (sem preços; versões dele só chegam ao cliente depois que um operador libera).
+  `users.platform_role` = operador/parceiro; e-mails em `PLATFORM_OPERATORS` viram operadores automaticamente.
+  Preço/prazo automáticos são **estimativas** (`estimate()` em `src/lib/bim.ts`, valores a validar).
 - Datas sempre por `src/lib/format.ts` (fuso America/Sao_Paulo); servidor roda em UTC.
 - Rótulos dos enums em `src/lib/labels.ts`.
 - Tokens de convite e de nova senha: só o **hash** fica no banco (`src/lib/email.ts`, `src/lib/tokens.ts`).
@@ -51,7 +57,7 @@ qualquer feature nova).
   a UI mostra "em breve" nesses pontos.
 
 ## Env (Vercel + `.env.local`)
-`DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`.
+`DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`, `PLATFORM_OPERATORS` (e-mails separados por vírgula).
 E-mail (convites e nova senha): `RESEND_API_KEY` + `EMAIL_FROM` (ex.: "Oraclo <nao-responda@dominio>"); sem eles roda em
 **modo simulado** (`src/lib/email.ts`): nada é enviado, o texto vai para o log e o admin vê o link para copiar.
 `APP_URL` opcional (base dos links; senão usa o host da requisição).

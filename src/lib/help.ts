@@ -45,6 +45,35 @@ export const HELP_TOPICS: HelpTopic[] = [
     ],
   },
   {
+    id: "pedido-bim",
+    category: "Modelos BIM",
+    title: "Pedir um modelo BIM",
+    summary: "Da nuvem de pontos ao Revit, Archicad ou IFC.",
+    routes: [/^\/bim/],
+    blocks: [
+      {
+        steps: [
+          "Em Modelos BIM (ou na página do projeto), toque em Solicitar modelo BIM.",
+          "Escolha o projeto e a base: uma captura concluída ou uma nuvem importada.",
+          "Informe a área em m², o nível de detalhe (LOD 200, 300 ou 350), as disciplinas e os formatos (RVT, PLN, IFC). A estimativa aparece na hora.",
+          "A equipe confere a base e envia o orçamento final. Você aprova (ou recusa) na plataforma — nada é cobrado antes.",
+          "Acompanhe a modelagem pelo status. Quando a versão chegar, baixe os arquivos e aceite — ou peça revisão dizendo o que ajustar.",
+        ],
+      },
+      { tip: "LOD 200 (volumes, paredes, aberturas) funciona bem com captura por celular ou vídeo. Para LOD 300 em áreas grandes ou indústria, prefira nuvem de laser." },
+    ],
+  },
+  {
+    id: "operacao-bim",
+    category: "Modelos BIM",
+    title: "Operação: orçar, atribuir e entregar",
+    summary: "Para a equipe Oraclo e parceiros modeladores.",
+    routes: [/^\/operacao/],
+    blocks: [
+      { list: ["Operador: vê todos os pedidos, envia orçamento, atribui à equipe ou a um parceiro, confere e entrega.", "Parceiro: vê só os pedidos atribuídos (sem preços), baixa a base, muda o status e envia versões — que passam pela conferência da equipe antes de chegar ao cliente.", "Notas internas no histórico não aparecem para o cliente."] },
+    ],
+  },
+  {
     id: "cadastrar-projeto",
     category: "Projetos",
     title: "Criar um projeto e suas áreas",

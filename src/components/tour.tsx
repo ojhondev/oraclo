@@ -19,6 +19,7 @@ const STEPS: Step[] = [
   { target: "busca", title: "Encontre qualquer coisa", body: "Busque projetos por nome, cidade ou endereço — ou troque para Mapas de danos." },
   { target: "nav-capturas", title: "Capturas", body: "Fotos do celular, fotos que você já tinha e modelos importados de todos os projetos, com o status de cada um (em campo, aguardando processamento, concluída)." },
   { target: "nav-modelos", title: "Modelos 3D", body: "Nuvens de pontos e malhas — suas ou processadas pela equipe. Abra no navegador para medir e gerar ortofotos em escala em três cliques." },
+  { target: "nav-bim", title: "Modelos BIM", body: "Peça o modelo em Revit, Archicad ou IFC a partir das suas nuvens: estimativa na hora, orçamento para aprovar, acompanhamento da modelagem, entregas e revisões." },
   { target: "nav-mapas", title: "Mapas de danos", body: "Desenhe danos e patologias sobre a ortofoto. Áreas, comprimentos e legenda saem sozinhos — exporte a prancha em PDF e o DXF." },
   { target: "nav-biblioteca", title: "Biblioteca de danos", body: "A legenda padronizada: fissuras, umidade, corrosão, perda de revestimento e mais, cada um com código, cor e hachura." },
   { target: "nav-equipe", title: "Equipe", body: "Convide arquitetos, engenheiros, técnicos e a equipe de campo, cada um com o papel certo." },

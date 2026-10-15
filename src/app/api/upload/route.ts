@@ -13,6 +13,7 @@ const isUuid = (s?: string) => !!s && /^[0-9a-f-]{36}$/i.test(s);
  *  - { siteId }             → ortofoto (JPG/PNG, até 200 MB, só editores)
  *  - { siteId, captureId }  → foto de captura (até 60 MB, inclusive equipe de campo)
  *  - { siteId, captureId, kind: "resultado" } → nuvem/malha/relatório processados (até 5 GB, editores)
+ *  - { orderId, kind: "entrega" } → arquivos do modelo BIM (até 5 GB, operador ou parceiro atribuído)
  */
 export async function POST(request: Request) {
   const body = (await request.json()) as HandleUploadBody;
@@ -23,7 +24,22 @@ export async function POST(request: Request) {
       onBeforeGenerateToken: async (pathname, clientPayload) => {
         const user = await getUser();
         if (!user) throw new Error("Sessão expirada. Entre de novo.");
-        const { siteId, captureId, kind } = JSON.parse(clientPayload || "{}") as { siteId?: string; captureId?: string; kind?: string };
+        const { siteId, captureId, kind, orderId } = JSON.parse(clientPayload || "{}") as { siteId?: string; captureId?: string; kind?: string; orderId?: string };
+
+        if (kind === "entrega") {
+          // arquivos do modelo BIM: operador ou parceiro atribuído ao pedido
+          if (!isUuid(orderId)) throw new Error("Pedido inválido.");
+          const [order] = await db
+            .select({ orgId: schema.bimOrders.orgId, assigneeId: schema.bimOrders.assigneeId })
+            .from(schema.bimOrders)
+            .where(eq(schema.bimOrders.id, orderId!))
+            .limit(1);
+          if (!order) throw new Error("Pedido não encontrado.");
+          const ok = user.platformRole === "operador" || (user.platformRole === "parceiro" && order.assigneeId === user.id);
+          if (!ok) throw new Error("Sem permissão para entregar este pedido.");
+          if (!pathname.startsWith(`orgs/${order.orgId}/bim/${orderId}/`)) throw new Error("Caminho inválido.");
+          return { maximumSizeInBytes: 5 * 1024 * 1024 * 1024, addRandomSuffix: true };
+        }
         if (!isUuid(siteId)) throw new Error("Bem inválido.");
         const [site] = await db
           .select({ id: schema.sites.id })

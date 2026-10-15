@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { db, schema } from "@/lib/db";
-import type { Role } from "@/lib/db/schema";
+import type { PlatformRole, Role } from "@/lib/db/schema";
 
 const COOKIE = "oraclo_session";
 const MAX_AGE = 60 * 60 * 24 * 30; // 30 dias
@@ -51,7 +51,16 @@ export type SessionUser = {
   email: string;
   role: Role;
   onboarded: boolean;
+  /** Operação do Oraclo: "operador" (equipe interna) ou "parceiro" (modelador). */
+  platformRole: PlatformRole | null;
 };
+
+/** E-mails com acesso de operador definidos por variável de ambiente (bootstrap da equipe). */
+const envOperators = () =>
+  (process.env.PLATFORM_OPERATORS ?? "")
+    .split(",")
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean);
 
 /** Usuário logado (memoizado por request) ou null. */
 export const getUser = cache(async (): Promise<SessionUser | null> => {
@@ -68,13 +77,15 @@ export const getUser = cache(async (): Promise<SessionUser | null> => {
       role: schema.users.role,
       active: schema.users.active,
       onboardedAt: schema.users.onboardedAt,
+      platformRole: schema.users.platformRole,
     })
     .from(schema.users)
     .innerJoin(schema.organizations, eq(schema.organizations.id, schema.users.orgId))
     .where(eq(schema.users.id, userId))
     .limit(1);
   if (!u || !u.active) return null;
-  return { id: u.id, orgId: u.orgId, orgName: u.orgName, name: u.name, email: u.email, role: u.role, onboarded: !!u.onboardedAt };
+  const platformRole: PlatformRole | null = envOperators().includes(u.email.toLowerCase()) ? "operador" : u.platformRole;
+  return { id: u.id, orgId: u.orgId, orgName: u.orgName, name: u.name, email: u.email, role: u.role, onboarded: !!u.onboardedAt, platformRole };
 });
 
 /** Exige login; opcionalmente restringe por papel. */
@@ -90,3 +101,10 @@ export const editors: Role[] = ["admin", "tecnico"];
 
 /** Papéis que podem fazer capturas em campo (fotos, medidas, roteiro). */
 export const capturers: Role[] = ["admin", "tecnico", "campo"];
+
+/** Exige papel na operação do Oraclo (operador; ou parceiro quando permitido). */
+export async function requireOps(allowPartner = false) {
+  const user = await requireUser();
+  if (user.platformRole === "operador" || (allowPartner && user.platformRole === "parceiro")) return user;
+  redirect("/");
+}

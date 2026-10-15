@@ -4,6 +4,8 @@ import { Box, Camera, FileDown, ImageUp, MapPin, Pencil, ShieldCheck } from "luc
 import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite, getSiteDetail } from "@/lib/sites";
 import { listOrthophotos } from "@/lib/orthophotos";
+import { listOrgOrders } from "@/lib/bim-orders";
+import { BimOrderList } from "@/components/bim-order-list";
 import { fmtMmPerPixel } from "@/lib/geometry";
 import type { OutputMeta } from "@/lib/model-formats";
 import {
@@ -57,7 +59,7 @@ function Section({ title, description, children, action }: { title: string; desc
 export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
   const { id } = await params;
   const user = await requireUser();
-  const [{ site, elements, campaigns, outputs }, orthos] = await Promise.all([getSiteDetail(user.orgId, id), listOrthophotos(id)]);
+  const [{ site, elements, campaigns, outputs }, orthos, bimOrders] = await Promise.all([getSiteDetail(user.orgId, id), listOrthophotos(id), listOrgOrders(user.orgId, id)]);
   const canEdit = editors.includes(user.role);
   const canCapture = capturers.includes(user.role);
   const elementName = Object.fromEntries(elements.map((e) => [e.id, e.name]));
@@ -142,6 +144,24 @@ export default async function SitePage({ params }: PageProps<"/bens/[id]">) {
                   </li>
                 ))}
               </ul>
+            )}
+          </Section>
+
+          <Section
+            title="Modelo BIM"
+            description="Peça o modelo em Revit, Archicad ou IFC a partir das capturas e nuvens deste projeto, e acompanhe orçamento, modelagem e entregas."
+            action={
+              canEdit && (
+                <Button size="sm" asChild>
+                  <Link href={`/bim/novo?projeto=${site.id}`}>Solicitar modelo BIM</Link>
+                </Button>
+              )
+            }
+          >
+            {bimOrders.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">Nenhum pedido ainda.</p>
+            ) : (
+              <BimOrderList rows={bimOrders} />
             )}
           </Section>
 

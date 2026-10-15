@@ -152,8 +152,14 @@ class SamClient {
     }
   }
 
-  async decode(points: XY[], labels: number[]): Promise<SamMask[]> {
-    return (await this.call<"decoded">({ type: "decode", points, labels })).masks;
+  async decode(points: XY[], labels: number[], clip?: SamRegion): Promise<SamMask[]> {
+    return (await this.call<"decoded">({ type: "decode", points, labels, clip })).masks;
+  }
+
+  /** "Mancha" por cor: não precisa do modelo (nada a baixar), só do worker. */
+  async wand(url: string, region: SamRegion, points: XY[], labels: number[], tol: number, clip?: SamRegion): Promise<SamMask[]> {
+    if (!this.worker) this.spawn();
+    return (await this.call<"decoded">({ type: "wand", url, region, points, labels, tol, clip })).masks;
   }
 }
 

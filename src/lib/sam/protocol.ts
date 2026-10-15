@@ -8,7 +8,8 @@ export type SamMask = { points: XY[]; score: number };
 export type SamRequest =
   | { type: "init"; id: number; backend: Backend; maxThreads: number }
   | { type: "encode"; id: number; url: string; region: SamRegion }
-  | { type: "decode"; id: number; points: XY[]; labels: number[] };
+  | { type: "decode"; id: number; points: XY[]; labels: number[]; clip?: SamRegion }
+  | { type: "wand"; id: number; url: string; region: SamRegion; points: XY[]; labels: number[]; tol: number; clip?: SamRegion };
 
 export type SamResponse =
   | { type: "progress"; label: string; loaded: number; total: number }

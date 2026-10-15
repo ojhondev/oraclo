@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { SimpleSelect } from "@/components/form";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fmtArea, fmtLength, fmtMmPerPixel, measure, minPoints, scaleFromCalibration, type Pt } from "@/lib/geometry";
+import { fmtArea, fmtLength, fmtMmPerPixel, measure, minPoints, polygonAreaPx, scaleFromCalibration, type Pt } from "@/lib/geometry";
 import { geometryKinds, severities } from "@/lib/labels";
 import { TREND_LABELS, URGENCY_LABELS, budget, damageCostCents, fmtBRL, gut, priority, unitLabels, type Price } from "@/lib/pricing";
 import type { schema } from "@/lib/db";
@@ -47,6 +47,11 @@ type View = { x: number; y: number; w: number; h: number };
 type Tool = "mover" | "desenhar" | "calibrar" | "contorno";
 type AiPoint = { p: Pt; label: 0 | 1 };
 type AiStatus = "idle" | "loading" | "encoding" | "decoding";
+/** "mancha": varinha por cor (manchas, umidade, sujidade…); "elemento": SAM (bordas nítidas). */
+type AiMode = "mancha" | "elemento";
+// danos de borda nítida (lacunas, vidros, peças) vão para o SAM; manchas e películas, para a cor
+const ELEMENT_CODES = new Set(["PRB", "LAC", "VID", "COR", "XIL", "APO", "DEF", "PIC", "INA"]);
+const modeFor = (code?: string | null): AiMode => (code && ELEMENT_CODES.has(code) ? "elemento" : "mancha");
 
 const PANELS_KEY = "archray:editor-paineis";
 
@@ -122,6 +127,11 @@ export function DamageMapEditor({
   const [aiProgress, setAiProgress] = useState<SamProgress | null>(null);
   const [aiInfo, setAiInfo] = useState<string | null>(null);
   const encodedRef = useRef<{ region: SamRegion; job: Promise<void> } | null>(null);
+  const [aiMode, setAiMode] = useState<AiMode>("mancha");
+  const [tol, setTol] = useState(14);
+  const [aiBox, setAiBox] = useState<SamRegion | null>(null);
+  const [boxDrag, setBoxDrag] = useState<[Pt, Pt] | null>(null);
+  const aiRegionRef = useRef<SamRegion | null>(null);
   const aiSeq = useRef(0);
 
   const svgRef = useRef<SVGSVGElement>(null);
@@ -186,6 +196,9 @@ export function DamageMapEditor({
     setAiPoints([]);
     setAiMasks([]);
     setAiIndex(0);
+    setAiBox(null);
+    setBoxDrag(null);
+    aiRegionRef.current = null;
   }, []);
 
   /** Região da imagem visível na tela (o que o usuário vê é o que a IA analisa), unida aos pontos. */
@@ -229,14 +242,15 @@ export function DamageMapEditor({
 
   /** Garante que a região visível (com os pontos) está codificada; reaproveita se ainda serve. */
   const ensureEncoded = useCallback(
-    (points: Pt[]) => {
-      const want = visibleRegion(points);
+    (points: Pt[], forced?: SamRegion) => {
+      const want = forced ?? visibleRegion(points);
       const cur = encodedRef.current;
       const covers =
         cur &&
         points.every(([x, y]) => x >= cur.region.x && y >= cur.region.y && x <= cur.region.x + cur.region.w && y <= cur.region.y + cur.region.h);
       // reaproveita se cobre os pontos e não ficou muito mais grosseira que o zoom atual
-      if (cur && covers && Math.max(cur.region.w, cur.region.h) <= Math.max(want.w, want.h) * 1.6) return cur.job;
+      const same = forced && cur && cur.region.x === want.x && cur.region.y === want.y && cur.region.w === want.w && cur.region.h === want.h;
+      if (same || (!forced && cur && covers && Math.max(cur.region.w, cur.region.h) <= Math.max(want.w, want.h) * 1.6)) return cur!.job;
       const sam = getSam();
       sam.onProgress = setAiProgress;
       const job = (async () => {
@@ -256,55 +270,114 @@ export function DamageMapEditor({
     [ortho.url, visibleRegion],
   );
 
+  /** Caixa desenhada + margem: a IA olha só para ela, então o dano ocupa o quadro todo. */
+  const boxRegion = useCallback(
+    (b: SamRegion): SamRegion => {
+      const m = Math.max(b.w, b.h) * 0.15 + 8;
+      const x = Math.max(0, Math.floor(b.x - m));
+      const y = Math.max(0, Math.floor(b.y - m));
+      return { x, y, w: Math.min(W, Math.ceil(b.x + b.w + m)) - x, h: Math.min(H, Math.ceil(b.y + b.h + m)) - y };
+    },
+    [W, H],
+  );
+
   const runAi = useCallback(
-    async (points: AiPoint[]) => {
+    async (points: AiPoint[], opts: { box?: SamRegion | null; mode?: AiMode; tol?: number } = {}) => {
       const seq = ++aiSeq.current;
+      const box = opts.box === undefined ? aiBox : opts.box;
+      const mode = opts.mode ?? aiMode;
       if (!points.length) {
         setAiMasks([]);
         return;
       }
+      const pts = points.map((a) => a.p);
+      const labels = points.map((a) => a.label);
       try {
-        await ensureEncoded(points.map((a) => a.p));
-        if (seq !== aiSeq.current) return;
-        setAiStatus("decoding");
-        const masks = await getSam().decode(points.map((a) => a.p), points.map((a) => a.label));
+        let masks: SamMask[];
+        let regionArea: number;
+        if (mode === "mancha") {
+          // região fixa durante o rascunho, para a tolerância mexer sempre na mesma imagem
+          const region = (aiRegionRef.current ??= box ? boxRegion(box) : visibleRegion(pts));
+          setAiStatus("decoding");
+          masks = await getSam().wand(ortho.url, region, pts, labels, opts.tol ?? tol, box ?? undefined);
+          regionArea = region.w * region.h;
+        } else {
+          const forced = box ? boxRegion(box) : undefined;
+          await ensureEncoded(pts, forced);
+          if (seq !== aiSeq.current) return;
+          setAiStatus("decoding");
+          masks = await getSam().decode(pts, labels, box ?? undefined);
+          const r = encodedRef.current?.region ?? visibleRegion(pts);
+          regionArea = r.w * r.h;
+        }
         if (seq !== aiSeq.current) return;
         setAiStatus("idle");
         const valid = masks.filter((m) => m.points.length >= 3);
-        if (!valid.length) {
+        // sem caixa: descarta o que pega quase tudo o que está na tela (a parede inteira não é um dano);
+        // com caixa o recorte já limita, e o dano tende a preencher a caixa
+        const local = box ? valid : valid.filter((m) => polygonAreaPx(m.points as Pt[]) <= regionArea * 0.4);
+        const list = local.length ? local : valid.slice(0, 1);
+        if (!list.length) {
           setAiMasks([]);
-          toast.info("A IA não encontrou uma região aqui. Tente clicar mais ao centro da mancha ou aproximar o zoom.");
+          toast.info(
+            mode === "mancha"
+              ? "Nada parecido com a cor clicada. Aumente a tolerância ou clique mais ao centro da mancha."
+              : "A IA não encontrou um elemento aqui. Arraste uma caixa em volta do dano ou aproxime o zoom.",
+          );
           return;
         }
-        // opções vêm do contorno mais justo ao mais amplo; ao refinar, mantém o nível escolhido.
-        // No primeiro clique, o mais justo que a IA considere razoável (dano costuma ser local).
-        setAiMasks(valid);
-        setAiIndex((cur) => {
-          if (points.length > 1 && cur < valid.length) return cur;
-          const i = valid.findIndex((m) => m.score >= 0.5);
-          return i >= 0 ? i : 0;
-        });
+        // opções vêm do contorno mais justo ao mais amplo; ao refinar, mantém o nível escolhido
+        setAiMasks(list);
+        // com caixa, começa pela opção de melhor nota que ocupa boa parte dela (sem ser a caixa toda)
+        let first = 0;
+        if (box && mode === "elemento") {
+          const boxArea = box.w * box.h;
+          let best = -1;
+          list.forEach((m, i) => {
+            const fill = polygonAreaPx(m.points as Pt[]) / boxArea;
+            if (fill > 0.12 && fill < 0.92 && m.score > best) {
+              best = m.score;
+              first = i;
+            }
+          });
+        }
+        setAiIndex((cur) => (points.length > 1 && cur < list.length ? cur : first));
       } catch (e) {
         if (seq === aiSeq.current) failAi(e);
       }
     },
-    [ensureEncoded, failAi],
+    [aiBox, aiMode, tol, boxRegion, ensureEncoded, failAi, ortho.url, visibleRegion],
   );
+
+  const changeTol = (t: number) => {
+    const next = Math.max(3, Math.min(45, Math.round(t)));
+    setTol(next);
+    if (aiMode === "mancha" && aiPoints.length) runAi(aiPoints, { tol: next });
+  };
+
+  const changeMode = (m: AiMode) => {
+    clearAi();
+    setAiMode(m);
+    // o modelo só é baixado quando o modo Elemento é usado
+    if (m === "elemento") ensureEncoded([]).then(() => setAiStatus((s) => (s === "encoding" ? "idle" : s))).catch(failAi);
+  };
 
   const startAi = useCallback(() => {
     setTool("contorno");
     setDraft([]);
     setSelected(null);
     clearAi();
-    if (activeType?.geometry !== "area") {
-      const first = types.find((t) => t.geometry === "area");
+    let t = activeType;
+    if (t?.geometry !== "area") {
+      const first = types.find((x) => x.geometry === "area") ?? null;
       if (activeType && first) toast.info(`Contorno IA é para danos de área — usando "${first.name}".`);
       setTypeId(first?.id ?? null);
+      t = first;
     }
-    // já baixa o modelo e analisa a vista atual, para o primeiro clique ser rápido
-    ensureEncoded([])
-      .then(() => setAiStatus((s) => (s === "encoding" ? "idle" : s)))
-      .catch(failAi);
+    const m = modeFor(t?.code);
+    setAiMode(m);
+    // no modo Elemento já baixa o modelo e analisa a vista, para o primeiro clique ser rápido
+    if (m === "elemento") ensureEncoded([]).then(() => setAiStatus((s) => (s === "encoding" ? "idle" : s))).catch(failAi);
   }, [activeType, types, clearAi, ensureEncoded, failAi]);
 
   /* ── desenho ── */
@@ -315,11 +388,12 @@ export function DamageMapEditor({
   }, [tool, clearAi]);
 
   const finishDraft = useCallback(
-    (points: Pt[]) => {
+    (points: Pt[], exact = false) => {
       if (!activeType) return;
       // remove pontos repetidos (duplo clique): menos de 2 px de tela de distância
       const ctm = svgRef.current?.getScreenCTM();
-      const tol = 2 / (ctm?.a || scale);
+      // (contorno da IA já vem limpo: só tira pontos repetidos de fato)
+      const tol = exact ? 0.01 : 2 / (ctm?.a || scale);
       const clean = points.filter((p, i) => i === 0 || Math.hypot(p[0] - points[i - 1]![0], p[1] - points[i - 1]![1]) > tol);
       if (clean.length < minPoints(activeType.geometry)) {
         toast.error(activeType.geometry === "area" ? "Uma área precisa de pelo menos 3 pontos." : "Uma linha precisa de pelo menos 2 pontos.");
@@ -354,7 +428,7 @@ export function DamageMapEditor({
   const aiPolygon = aiMasks[aiIndex]?.points ?? null;
   const saveAi = useCallback(() => {
     if (!aiPolygon || aiStatus !== "idle") return;
-    finishDraft(aiPolygon as Pt[]);
+    finishDraft(aiPolygon as Pt[], true);
     clearAi();
   }, [aiPolygon, aiStatus, finishDraft, clearAi]);
   const cycleAi = () => aiMasks.length > 1 && setAiIndex((i) => (i + 1) % aiMasks.length);
@@ -373,6 +447,10 @@ export function DamageMapEditor({
       if (e.key === "Escape") {
         cancelDraft();
         setSelected(null);
+      }
+      if (tool === "contorno" && aiMode === "mancha" && (e.key === "-" || e.key === "=" || e.key === "+")) {
+        changeTol(tol + (e.key === "-" ? -2 : 2));
+        return;
       }
       if (tool === "contorno" && aiPoints.length) {
         if (e.key === "Enter") saveAi();
@@ -451,6 +529,8 @@ export function DamageMapEditor({
     if (Math.hypot(dx, dy) > 4) pan.moved = true;
     const canPan = tool === "mover" || spaceRef.current || pan.button === 1;
     if (pan.moved && canPan) setView((v) => ({ ...v, x: pan.vx - dx / scale, y: pan.vy - dy / scale }));
+    // Contorno IA: arrastar desenha a caixa em volta do dano
+    else if (pan.moved && tool === "contorno" && pan.button === 0 && canEdit) setBoxDrag([toImage(pan.sx, pan.sy), p]);
   }
 
   function onPointerUp(e: React.PointerEvent) {
@@ -463,6 +543,22 @@ export function DamageMapEditor({
       const type = typeById.get(selDamage!.typeId)!;
       setDamages((list) => list.map((d) => (d.id === id ? { ...d, geometry: { points }, ...measure(type.geometry, points, mm) } : d)));
       patchDamage(id, { points });
+      return;
+    }
+    if (tool === "contorno" && pan?.moved && pan.button === 0 && !spaceRef.current && canEdit) {
+      // caixa = do ponto onde o arraste começou até onde soltou (não depende do estado do arraste)
+      const [ax, ay] = toImage(pan.sx, pan.sy);
+      const [bx, by] = toImage(e.clientX, e.clientY);
+      setBoxDrag(null);
+      const b = { x: Math.min(ax, bx), y: Math.min(ay, by), w: Math.abs(bx - ax), h: Math.abs(by - ay) };
+      if (b.w * scale < 8 || b.h * scale < 8 || activeType?.geometry !== "area") return;
+      // caixa nova = rascunho novo, começando pelo centro dela
+      aiSeq.current++;
+      aiRegionRef.current = null;
+      setAiBox(b);
+      const first: AiPoint[] = [{ p: [b.x + b.w / 2, b.y + b.h / 2], label: 1 }];
+      setAiPoints(first);
+      runAi(first, { box: b });
       return;
     }
     if (!pan || pan.moved || pan.button !== 0 || spaceRef.current) return;
@@ -499,7 +595,12 @@ export function DamageMapEditor({
   function pickType(id: string) {
     setTypeId(id);
     // no Contorno IA, trocar para outro tipo de área mantém a ferramenta (e o rascunho)
-    if (tool === "contorno" && typeById.get(id)?.geometry === "area") return;
+    if (tool === "contorno" && typeById.get(id)?.geometry === "area") {
+      // cada tipo abre no modo que funciona melhor para ele (mancha × elemento)
+      const m = modeFor(typeById.get(id)?.code);
+      if (m !== aiMode) changeMode(m);
+      return;
+    }
     clearAi();
     setTool("desenhar");
     setDraft([]);
@@ -857,6 +958,19 @@ export function DamageMapEditor({
                 </g>
               )}
 
+              {/* caixa do contorno IA (sendo arrastada ou já usada) */}
+              {tool === "contorno" && (boxDrag || aiBox) && (() => {
+                const b = boxDrag
+                  ? { x: Math.min(boxDrag[0][0], boxDrag[1][0]), y: Math.min(boxDrag[0][1], boxDrag[1][1]), w: Math.abs(boxDrag[1][0] - boxDrag[0][0]), h: Math.abs(boxDrag[1][1] - boxDrag[0][1]) }
+                  : aiBox!;
+                return (
+                  <g pointerEvents="none">
+                    <rect x={b.x} y={b.y} width={b.w} height={b.h} fill="none" stroke="#000" strokeOpacity={0.6} strokeWidth={3} vectorEffect="non-scaling-stroke" />
+                    <rect x={b.x} y={b.y} width={b.w} height={b.h} fill="none" stroke="#fff" strokeWidth={1.5} strokeDasharray="5 4" vectorEffect="non-scaling-stroke" />
+                  </g>
+                );
+              })()}
+
               {/* rascunho do contorno IA */}
               {tool === "contorno" && (aiPolygon || aiPoints.length > 0) && (
                 <g pointerEvents="none">
@@ -906,16 +1020,54 @@ export function DamageMapEditor({
 
           {/* rodapé da tela: ações do contorno IA e dica de uso, empilhadas para nunca se sobreporem */}
           <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2">
-          {tool === "contorno" && (aiPoints.length > 0 || aiInfo) && (
+          {tool === "contorno" && canEdit && (
             <div className="pointer-events-auto flex max-w-full justify-center">
-              <div className="flex flex-wrap items-center justify-center gap-1.5 rounded-full border border-white/10 bg-black/70 p-1 pl-3 text-[12px] text-white backdrop-blur">
-                {aiStatus !== "idle" && <Loader2 className="size-3.5 animate-spin opacity-80" />}
-                <span className="text-white/70">{aiInfo ?? "IA no navegador"}</span>
+              <div className="flex flex-wrap items-center justify-center gap-1.5 rounded-3xl border border-white/10 bg-black/70 p-1 text-[12px] text-white backdrop-blur">
+                <div className="flex rounded-full bg-white/10 p-0.5" role="radiogroup" aria-label="Modo do contorno">
+                  {(
+                    [
+                      ["mancha", "Mancha", "Pela cor: manchas, umidade, sujidade, biodeterioração"],
+                      ["elemento", "Elemento", "IA (SAM): danos com borda nítida — perda de reboco, lacuna, vidro"],
+                    ] as const
+                  ).map(([m, label, title]) => (
+                    <button
+                      key={m}
+                      type="button"
+                      role="radio"
+                      aria-checked={aiMode === m}
+                      title={title}
+                      onClick={() => aiMode !== m && changeMode(m)}
+                      className={cn("rounded-full px-2.5 py-1", aiMode === m ? "bg-white font-medium text-black" : "hover:bg-white/15")}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                {aiMode === "mancha" ? (
+                  <label className="flex items-center gap-2 px-1.5" title="Tolerância de cor (teclas − e +)">
+                    <span className="text-white/70">Tolerância</span>
+                    <input
+                      type="range"
+                      min={3}
+                      max={45}
+                      step={1}
+                      value={tol}
+                      onChange={(e) => changeTol(Number(e.target.value))}
+                      className="h-1 w-24 cursor-pointer accent-white"
+                    />
+                    <span className="w-5 text-right tabular-nums">{tol}</span>
+                  </label>
+                ) : (
+                  <>
+                    {aiStatus !== "idle" && <Loader2 className="size-3.5 animate-spin opacity-80" />}
+                    <span className="px-1 text-white/70">{aiInfo ?? "IA no navegador"}</span>
+                  </>
+                )}
                 {aiPoints.length > 0 && (
                   <>
                     {aiMasks.length > 1 && (
                       <button type="button" onClick={cycleAi} className="rounded-full px-2.5 py-1 hover:bg-white/15" title="Tab">
-                        Contorno: {aiMasks.length === 3 ? ["justo", "médio", "amplo"][aiIndex] : `${aiIndex + 1}/${aiMasks.length}`}
+                        Contorno: {["justo", "médio", "amplo"][aiIndex] ?? aiIndex + 1}
                       </button>
                     )}
                     <button type="button" onClick={clearAi} className="rounded-full px-2.5 py-1 hover:bg-white/15" title="Esc">
@@ -954,8 +1106,12 @@ export function DamageMapEditor({
                         : !activeType || activeType.geometry !== "area"
                           ? "Contorno IA: escolha na biblioteca um dano de área (mancha, perda de reboco…)"
                           : aiPolygon
-                            ? `${activeType.name}: clique para incluir mais · Shift+clique exclui · Enter salva · Tab outra opção · Esc descarta`
-                            : `${activeType.name}: clique sobre a mancha para contornar · aproxime o zoom para mais detalhe`
+                            ? aiMode === "mancha"
+                              ? `${activeType.name}: clique para incluir mais · Shift+clique exclui · − / + tolerância · Enter salva · Esc descarta`
+                              : `${activeType.name}: clique para incluir mais · Shift+clique exclui · Enter salva · Tab outra opção · Esc descarta`
+                            : aiMode === "mancha"
+                              ? `${activeType.name}: clique sobre a mancha (cresce pela cor) · ou arraste uma caixa para limitar`
+                              : `${activeType.name}: arraste uma caixa em volta do dano · ou clique sobre ele`
                 : tool === "desenhar" && activeType
                   ? activeType.geometry === "ponto"
                     ? `${activeType.name}: clique para marcar. Esc para sair.`

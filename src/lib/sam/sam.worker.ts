@@ -4,6 +4,7 @@
 // sem passar pelo bundler; os modelos vêm do Hugging Face e ficam na Cache Storage.
 import type * as Ort from "onnxruntime-web";
 import { maskToPolygon, type XY } from "./contour";
+import { toLab, wandMask } from "./wand";
 import type { Backend, SamRequest, SamResponse, SamRegion } from "./protocol";
 
 declare const self: DedicatedWorkerGlobalScope;
@@ -132,10 +133,41 @@ async function encode(url: string, region: SamRegion) {
   return ms;
 }
 
-async function decode(points: XY[], labels: number[]) {
+/** Pixels (Lab) da região, na mesma escala da IA (lado maior ≤ 1024); guarda a última. */
+let labCache: { key: string; region: SamRegion; w: number; h: number; lab: Float32Array } | null = null;
+async function regionLab(url: string, region: SamRegion) {
+  const key = `${url}|${region.x},${region.y},${region.w},${region.h}`;
+  if (labCache?.key === key) return labCache;
+  const img = await loadBitmap(url);
+  const k = SIZE / Math.max(region.w, region.h);
+  const w = Math.max(1, Math.round(region.w * k));
+  const h = Math.max(1, Math.round(region.h * k));
+  const ctx = new OffscreenCanvas(w, h).getContext("2d", { willReadFrequently: true })!;
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(img, region.x, region.y, region.w, region.h, 0, 0, w, h);
+  labCache = { key, region, w, h, lab: toLab(ctx.getImageData(0, 0, w, h).data, w, h) };
+  return labCache;
+}
+
+/** Recorte (pixels da imagem) → retângulo no espaço redimensionado. */
+const clipRect = (clip: SamRegion | undefined, region: SamRegion, k: number) =>
+  clip && { x0: (clip.x - region.x) * k, y0: (clip.y - region.y) * k, x1: (clip.x + clip.w - region.x) * k, y1: (clip.y + clip.h - region.y) * k };
+
+async function wand(url: string, region: SamRegion, points: XY[], labels: number[], tol: number, clip?: SamRegion) {
+  const { w, h, lab } = await regionLab(url, region);
+  const k = w / region.w;
+  const local: XY[] = points.map(([x, y]) => [(x - region.x) * k, (y - region.y) * k]);
+  const mask = wandMask(lab, w, h, local, labels, tol, clipRect(clip, region, k));
+  const poly = maskToPolygon(mask, w, h, local.filter((_, i) => labels[i] === 1), 120);
+  const pts = poly.map(([x, y]) => [region.x + (x + 0.5) / k, region.y + (y + 0.5) / k] as XY);
+  return { points: pts, score: 1 };
+}
+
+async function decode(points: XY[], labels: number[], clip?: SamRegion) {
   if (!ort || !decoder || !embedding) throw new Error("Imagem não codificada.");
   const { region, newW, newH, emb, pos } = embedding;
   const k = newW / region.w;
+  const cr = clipRect(clip, region, k);
   // pontos em coordenadas da imagem → espaço redimensionado (≤1024)
   const local: XY[] = points.map(([x, y]) => [(x - region.x) * k, (y - region.y) * k]);
   const n = local.length;
@@ -171,7 +203,7 @@ async function decode(points: XY[], labels: number[]) {
         const v =
           (md[base + y0 * mw + x0]! * (1 - wx) + md[base + y0 * mw + x1]! * wx) * (1 - wy) +
           (md[base + y1 * mw + x0]! * (1 - wx) + md[base + y1 * mw + x1]! * wx) * wy;
-        bin[y * newW + x] = v > 0 ? 1 : 0;
+        bin[y * newW + x] = v > 0 && (!cr || (x >= cr.x0 && x <= cr.x1 && y >= cr.y0 && y <= cr.y1)) ? 1 : 0;
       }
     }
     const poly = maskToPolygon(bin, newW, newH, seeds);
@@ -192,8 +224,11 @@ self.onmessage = async (e: MessageEvent<SamRequest>) => {
       const ms = await encode(msg.url, msg.region);
       post({ type: "encoded", id: msg.id, ms });
     } else if (msg.type === "decode") {
-      const masks = await decode(msg.points, msg.labels);
+      const masks = await decode(msg.points, msg.labels, msg.clip);
       post({ type: "decoded", id: msg.id, masks });
+    } else if (msg.type === "wand") {
+      const mask = await wand(msg.url, msg.region, msg.points, msg.labels, msg.tol, msg.clip);
+      post({ type: "decoded", id: msg.id, masks: mask.points.length >= 3 ? [mask] : [] });
     }
   } catch (err) {
     post({ type: "error", id: msg.id, message: (err as Error)?.message || String(err) });

@@ -62,7 +62,7 @@ export function SimpleSelect({
       value={value}
       onValueChange={onValueChange}
     >
-      <SelectTrigger id={id} className={cn("w-full", className)}>
+      <SelectTrigger id={id} className={cn("w-full min-w-0 *:data-[slot=select-value]:block! *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:truncate", className)}>
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
       <SelectContent className="max-h-72">

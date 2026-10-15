@@ -96,6 +96,8 @@ export function DamageMapEditor({
       const saved = JSON.parse(localStorage.getItem(PANELS_KEY) ?? "null");
       // eslint-disable-next-line react-hooks/set-state-in-effect -- lê o navegador só depois de montar
       if (saved) setPanels({ lib: saved.lib !== false, side: saved.side !== false });
+      // sem preferência salva, em telas menores a biblioteca começa recolhida para a imagem ter espaço
+      else if (window.innerWidth < 1200) setPanels({ lib: false, side: true });
     } catch {
       // sem armazenamento: painéis abertos
     }
@@ -561,6 +563,18 @@ export function DamageMapEditor({
   const usedTypes = summary.map((s) => s.type);
   const orc = useMemo(() => budget(damages, prices), [damages, prices]);
   const costByType = new Map(orc.rows.map((r) => [r.typeId, r]));
+  const stats = useMemo(() => {
+    let area = 0;
+    let length = 0;
+    let urgent = 0;
+    for (const d of damages) {
+      const g = typeById.get(d.typeId)?.geometry;
+      if (g === "area") area += d.areaM2 ?? 0;
+      if (g === "linha") length += d.lengthM ?? 0;
+      if (gut(d) >= 64) urgent++;
+    }
+    return { area, length, urgent };
+  }, [damages, typeById]);
 
   const cursor = tool === "desenhar" || tool === "calibrar" || tool === "contorno" ? (aiStatus !== "idle" && tool === "contorno" ? "progress" : "crosshair") : panRef.current?.moved ? "grabbing" : "grab";
 
@@ -735,7 +749,7 @@ export function DamageMapEditor({
             <span className="text-[12px] [writing-mode:vertical-rl] rotate-180">Biblioteca de danos</span>
           </button>
         )}
-        <aside className={cn("thin-scroll hidden w-64 shrink-0 overflow-y-auto border-r bg-sidebar", panels.lib && "md:block")}>
+        <aside className={cn("thin-scroll hidden w-56 shrink-0 overflow-y-auto border-r bg-sidebar 2xl:w-64", panels.lib && "md:block")}>
           <div className="sticky top-0 z-10 border-b bg-sidebar p-3">
             <p className="label mb-2">Biblioteca de danos</p>
             <div className="relative">
@@ -760,8 +774,10 @@ export function DamageMapEditor({
                     )}
                   >
                     <Swatch type={t} />
-                    <span className="min-w-0 flex-1 truncate">{t.name}</span>
-                    <span className="text-[10.5px] text-muted-foreground">{t.code}</span>
+                    <span className="line-clamp-2 min-w-0 flex-1 leading-tight break-words" title={t.name}>
+                      {t.name}
+                    </span>
+                    <span className="shrink-0 text-[10.5px] text-muted-foreground">{t.code}</span>
                   </button>
                 ))}
             </div>
@@ -888,9 +904,10 @@ export function DamageMapEditor({
             {busy && <Loader2 className="mx-1.5 size-4 animate-spin opacity-70" />}
           </div>
 
-          {/* ações do rascunho do contorno IA */}
+          {/* rodapé da tela: ações do contorno IA e dica de uso, empilhadas para nunca se sobreporem */}
+          <div className="pointer-events-none absolute inset-x-3 bottom-3 flex flex-col items-center gap-2">
           {tool === "contorno" && (aiPoints.length > 0 || aiInfo) && (
-            <div className="absolute right-3 bottom-14 left-3 flex justify-center">
+            <div className="pointer-events-auto flex max-w-full justify-center">
               <div className="flex flex-wrap items-center justify-center gap-1.5 rounded-full border border-white/10 bg-black/70 p-1 pl-3 text-[12px] text-white backdrop-blur">
                 {aiStatus !== "idle" && <Loader2 className="size-3.5 animate-spin opacity-80" />}
                 <span className="text-white/70">{aiInfo ?? "IA no navegador"}</span>
@@ -919,9 +936,8 @@ export function DamageMapEditor({
             </div>
           )}
 
-          {/* dica de uso */}
-          <div className="pointer-events-none absolute right-3 bottom-3 left-3 flex justify-center">
-            <p className="rounded-full bg-black/65 px-3 py-1.5 text-center text-[12px] text-white/90 backdrop-blur">
+            {/* dica de uso */}
+            <p className="max-w-full rounded-2xl bg-black/65 px-3 py-1.5 text-center text-[12px] text-balance text-white/90 backdrop-blur">
               {tool === "calibrar"
                 ? draft.length
                   ? "Clique no segundo extremo da medida."
@@ -964,7 +980,7 @@ export function DamageMapEditor({
           </button>
         )}
         {/* com um dano selecionado o painel abre mesmo recolhido, para editar; ao fechar o dano ele recolhe de novo */}
-        <aside className={cn("thin-scroll hidden w-80 shrink-0 overflow-y-auto border-l bg-background", (panels.side || selDamage) && "lg:block")}>
+        <aside className={cn("thin-scroll hidden w-72 shrink-0 overflow-y-auto border-l bg-background 2xl:w-80", (panels.side || selDamage) && "lg:block")}>
           {selDamage ? (
             <DamagePanel
               key={selDamage.id}
@@ -978,83 +994,131 @@ export function DamageMapEditor({
               onDelete={() => removeDamage(selDamage.id)}
             />
           ) : (
-            <div className="grid gap-5 p-4">
-              <div className="rounded-xl border bg-card p-3">
-                <p className="label">Orçamento estimado</p>
-                <p className="mt-1 text-[22px] font-medium tabular-nums">{fmtBRL(orc.totalCents)}</p>
-                <p className="text-[11.5px] text-muted-foreground">
+            <div className="flex min-w-0 flex-col gap-6 p-4 pb-20">
+              {/* orçamento da vista */}
+              <div className="rounded-xl border bg-card p-3.5">
+                <div className="flex items-baseline justify-between gap-2">
+                  <p className="label">Orçamento estimado</p>
+                  <span className="text-[11.5px] text-muted-foreground tabular-nums">
+                    {damages.length} {damages.length === 1 ? "dano" : "danos"}
+                  </span>
+                </div>
+                <p className="mt-1 text-[24px] leading-tight font-medium tracking-[-0.01em] tabular-nums">{fmtBRL(orc.totalCents)}</p>
+                <p className="mt-0.5 text-[11.5px] leading-snug text-muted-foreground">
                   {damages.length === 0
                     ? "Marque danos para orçar o tratamento."
                     : orc.missing > 0
                       ? `${orc.missing} dano(s) sem medida — defina a escala para orçar.`
-                      : "Quantidade × preço da tabela do escritório (Biblioteca)."}
+                      : "Quantidade × preço da tabela do escritório."}
                 </p>
+                {damages.length > 0 && (
+                  <dl className="mt-3 grid grid-cols-3 gap-2 border-t pt-3 text-[11.5px]">
+                    <div className="min-w-0">
+                      <dt className="text-muted-foreground">Área</dt>
+                      <dd className="truncate text-[13px] font-medium tabular-nums">{mm ? fmtArea(stats.area) : "—"}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted-foreground">Linhas</dt>
+                      <dd className="truncate text-[13px] font-medium tabular-nums">{mm ? fmtLength(stats.length) : "—"}</dd>
+                    </div>
+                    <div className="min-w-0">
+                      <dt className="text-muted-foreground">Imediatos</dt>
+                      <dd className="truncate text-[13px] font-medium tabular-nums">{stats.urgent}</dd>
+                    </div>
+                  </dl>
+                )}
               </div>
-              <div>
-                <p className="label mb-2">Quantitativos</p>
+
+              {/* quantitativos por tipo */}
+              <section className="min-w-0">
+                <p className="label mb-1">Quantitativos</p>
                 {summary.length === 0 ? (
                   <p className="text-[13px] text-muted-foreground">Nenhum dano marcado ainda.</p>
                 ) : (
-                  <ul className="grid gap-1">
-                    {summary.map((s) => (
-                      <li key={s.type.id} className="flex items-center gap-2 rounded-md px-1.5 py-1 text-[13px] hover:bg-muted">
-                        <Swatch type={s.type} />
-                        <span className="min-w-0 flex-1 truncate">{s.type.name}</span>
-                        <span className="text-[12px] text-muted-foreground tabular-nums">
-                          {s.type.geometry === "area" ? fmtArea(mm ? s.area : null) : s.type.geometry === "linha" ? fmtLength(mm ? s.length : null) : `${s.count} un.`}
-                        </span>
-                        <span className="w-20 text-right text-[12px] tabular-nums">{fmtBRL(costByType.get(s.type.id)?.cents ?? 0)}</span>
-                        <button
-                          aria-label={hidden.has(s.type.id) ? "Mostrar" : "Ocultar"}
-                          onClick={() =>
-                            setHidden((h) => {
-                              const n = new Set(h);
-                              if (n.has(s.type.id)) n.delete(s.type.id);
-                              else n.add(s.type.id);
-                              return n;
-                            })
-                          }
-                          className="text-muted-foreground hover:text-foreground"
-                        >
-                          {hidden.has(s.type.id) ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-              {damages.length > 0 && (
-                <div>
-                  <p className="label mb-2">Danos ({damages.length})</p>
-                  <ul className="grid gap-0.5">
-                    {damages.map((d, i) => {
-                      const t = typeById.get(d.typeId);
-                      if (!t) return null;
+                  <ul className="grid grid-cols-1 divide-y">
+                    {summary.map((s) => {
+                      const off = hidden.has(s.type.id);
+                      const qty =
+                        s.type.geometry === "area" ? fmtArea(mm ? s.area : null) : s.type.geometry === "linha" ? fmtLength(mm ? s.length : null) : `${s.count} un.`;
                       return (
-                        <li key={d.id}>
+                        <li key={s.type.id} className={cn("flex min-w-0 items-start gap-2.5 py-2", off && "opacity-45")}>
+                          <span className="mt-[3px] flex shrink-0">
+                            <Swatch type={s.type} />
+                          </span>
+                          <div className="min-w-0 flex-1">
+                            <p className="line-clamp-2 text-[13px] leading-5 break-words" title={s.type.name}>
+                              {s.type.name}
+                            </p>
+                            <p className="text-[11.5px] leading-4 text-muted-foreground tabular-nums">
+                              {qty}
+                              {s.type.geometry !== "ponto" && ` · ${s.count} ${s.count === 1 ? "dano" : "danos"}`}
+                            </p>
+                          </div>
+                          <span className="shrink-0 text-[13px] leading-5 tabular-nums">{fmtBRL(costByType.get(s.type.id)?.cents ?? 0)}</span>
                           <button
-                            onClick={() => {
-                              setTool("mover");
-                              setSelected(d.id);
-                            }}
-                            className="flex w-full items-center gap-2 rounded-md px-1.5 py-1 text-left text-[13px] hover:bg-muted"
+                            aria-label={off ? `Mostrar ${s.type.name}` : `Ocultar ${s.type.name}`}
+                            title={off ? "Mostrar na imagem" : "Ocultar na imagem"}
+                            onClick={() =>
+                              setHidden((h) => {
+                                const n = new Set(h);
+                                if (n.has(s.type.id)) n.delete(s.type.id);
+                                else n.add(s.type.id);
+                                return n;
+                              })
+                            }
+                            className="-mr-1 grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
                           >
-                            <span className="w-5 text-[11px] text-muted-foreground tabular-nums">{i + 1}</span>
-                            <Swatch type={t} />
-                            <span className="min-w-0 flex-1 truncate">{t.name}</span>
-                            <span className="text-[12px] text-muted-foreground tabular-nums">
-                              {t.geometry === "area" ? fmtArea(d.areaM2) : t.geometry === "linha" ? fmtLength(d.lengthM) : ""}
-                            </span>
+                            {off ? <EyeOff className="size-3.5" /> : <Eye className="size-3.5" />}
                           </button>
                         </li>
                       );
                     })}
                   </ul>
-                </div>
+                )}
+              </section>
+
+              {/* lista de danos */}
+              {damages.length > 0 && (
+                <section className="min-w-0">
+                  <p className="label mb-1">Danos ({damages.length})</p>
+                  <ul className="-mx-1.5 grid grid-cols-1">
+                    {damages.map((d, i) => {
+                      const t = typeById.get(d.typeId);
+                      if (!t) return null;
+                      const cost = damageCostCents(d, prices);
+                      const measureText = t.geometry === "area" ? fmtArea(d.areaM2) : t.geometry === "linha" ? fmtLength(d.lengthM) : "1 un.";
+                      return (
+                        <li key={d.id} className="min-w-0">
+                          <button
+                            onClick={() => {
+                              setTool("mover");
+                              setSelected(d.id);
+                            }}
+                            className="flex w-full min-w-0 items-start gap-2.5 rounded-md px-1.5 py-1.5 text-left hover:bg-muted"
+                          >
+                            <span className="w-4 shrink-0 text-right text-[11px] leading-5 text-muted-foreground tabular-nums">{i + 1}</span>
+                            <span className="mt-[3px] flex shrink-0">
+                              <Swatch type={t} />
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="line-clamp-2 text-[13px] leading-5 break-words" title={t.name}>
+                                {t.name}
+                              </span>
+                              <span className="block truncate text-[11.5px] leading-4 text-muted-foreground tabular-nums">
+                                {measureText} · P{priority(gut(d)).level}
+                              </span>
+                            </span>
+                            <span className="shrink-0 text-[12px] leading-5 tabular-nums">{cost == null ? "—" : fmtBRL(cost)}</span>
+                          </button>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </section>
               )}
               {usedTypes.length > 0 && (
-                <p className="text-[12px] text-muted-foreground">
-                  A prancha PDF e o DXF usam esta legenda, com uma camada por tipo de dano.
+                <p className="text-[11.5px] leading-snug text-muted-foreground">
+                  P1 a P4 = prioridade GUT. A prancha PDF e o DXF usam esta legenda, com uma camada por tipo de dano.
                 </p>
               )}
             </div>
@@ -1124,7 +1188,7 @@ function DamagePanel({
     if (v !== (damage[field] ?? "")) onPatch({ [field]: v || null });
   };
   return (
-    <div className="grid gap-4 p-4">
+    <div className="grid min-w-0 grid-cols-1 gap-4 p-4 pb-20">
       <div className="flex items-center gap-2">
         <button onClick={onClose} className="text-[12.5px] text-muted-foreground hover:text-foreground">
           ← Todos os danos
@@ -1135,9 +1199,11 @@ function DamagePanel({
           </Button>
         )}
       </div>
-      <div className="flex items-center gap-2">
-        <Swatch type={type} />
-        <span className="text-[16px] font-medium leading-tight">{type.name}</span>
+      <div className="flex items-start gap-2">
+        <span className="mt-[3px] flex shrink-0">
+          <Swatch type={type} />
+        </span>
+        <span className="min-w-0 text-[16px] leading-tight font-medium break-words">{type.name}</span>
       </div>
       <div className="flex flex-wrap gap-2">
         <Badge variant="outline">{geometryKinds[type.geometry]}</Badge>
@@ -1145,7 +1211,7 @@ function DamagePanel({
         {type.geometry !== "ponto" && <Badge variant="secondary">{type.geometry === "area" ? "perímetro " : ""}{fmtLength(damage.lengthM)}</Badge>}
       </div>
 
-      <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+      <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Tipo de dano
         <SimpleSelect
           options={sameGeometry.map((t) => ({ value: t.id, label: t.name }))}
@@ -1153,7 +1219,7 @@ function DamagePanel({
           onValueChange={(v) => canEdit && onPatch({ typeId: v })}
         />
       </label>
-      <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+      <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Gravidade
         <SimpleSelect
           options={Object.entries(severities).map(([value, label]) => ({ value, label }))}
@@ -1162,7 +1228,7 @@ function DamagePanel({
         />
       </label>
       <div className="grid grid-cols-2 gap-2">
-        <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+        <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
           Urgência
           <SimpleSelect
             options={Object.entries(URGENCY_LABELS).map(([value, label]) => ({ value, label: `${value} · ${label}` }))}
@@ -1170,7 +1236,7 @@ function DamagePanel({
             onValueChange={(v) => canEdit && onPatch({ urgency: Number(v) })}
           />
         </label>
-        <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+        <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
           Tendência
           <SimpleSelect
             options={Object.entries(TREND_LABELS).map(([value, label]) => ({ value, label: `${value} · ${label}` }))}
@@ -1196,15 +1262,15 @@ function DamagePanel({
           </div>
         )}
       </div>
-      <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+      <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Causa provável
         <Textarea defaultValue={damage.cause ?? ""} onBlur={saveText("cause")} readOnly={!canEdit} rows={2} />
       </label>
-      <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+      <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Recomendação
         <Textarea defaultValue={damage.recommendation ?? ""} onBlur={saveText("recommendation")} readOnly={!canEdit} rows={2} placeholder={price?.treatment || undefined} />
       </label>
-      <label className="grid gap-1.5 text-[12.5px] font-medium text-foreground/80">
+      <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Observações
         <Textarea defaultValue={damage.notes ?? ""} onBlur={saveText("notes")} readOnly={!canEdit} rows={3} />
       </label>

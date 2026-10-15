@@ -198,8 +198,12 @@ html:has(.site-theme.site-light) {
 @media (prefers-reduced-motion: reduce) {
   .motion-ready [data-reveal],
   .motion-ready [data-reveal="scale"] {
-    transform: none;
+    transform: translate3d(0, 10px, 0);
     filter: none;
+  }
+  .motion-ready [data-reveal="fade"],
+  .motion-ready [data-reveal].is-in {
+    transform: none;
   }
   .motion-ready [data-reveal] .dm-dot,
   .motion-ready [data-reveal] .dm-label {

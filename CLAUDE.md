@@ -1,16 +1,20 @@
 @AGENTS.md
 
-# Oraclo — do scan ao BIM
+# Oraclo — mapa de danos com IA
 
-Plataforma (web, com captura integrada para celular) de **scan-to-BIM** para qualquer
-edificação (reforma, retrofit, indústria, varejo, patrimônio): o cliente captura com o
-celular (fotos ou vídeo), drone ou laser — ou envia a nuvem pronta — e recebe nuvem de
-pontos validada, **modelo BIM (RVT, PLN, IFC)** modelado pela equipe/parceiros, ortofotos,
-mapa de danos e documentação. Escopo, fases e decisões em **`PRD.md`** (v0.2; ler antes de
-qualquer feature nova).
+Central visual de **diagnóstico de edificações existentes**: o imóvel aparece na tela
+(fachadas retificadas, plantas, imagens em escala, modelo 3D opcional), os danos são
+apontados em cima — à mão (IA de contorno na fase 2) — e a plataforma calcula
+quantitativos, **orçamento do tratamento**, prioridade **GUT** e gera o **laudo de estado de
+conservação** em PDF. Piloto: Estúdio Restaura; público também inspeção predial/patologia.
+Escopo e decisões em **`PRD.md`** (v0.3; ler antes de qualquer feature nova). A v0.2
+(scan-to-BIM, nuvem de pontos) foi abandonada — histórico em `docs/PRD-v0.2-scan-to-bim.md`.
+Tudo deve rodar em planos **gratuitos** (sem GPU/servidor de processamento).
 
-**Nomenclatura:** na interface a entidade `sites` se chama **Projeto** e `elements` se chama
-**Área**; as rotas continuam em `/bens/...` (nome interno antigo).
+**Nomenclatura (interno → interface):** `sites` = **Projeto**, `elements` = **Área**,
+`campaigns` = **Vistoria**, `orthophotos` = **Vista** (`kind`: fachada, planta, imagem,
+modelo_3d), `captures` = **Fotos de campo** (ou modelo 3D importado, `mode = laser`).
+As rotas continuam em `/bens/...` e `/ortofotos/...` (nomes internos antigos).
 
 ## Stack
 - Next.js 16.4 (App Router, Server Actions, Turbopack). `cacheComponents` desligado:
@@ -31,33 +35,36 @@ qualquer feature nova).
 - Papéis: `admin` (tudo, inclusive excluir bem), `tecnico` (edita), `campo` (só captura),
   `leitor` (só vê). `editors` em `src/lib/auth.ts`. Toda server action revalida o papel.
 - Consultas que não são actions ficam em `src/lib/*` — nunca exportar consulta de um arquivo `"use server"`.
-- **Pedidos de modelo BIM** (`/bim`, `/operacao`; lógica em `src/lib/bim.ts`, `src/lib/bim-orders.ts`, ações em
-  `src/app/(app)/bim/actions.ts`). Fluxo: solicitado → orçado → aprovado → em modelagem → conferência interna →
-  entregue → (revisão) → concluído. Acesso por `accessOf()`: organização cliente, **operador** (vê tudo) ou
-  **parceiro** atribuído (sem preços; versões dele só chegam ao cliente depois que um operador libera).
-  `users.platform_role` = operador/parceiro; e-mails em `PLATFORM_OPERATORS` viram operadores automaticamente.
-  Preço/prazo automáticos são **estimativas** (`estimate()` em `src/lib/bim.ts`, valores a validar).
+- **Vista retificada**: `src/lib/rectify.ts` (homografia de 4 pontos + warp bilinear no canvas, no navegador);
+  tela em `/bens/[id]/ortofotos/nova` (`?tipo=fachada|planta|imagem`, `?vistoria=`). Guarda a foto
+  original (`source_url`) e os cantos/medidas (`rectification`).
+- **Orçamento e GUT**: funções puras em `src/lib/pricing.ts` (preço por tipo, unidade m²/m/un pela
+  geometria, valores SUGERIDOS hipotéticos por código; GUT = G(severity 2–5) × urgency × trend; faixas
+  ≥64/27/12). Preços do escritório em `treatment_prices` (`src/lib/prices.ts`, edição em /biblioteca).
+- **Painel e laudo**: `loadDiagnosis()` em `src/lib/diagnosis.ts` alimenta o painel do projeto
+  (`/bens/[id]`, filtro `?vistoria=`) e o laudo A4 (`/bens/[id]/laudo`, `src/lib/exports/laudo.ts`).
+  IDs dos danos no laudo = código + ordem na vista (iguais aos da prancha A3).
 - Datas sempre por `src/lib/format.ts` (fuso America/Sao_Paulo); servidor roda em UTC.
 - Rótulos dos enums em `src/lib/labels.ts`.
 - Tokens de convite e de nova senha: só o **hash** fica no banco (`src/lib/email.ts`, `src/lib/tokens.ts`).
   Funções que criam links (ex.: `createResetFor`) ficam em `src/lib/*`, nunca exportadas de arquivo `"use server"`.
 - Biblioteca de danos padrão = linhas de `damage_types` com `org_id` nulo
   (`src/lib/damage-library.ts`, idempotente). Personalizadas têm `org_id`.
-- Ortofotos (JPG/PNG) vão para o **Vercel Blob** (store `oraclo-files`, gru1, público com
+- Vistas (JPG/PNG) vão para o **Vercel Blob** (store `oraclo-files`, gru1, público com
   sufixo aleatório) por upload direto do navegador (`/api/upload`, que valida sessão,
-  papel e o bem). Caminho: `orgs/<orgId>/sites/<siteId>/...`. Nuvens/malhas pesadas
-  irão para Cloudflare R2 (ainda não conectado) — o banco guarda só metadados.
+  papel e o bem). Caminho: `orgs/<orgId>/sites/<siteId>/...`. Modelos 3D importados
+  também (até 5 GB) — o banco guarda só metadados.
 - Mapa de danos: pontos em **pixels da imagem** (`damages.geometry.points`); áreas e
   comprimentos vêm de `src/lib/geometry.ts` × `orthophotos.mm_per_pixel` e são
   recalculados no servidor a cada mudança de escala. Exportações em
   `src/lib/exports/` (DXF R2007 em metros + IMAGE, zipado com a ortofoto; prancha A3 em PDF).
 - Testar exportações fora do Next: `.cache/check-exports.mts` com `tsx` e o tsconfig
   `.cache/tsconfig.check.json` (stub de `server-only`).
-- Mockado primeiro: app de captura, upload e processamento em GPU ainda não existem;
-  a UI mostra "em breve" nesses pontos.
+- Fase 2 (não feito): contorno com IA no navegador (SAM/SlimSAM via transformers.js), sugestões de
+  fissuras, foto 360°, comparação entre vistorias, tipos de dano personalizados.
 
 ## Env (Vercel + `.env.local`)
-`DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`, `PLATFORM_OPERATORS` (e-mails separados por vírgula).
+`DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`. (`PLATFORM_OPERATORS` era do fluxo BIM e não é mais usado.)
 E-mail (convites e nova senha): `RESEND_API_KEY` + `EMAIL_FROM` (ex.: "Oraclo <nao-responda@dominio>"); sem eles roda em
 **modo simulado** (`src/lib/email.ts`): nada é enviado, o texto vai para o log e o admin vê o link para copiar.
 `APP_URL` opcional (base dos links; senão usa o host da requisição).

@@ -1,6 +1,6 @@
 # Oraclo — PRD (Product Requirements Document)
 
-> **Versão:** 0.3 · **Data:** 2026-10-14 · **Status:** refatoração em andamento
+> **Versão:** 0.3 · **Data:** 2026-10-14 · **Status:** v0.3 publicada (fase 1: vistas, editor manual, orçamento, GUT, painel e laudo)
 > **Pasta:** `A:\Claude Code\Oraclo` · **Porta de dev:** 3022 · **Produção:** oraclo-app.vercel.app
 > Histórico: a versão 0.2 (scan-to-BIM / nuvem de pontos) está em `docs/PRD-v0.2-scan-to-bim.md`.
 

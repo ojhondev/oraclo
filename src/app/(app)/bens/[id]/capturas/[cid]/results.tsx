@@ -5,47 +5,33 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { upload } from "@vercel/blob/client";
 import { toast } from "sonner";
-import { BadgeCheck, Box, CircleAlert, Download, FileUp, Loader2, Rocket, Trash2 } from "lucide-react";
+import { Box, Download, FileUp, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { fmtBytes } from "@/lib/format";
 import { ACCEPTED_EXTENSIONS, formatOf, MODEL_FORMATS, type OutputMeta } from "@/lib/model-formats";
 import type { schema } from "@/lib/db";
-import { deleteOutput, publishResult, registerOutput, saveQualityReport } from "../actions";
+import { deleteOutput, registerOutput } from "../actions";
 
 type Output = typeof schema.outputs.$inferSelect;
-type Report = typeof schema.qualityReports.$inferSelect;
-type Distance = typeof schema.controlDistances.$inferSelect;
 
-const mm = (v: number | null | undefined) => (v == null ? "—" : `${Math.round(v).toLocaleString("pt-BR")} mm`);
-
+/** Modelo 3D importado (opcional): arquivos prontos de app de celular, drone ou laser. */
 export function CaptureResults({
   siteId,
   orgId,
   captureId,
-  status,
   results,
-  report,
-  distances,
   canEdit,
-  imported = false,
 }: {
   siteId: string;
   orgId: string;
   captureId: string;
-  status: string;
   results: Output[];
-  report: Report | null;
-  distances: Distance[];
   canEdit: boolean;
-  /** Modelo 3D trazido pronto (laser, outro software), sem fotos no Oraclo. */
-  imported?: boolean;
 }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState<{ name: string; pct: number } | null>(null);
-  const [busy, start] = useTransition();
+  const [, start] = useTransition();
 
   async function sendFiles(list: FileList | null) {
     if (!list?.length) return;
@@ -75,51 +61,20 @@ export function CaptureResults({
     router.refresh();
   }
 
-  function saveReport(form: FormData) {
-    const num = (k: string) => {
-      const v = String(form.get(k) ?? "").replace(",", ".").trim();
-      return v === "" ? null : Number(v);
-    };
-    start(async () => {
-      try {
-        await saveQualityReport(siteId, captureId, {
-          photosUsed: num("photosUsed") ?? 0,
-          photosDiscarded: num("photosDiscarded") ?? 0,
-          reprojectionErrorPx: num("reproj"),
-          distances: distances.map((d) => {
-            const m = num(`d-${d.id}`);
-            return { id: d.id, modelMm: m == null ? null : Math.round(m * 1000) };
-          }),
-        });
-        toast.success("Relatório de qualidade salvo.");
-        router.refresh();
-      } catch (e) {
-        toast.error((e as Error).message);
-      }
-    });
-  }
-
   if (!results.length && !canEdit) return null;
 
   return (
     <section className="grid gap-5 rounded-2xl border bg-card p-4 sm:p-5">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-[16px] font-medium">{imported ? "Modelo 3D importado" : "Resultado do processamento"}</h2>
-        {report && (
-          <Badge variant={report.approved ? "default" : "outline"} className="gap-1">
-            {report.approved ? <BadgeCheck className="size-3.5" /> : <CircleAlert className="size-3.5" />}
-            {report.approved ? "Apto para levantamento cadastral" : "Não apto (erro acima de 30 mm ou medidas insuficientes)"}
-          </Badge>
-        )}
+        <h2 className="text-[16px] font-medium">Modelo 3D importado</h2>
       </div>
 
       {/* arquivos */}
       <div className="grid gap-2">
         {results.length === 0 ? (
           <p className="text-[13.5px] text-muted-foreground">
-            {imported
-              ? "Envie a nuvem de pontos ou a malha que você já tem — de laser scanner, drone ou de outro software (RealityScan, Metashape, Pix4D…)."
-              : "Nenhum arquivo ainda. Depois de processar as fotos (RealityScan, COLMAP…), envie aqui a nuvem de pontos e a malha."}
+            Envie o modelo que você já tem — de um app gratuito de celular (ex.: Scaniverse), de drone ou de laser scanner. No
+            visualizador dá para medir e gerar vistas em escala das paredes.
             Para ver no navegador, inclua uma versão em <b className="font-medium text-foreground">PLY, LAS, XYZ ou GLB</b>; E57, LAZ e OBJ ficam para download.
           </p>
         ) : (
@@ -169,7 +124,7 @@ export function CaptureResults({
           <div className="flex flex-wrap items-center gap-2">
             <Button variant="outline" onClick={() => inputRef.current?.click()} disabled={!!uploading}>
               {uploading ? <Loader2 className="animate-spin" /> : <FileUp />}
-              {uploading ? `Enviando ${uploading.name} · ${Math.round(uploading.pct)}%` : "Enviar arquivos de resultado"}
+              {uploading ? `Enviando ${uploading.name} · ${Math.round(uploading.pct)}%` : "Enviar modelo 3D"}
             </Button>
             <span className="text-[12.5px] text-muted-foreground">E57, LAS, LAZ, PLY, XYZ, PTS, GLB, OBJ, FBX, ZIP ou PDF · até 5 GB cada</span>
             <input ref={inputRef} type="file" multiple accept={ACCEPTED_EXTENSIONS} className="sr-only" onChange={(e) => { void sendFiles(e.target.files); e.target.value = ""; }} />
@@ -177,98 +132,6 @@ export function CaptureResults({
         )}
       </div>
 
-      {/* relatório de qualidade */}
-      {(report || canEdit) && (
-        <div className="grid gap-3">
-          <h3 className="text-[14px] font-medium">Relatório de qualidade</h3>
-          {report && (
-            <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-[13.5px] sm:grid-cols-4">
-              <div><dt className="text-muted-foreground">Fotos usadas</dt><dd>{report.photosUsed} <span className="text-muted-foreground">(+{report.photosDiscarded} descartadas)</span></dd></div>
-              <div><dt className="text-muted-foreground">Erro de reprojeção</dt><dd>{report.reprojectionErrorPx == null ? "—" : `${report.reprojectionErrorPx.toLocaleString("pt-BR")} px`}</dd></div>
-              <div><dt className="text-muted-foreground">Erro médio (RMS)</dt><dd>{mm(report.rmsResidualMm)}</dd></div>
-              <div><dt className="text-muted-foreground">Maior erro</dt><dd>{mm(report.maxResidualMm)}</dd></div>
-            </dl>
-          )}
-          {distances.length > 0 && (
-            <form action={saveReport} className="grid gap-3">
-              <div className="overflow-x-auto rounded-xl border">
-                <table className="w-full text-[13.5px]">
-                  <thead className="bg-muted/60 text-left text-[12.5px] text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 font-normal">Medida</th>
-                      <th className="px-3 py-2 font-normal">Trena</th>
-                      <th className="px-3 py-2 font-normal">No modelo</th>
-                      <th className="px-3 py-2 font-normal">Erro</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {distances.map((d) => (
-                      <tr key={d.id}>
-                        <td className="px-3 py-1.5">{d.targetA} ↔ {d.targetB}</td>
-                        <td className="px-3 py-1.5 tabular-nums">{(d.measuredMm / 1000).toLocaleString("pt-BR", { minimumFractionDigits: 3 })} m</td>
-                        <td className="px-3 py-1.5">
-                          {canEdit ? (
-                            <Input
-                              name={`d-${d.id}`}
-                              inputMode="decimal"
-                              placeholder="m"
-                              defaultValue={d.modelMm == null ? "" : (d.modelMm / 1000).toFixed(3).replace(".", ",")}
-                              className="h-8 w-28"
-                            />
-                          ) : (
-                            d.modelMm == null ? "—" : `${(d.modelMm / 1000).toLocaleString("pt-BR", { minimumFractionDigits: 3 })} m`
-                          )}
-                        </td>
-                        <td className="px-3 py-1.5 tabular-nums">{d.residualMm == null ? "—" : `${d.residualMm > 0 ? "+" : ""}${d.residualMm} mm`}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {canEdit && (
-                <div className="flex flex-wrap items-end gap-2">
-                  <label className="grid gap-1 text-[12.5px] text-muted-foreground">
-                    Fotos usadas
-                    <Input name="photosUsed" inputMode="numeric" defaultValue={report?.photosUsed ?? ""} className="h-8 w-24" />
-                  </label>
-                  <label className="grid gap-1 text-[12.5px] text-muted-foreground">
-                    Descartadas
-                    <Input name="photosDiscarded" inputMode="numeric" defaultValue={report?.photosDiscarded ?? ""} className="h-8 w-24" />
-                  </label>
-                  <label className="grid gap-1 text-[12.5px] text-muted-foreground">
-                    Reprojeção (px)
-                    <Input name="reproj" inputMode="decimal" defaultValue={report?.reprojectionErrorPx ?? ""} className="h-8 w-24" />
-                  </label>
-                  <Button type="submit" size="sm" variant="secondary" disabled={busy}>
-                    {busy && <Loader2 className="animate-spin" />} Salvar relatório
-                  </Button>
-                </div>
-              )}
-            </form>
-          )}
-          {distances.length === 0 && (
-            <p className="text-[13px] text-muted-foreground">Esta captura não tem medidas de controle — o modelo fica sem verificação de escala.</p>
-          )}
-        </div>
-      )}
-
-      {canEdit && status !== "concluida" && results.length > 0 && (
-        <Button
-          size="lg"
-          onClick={() => start(async () => {
-            try {
-              await publishResult(siteId, captureId);
-              toast.success("Resultado publicado.");
-              router.refresh();
-            } catch (e) {
-              toast.error((e as Error).message);
-            }
-          })}
-          disabled={busy}
-        >
-          <Rocket /> Publicar resultado (marcar captura como concluída)
-        </Button>
-      )}
     </section>
   );
 }

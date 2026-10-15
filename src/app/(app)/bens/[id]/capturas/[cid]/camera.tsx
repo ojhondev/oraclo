@@ -10,26 +10,19 @@ export type Shot = { blob: Blob; type: string; name: string; width: number; heig
 type ImageCaptureLike = { takePhoto: (o?: object) => Promise<Blob> };
 type ImageCaptureCtor = new (track: MediaStreamTrack) => ImageCaptureLike;
 
-const PASS_HINT = {
-  1: "Volta 1 · de longe — enquadre o conjunto e ande em arco, com ~70% de sobreposição entre fotos.",
-  2: "Volta 2 · de perto — detalhes, ornamentos e danos. Feche o percurso onde começou.",
-} as const;
+const HINT = "Fotografe os danos de perto e a parede de frente, inteira no quadro — a foto de frente vira vista retificada.";
 
 /**
  * Câmera guiada em tela cheia: usa a câmera traseira na maior resolução que o navegador
  * oferece (ImageCapture quando existe), mede a nitidez ao vivo e de cada foto.
  */
 export function GuidedCamera({
-  pass,
-  onPass,
   total,
   pending,
   recent,
   onShot,
   onClose,
 }: {
-  pass: 1 | 2;
-  onPass: (p: 1 | 2) => void;
   total: number;
   pending: number;
   recent: number[];
@@ -156,14 +149,7 @@ export function GuidedCamera({
           <X className="size-5" />
         </button>
         <div className="grid min-w-0 flex-1 gap-2">
-          <div className="grid grid-cols-2 gap-1 rounded-full bg-white/15 p-1 text-[13px]">
-            {([1, 2] as const).map((p) => (
-              <button key={p} onClick={() => onPass(p)} className={cn("h-8 rounded-full", pass === p ? "bg-white text-black" : "text-white/80")}>
-                Volta {p} · {p === 1 ? "de longe" : "de perto"}
-              </button>
-            ))}
-          </div>
-          <p className="text-[12.5px] leading-snug text-white/85">{PASS_HINT[pass]}</p>
+          <p className="text-[12.5px] leading-snug text-white/85">{HINT}</p>
         </div>
       </div>
 

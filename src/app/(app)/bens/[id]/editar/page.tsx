@@ -22,7 +22,7 @@ export default async function EditSitePage({ params }: PageProps<"/bens/[id]/edi
             <ConfirmButton
               action={deleteSite.bind(null, id)}
               title="Excluir este projeto?"
-              description="Áreas, campanhas, capturas, modelos e danos registrados serão apagados. Não dá para desfazer."
+              description="Áreas, vistorias, vistas, fotos, modelos e danos registrados serão apagados. Não dá para desfazer."
               label="Excluir projeto"
             />
           )

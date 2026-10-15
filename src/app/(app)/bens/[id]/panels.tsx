@@ -68,11 +68,11 @@ export function AddCampaignForm({ siteId, today }: { siteId: string; today: stri
   return (
     <div className="grid gap-2">
       <form ref={ref} action={action} className="flex flex-wrap gap-2">
-        <Input name="name" placeholder="Ex.: Levantamento inicial" className="min-w-48 flex-1" required />
+        <Input name="name" placeholder="Ex.: Vistoria inicial" className="min-w-48 flex-1" required />
         <SimpleSelect name="purpose" options={toOptions(purposes)} defaultValue="levantamento" className="w-44" />
         <Input name="date" type="date" defaultValue={today} className="w-40" required />
         <Button type="submit" variant="secondary" disabled={pending}>
-          {pending ? <Loader2 className="animate-spin" /> : <Plus />} Nova campanha
+          {pending ? <Loader2 className="animate-spin" /> : <Plus />} Nova vistoria
         </Button>
       </form>
       {state?.error && <p className="text-sm text-destructive">{state.error}</p>}
@@ -83,8 +83,8 @@ export function AddCampaignForm({ siteId, today }: { siteId: string; today: stri
 type Origem = "celular" | "fotos" | "modelo";
 
 /**
- * Três formas de alimentar uma campanha: capturar em campo com o celular, enviar fotos
- * que o escritório já tem ou importar um modelo 3D pronto (laser, outro software).
+ * Fotos de campo da vistoria: tirar com o celular, enviar fotos que o escritório já tem ou
+ * (opcional) importar um modelo 3D pronto para gerar vistas.
  */
 export function NewCaptureForm({
   action,
@@ -123,9 +123,9 @@ export function NewCaptureForm({
         className="h-9 w-full bg-card"
       />
       <div className="flex flex-wrap gap-1.5" data-tour="captura">
-        {btn("celular", <Camera />, "Capturar com celular", "default")}
+        {btn("celular", <Camera />, "Fotos com o celular", "default")}
         {btn("fotos", <Images />, "Enviar fotos", "outline")}
-        {canImportModel && btn("modelo", <Box />, "Importar modelo 3D", "outline")}
+        {canImportModel && btn("modelo", <Box />, "Modelo 3D", "outline")}
       </div>
     </form>
   );

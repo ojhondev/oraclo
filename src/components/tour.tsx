@@ -13,15 +13,12 @@ type Step = { target?: string; title: string; body: string };
 const STEPS: Step[] = [
   {
     title: "Bem-vindo ao Oraclo",
-    body: "Do scan ao BIM: capture com o celular (fotos ou vídeo), drone ou laser, receba a nuvem de pontos e o modelo, meça, gere ortofotos e documentação. Vamos ver onde fica cada coisa — leva 1 minuto.",
+    body: "Mapa de danos com IA: o imóvel aparece na tela, você aponta os danos em cima e o Oraclo mede, orça o tratamento, prioriza e gera o laudo. Vamos ver onde fica cada coisa — leva 1 minuto.",
   },
-  { target: "novo", title: "Comece por um projeto", body: "Em Novo você cria o projeto — reforma, retrofit, galpão, loja, edifício ou patrimônio — e divide em áreas (fachadas, pavimentos, cobertura…)." },
+  { target: "novo", title: "Comece por um projeto", body: "Em Novo você cadastra o imóvel — casa, prédio, igreja, galpão — e divide em áreas (fachadas, pavimentos, cobertura…)." },
   { target: "busca", title: "Encontre qualquer coisa", body: "Busque projetos por nome, cidade ou endereço — ou troque para Mapas de danos." },
-  { target: "nav-capturas", title: "Capturas", body: "Fotos do celular, fotos que você já tinha e modelos importados de todos os projetos, com o status de cada um (em campo, aguardando processamento, concluída)." },
-  { target: "nav-modelos", title: "Modelos 3D", body: "Nuvens de pontos e malhas — suas ou processadas pela equipe. Abra no navegador para medir e gerar ortofotos em escala em três cliques." },
-  { target: "nav-bim", title: "Modelos BIM", body: "Peça o modelo em Revit, Archicad ou IFC a partir das suas nuvens: estimativa na hora, orçamento para aprovar, acompanhamento da modelagem, entregas e revisões." },
-  { target: "nav-mapas", title: "Mapas de danos", body: "Desenhe danos e patologias sobre a ortofoto. Áreas, comprimentos e legenda saem sozinhos — exporte a prancha em PDF e o DXF." },
-  { target: "nav-biblioteca", title: "Biblioteca de danos", body: "A legenda padronizada: fissuras, umidade, corrosão, perda de revestimento e mais, cada um com código, cor e hachura." },
+  { target: "nav-mapas", title: "Mapas de danos", body: "Cada vista em escala (foto da fachada retificada, planta ou imagem) com os danos apontados. Áreas, comprimentos, custo e legenda saem sozinhos — exporte a prancha em PDF e o DXF." },
+  { target: "nav-biblioteca", title: "Danos e preços", body: "A legenda padronizada (fissuras, umidade, perda de reboco…) e a tabela de preços de tratamento do escritório, que vira o orçamento automático." },
   { target: "nav-equipe", title: "Equipe", body: "Convide arquitetos, engenheiros, técnicos e a equipe de campo, cada um com o papel certo." },
   { target: "ajuda", title: "Sempre que precisar", body: "O botão Ajuda abre os tópicos da ferramenta, com sugestões para a tela em que você está. Dá para refazer este tour por lá." },
 ];

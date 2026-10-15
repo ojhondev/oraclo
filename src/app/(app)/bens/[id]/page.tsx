@@ -7,7 +7,7 @@ import { loadDiagnosis } from "@/lib/diagnosis";
 import { fmtArea, fmtLength, fmtMmPerPixel } from "@/lib/geometry";
 import { fmtBRL } from "@/lib/pricing";
 import type { OutputMeta } from "@/lib/model-formats";
-import { captureStatuses, elementKinds, protectionLevels, purposes, severities, siteKinds, vistaKinds } from "@/lib/labels";
+import { elementKinds, protectionLevels, purposes, severities, siteKinds, vistaKinds } from "@/lib/labels";
 import { fmtBytes, fmtDate, todayISO } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -412,11 +412,10 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
                                 className="-mx-2 flex flex-wrap items-center gap-2 rounded-lg px-2 py-1.5 text-[12.5px] hover:bg-muted"
                               >
                                 <Camera className="size-3.5 text-muted-foreground" />
-                                <span>{k.elementId ? elementName[k.elementId] : "Fotos de campo"}</span>
+                                <span>{k.mode === "laser" ? "Modelo 3D" : k.elementId ? elementName[k.elementId] : "Fotos de campo"}</span>
                                 <span className="text-muted-foreground">
-                                  · {k.fileCount} fotos ({fmtBytes(k.totalBytes)})
+                                  {k.mode === "laser" ? "" : `· ${k.fileCount} fotos (${fmtBytes(k.totalBytes)})`}
                                 </span>
-                                <span className="ml-auto text-[11.5px] text-muted-foreground">{captureStatuses[k.status]}</span>
                               </Link>
                             </li>
                           ))}

@@ -34,11 +34,11 @@ export function HomeSearch({ sites, maps, canEdit, autoFocus }: { sites: HomeSit
     if (mode === "bens") {
       return sites
         .filter((s) => !t || norm(`${s.name} ${s.kind} ${s.city ?? ""} ${s.state ?? ""} ${s.protection ?? ""}`).includes(t))
-        .map((s) => ({ key: s.id, href: `/bens/${s.id}`, title: s.name, sub: [s.kind, [s.city, s.state].filter(Boolean).join(" · ")].filter(Boolean).join(" — "), meta: `${s.damageCount} danos`, protection: s.protection }));
+        .map((s) => ({ key: s.id, href: `/bens/${s.id}`, title: s.name, sub: [s.kind, [s.city, s.state].filter(Boolean).join(" · ")].filter(Boolean).join(" — "), meta: `${s.damageCount} ${s.damageCount === 1 ? "dano" : "danos"}`, protection: s.protection }));
     }
     return maps
       .filter((m) => !t || norm(`${m.name} ${m.siteName}`).includes(t))
-      .map((m) => ({ key: m.id, href: `/bens/${m.siteId}/ortofotos/${m.id}`, title: m.name, sub: m.siteName, meta: `${m.damageCount} danos`, protection: null }));
+      .map((m) => ({ key: m.id, href: `/bens/${m.siteId}/ortofotos/${m.id}`, title: m.name, sub: m.siteName, meta: `${m.damageCount} ${m.damageCount === 1 ? "dano" : "danos"}`, protection: null }));
   }, [q, mode, sites, maps]);
 
   function submit() {
@@ -48,8 +48,8 @@ export function HomeSearch({ sites, maps, canEdit, autoFocus }: { sites: HomeSit
   return (
     <div className="mx-auto w-full max-w-[640px]">
       <div className="mb-5 text-center">
-        <p className="mb-1.5 text-[13px] text-muted-foreground">Levantamento 3D e BIM</p>
-        <h1 className="text-[28px] leading-tight font-normal tracking-[-0.015em] sm:text-[30px]">O que vamos levantar hoje?</h1>
+        <p className="mb-1.5 text-[13px] text-muted-foreground">Mapa de danos com IA</p>
+        <h1 className="text-[28px] leading-tight font-normal tracking-[-0.015em] sm:text-[30px]">Qual imóvel vamos diagnosticar?</h1>
       </div>
 
       <div data-tour="busca" className="rounded-2xl border bg-card shadow-(--shadow-soft) transition-shadow focus-within:border-foreground/25 focus-within:shadow-(--shadow-focus)">

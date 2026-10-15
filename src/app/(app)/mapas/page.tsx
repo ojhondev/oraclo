@@ -4,6 +4,7 @@ import { Layers } from "lucide-react";
 import { requireUser } from "@/lib/auth";
 import { listAllMaps } from "@/lib/overview";
 import { fmtMmPerPixel } from "@/lib/geometry";
+import { vistaKinds } from "@/lib/labels";
 import { EmptyState, PageBody, PageHeader } from "@/components/page-header";
 
 export const metadata: Metadata = { title: "Mapas de danos" };
@@ -16,12 +17,12 @@ export default async function MapsPage() {
       <PageHeader
         eyebrow={user.orgName}
         title="Mapas de danos"
-        description="Ortofotos em escala de todos os projetos, com os danos desenhados. Cada uma exporta prancha em PDF e DXF."
+        description="Todas as vistas em escala (fachadas retificadas, plantas, imagens) dos seus projetos, com os danos apontados. Cada uma exporta prancha em PDF e DXF."
       />
       <PageBody>
         {rows.length === 0 ? (
           <EmptyState icon={Layers} title="Nenhum mapa de danos ainda">
-            Gere uma ortofoto a partir de um modelo 3D ou envie uma imagem em escala na página do projeto.
+            Abra um projeto e crie uma vista: foto da fachada retificada, planta ou imagem em escala.
           </EmptyState>
         ) : (
           <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
@@ -42,8 +43,7 @@ export default async function MapsPage() {
                       {m.elementName && ` · ${m.elementName}`}
                     </span>
                     <span className="text-[12.5px] text-muted-foreground">
-                      {m.damageCount} danos · {fmtMmPerPixel(m.mmPerPixel)}
-                      {m.fromModel && " · do modelo 3D"}
+                      {vistaKinds[m.kind]} · {m.damageCount} {m.damageCount === 1 ? "dano" : "danos"} · {fmtMmPerPixel(m.mmPerPixel)}
                     </span>
                   </div>
                 </Link>

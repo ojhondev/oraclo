@@ -12,7 +12,7 @@ import { getSite } from "@/lib/sites";
 import { getCapture, IMPORT_DEVICE } from "@/lib/captures";
 import { formatOf, type OutputMeta } from "@/lib/model-formats";
 
-const { captures, captureFiles, controlDistances, campaigns, sites, qualityReports } = schema;
+const { captures, captureFiles, campaigns, sites } = schema;
 
 async function guard(siteId: string, captureId: string, roles = capturers) {
   const user = await requireUser(roles);
@@ -78,35 +78,9 @@ export async function startCapture(siteId: string, campaignId: string, form: For
   redirect(`/bens/${siteId}/capturas/${c!.id}`);
 }
 
-export async function saveChecklist(siteId: string, captureId: string, checklist: Record<string, boolean>) {
-  await guard(siteId, captureId);
-  const clean = z.record(z.string().max(40), z.boolean()).parse(checklist);
-  await db.update(captures).set({ checklist: clean }).where(eq(captures.id, captureId));
-}
-
 export async function saveNotes(siteId: string, captureId: string, notes: string) {
   await guard(siteId, captureId);
   await db.update(captures).set({ notes: notes.trim().slice(0, 4000) || null }).where(eq(captures.id, captureId));
-}
-
-const distanceSchema = z.object({
-  targetA: z.string().trim().min(1, "Informe o alvo A.").max(20),
-  targetB: z.string().trim().min(1, "Informe o alvo B.").max(20),
-  measuredMm: z.number().int().positive("Distância inválida.").max(1_000_000),
-});
-
-export async function addDistance(siteId: string, captureId: string, input: z.input<typeof distanceSchema>) {
-  await guard(siteId, captureId);
-  const data = distanceSchema.parse(input);
-  const [d] = await db.insert(controlDistances).values({ ...data, captureId }).returning();
-  refresh(siteId, captureId);
-  return d!;
-}
-
-export async function deleteDistance(siteId: string, captureId: string, distanceId: string) {
-  await guard(siteId, captureId);
-  await db.delete(controlDistances).where(and(eq(controlDistances.id, distanceId), eq(controlDistances.captureId, captureId)));
-  refresh(siteId, captureId);
 }
 
 const fileSchema = z.object({
@@ -177,28 +151,6 @@ export async function deleteFile(siteId: string, captureId: string, fileId: stri
   refresh(siteId, captureId);
 }
 
-/** Equipe de campo terminou: manda para processamento (feito pela equipe do Oraclo no piloto). */
-export async function submitCapture(siteId: string, captureId: string) {
-  const { capture } = await guard(siteId, captureId);
-  const [{ n }] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(captureFiles)
-    .where(eq(captureFiles.captureId, captureId));
-  if (!n) throw new Error("Envie pelo menos uma foto antes de concluir.");
-  if (n < 20) throw new Error(`Só ${n} fotos enviadas. Para gerar o 3D, faça pelo menos 20 (o ideal são centenas).`);
-  if (capture.status === "processando" || capture.status === "concluida") return;
-  await db.update(captures).set({ status: "na_fila", submittedAt: new Date() }).where(eq(captures.id, captureId));
-  refresh(siteId, captureId);
-}
-
-/** Status do processamento — no piloto, atualizado à mão pelo administrador. */
-export async function setCaptureStatus(siteId: string, captureId: string, status: (typeof schema.captureStatusEnum.enumValues)[number]) {
-  await guard(siteId, captureId, ["admin"]);
-  const s = z.enum(schema.captureStatusEnum.enumValues).parse(status);
-  await db.update(captures).set({ status: s }).where(eq(captures.id, captureId));
-  refresh(siteId, captureId);
-}
-
 export async function deleteCapture(siteId: string, captureId: string) {
   await guard(siteId, captureId, editors);
   const files = await db.select({ url: captureFiles.url }).from(captureFiles).where(eq(captureFiles.captureId, captureId));
@@ -210,7 +162,7 @@ export async function deleteCapture(siteId: string, captureId: string) {
   redirect(`/bens/${siteId}`);
 }
 
-/* ───────────── Resultado do processamento ───────────── */
+/* ───────────── Modelo 3D importado ───────────── */
 
 const outputSchema = z.object({
   url: z.string().url(),
@@ -257,60 +209,5 @@ export async function deleteOutput(siteId: string, captureId: string, outputId: 
     .where(and(eq(schema.outputs.id, outputId), eq(schema.outputs.captureId, captureId)))
     .returning({ url: schema.outputs.url });
   if (o?.url) await del(o.url).catch(() => {});
-  refresh(siteId, captureId);
-}
-
-const reportSchema = z.object({
-  photosUsed: z.number().int().nonnegative(),
-  photosDiscarded: z.number().int().nonnegative(),
-  reprojectionErrorPx: z.number().nonnegative().nullable(),
-  distances: z.array(z.object({ id: z.string().uuid(), modelMm: z.number().int().positive().nullable() })),
-});
-
-/** Limite do selo "apto para levantamento cadastral" (PRD §4). */
-const APPROVAL_MM = 30;
-
-/**
- * Relatório de qualidade: a equipe informa o que o software de fotogrametria mediu,
- * inclusive o comprimento de cada distância de controle no modelo; o Oraclo calcula
- * os resíduos, o erro médio quadrático e o selo de aptidão.
- */
-export async function saveQualityReport(siteId: string, captureId: string, input: z.input<typeof reportSchema>) {
-  await guard(siteId, captureId, editors);
-  const r = reportSchema.parse(input);
-  const rows = await db.select().from(controlDistances).where(eq(controlDistances.captureId, captureId));
-  const residuals: number[] = [];
-  for (const d of rows) {
-    const m = r.distances.find((x) => x.id === d.id)?.modelMm ?? null;
-    const residual = m == null ? null : m - d.measuredMm;
-    if (residual != null) residuals.push(residual);
-    await db.update(controlDistances).set({ modelMm: m, residualMm: residual }).where(eq(controlDistances.id, d.id));
-  }
-  const rms = residuals.length ? Math.sqrt(residuals.reduce((a, x) => a + x * x, 0) / residuals.length) : null;
-  const max = residuals.length ? Math.max(...residuals.map(Math.abs)) : null;
-  const values = {
-    photosUsed: r.photosUsed,
-    photosDiscarded: r.photosDiscarded,
-    reprojectionErrorPx: r.reprojectionErrorPx,
-    rmsResidualMm: rms,
-    maxResidualMm: max,
-    approved: max != null && residuals.length >= 3 && max <= APPROVAL_MM,
-  };
-  const [existing] = await db.select({ id: qualityReports.id }).from(qualityReports).where(eq(qualityReports.captureId, captureId));
-  if (existing) await db.update(qualityReports).set(values).where(eq(qualityReports.id, existing.id));
-  else await db.insert(qualityReports).values({ ...values, captureId });
-  refresh(siteId, captureId);
-  return values;
-}
-
-/** Publica o resultado: captura concluída (aparece para o cliente como pronta). */
-export async function publishResult(siteId: string, captureId: string) {
-  await guard(siteId, captureId, editors);
-  const [{ n }] = await db
-    .select({ n: sql<number>`count(*)::int` })
-    .from(schema.outputs)
-    .where(eq(schema.outputs.captureId, captureId));
-  if (!n) throw new Error("Envie pelo menos um arquivo de resultado antes de publicar.");
-  await db.update(captures).set({ status: "concluida" }).where(eq(captures.id, captureId));
   refresh(siteId, captureId);
 }

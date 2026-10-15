@@ -143,7 +143,7 @@ export async function addCampaign(siteId: string, _: State, form: FormData): Pro
   await getSite(user.orgId, siteId);
   const parsed = z
     .object({
-      name: z.string().trim().min(2, "Dê um nome à campanha."),
+      name: z.string().trim().min(2, "Dê um nome à vistoria."),
       purpose: z.enum(schema.purposeEnum.enumValues).catch("levantamento"),
       date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Data inválida."),
       notes: opt,

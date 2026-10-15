@@ -230,9 +230,20 @@ export const qualityReports = pgTable("quality_reports", {
 
 /* ───────────────────────── Ortofotos e danos ───────────────────────── */
 
+/** Tipo da vista: a imagem-base em escala onde os danos são apontados. */
+export const vistaKindEnum = pgEnum("vista_kind", ["fachada", "planta", "imagem", "modelo_3d"]);
+export type VistaKind = (typeof vistaKindEnum.enumValues)[number];
+
+/** Vista do imóvel (fachada retificada, planta, imagem em escala ou ortofoto de modelo 3D). */
 export const orthophotos = pgTable("orthophotos", {
   id: id(),
   siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
+  /** Vistoria (campanha) em que a vista foi feita. */
+  campaignId: uuid("campaign_id").references(() => campaigns.id, { onDelete: "set null" }),
+  kind: vistaKindEnum("kind").notNull().default("imagem"),
+  /** Foto original e os 4 cantos usados na retificação (fachada). */
+  sourceUrl: text("source_url"),
+  rectification: jsonb("rectification").$type<{ corners: [number, number][]; widthM: number; heightM: number; srcW: number; srcH: number }>(),
   elementId: uuid("element_id").references(() => elements.id, { onDelete: "set null" }),
   outputId: uuid("output_id").references(() => outputs.id, { onDelete: "set null" }),
   name: text("name").notNull(),
@@ -281,6 +292,9 @@ export const damages = pgTable("damages", {
   /** Coordenadas em pixels da ortofoto ([x,y][]); ponto 3D opcional no modelo. */
   geometry: jsonb("geometry").$type<{ points: [number, number][]; point3d?: [number, number, number] }>(),
   severity: severityEnum("severity").notNull().default("media"),
+  /** Matriz GUT: urgência e tendência de 1 a 5 (a gravidade vem de severity). */
+  urgency: integer("urgency").notNull().default(3),
+  trend: integer("trend").notNull().default(3),
   areaM2: real("area_m2"),
   lengthM: real("length_m"),
   cause: text("cause"),
@@ -289,6 +303,21 @@ export const damages = pgTable("damages", {
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 }, (t) => [index("damages_site_idx").on(t.siteId)]);
+
+/** Unidade de cobrança do tratamento de um dano. */
+export const priceUnitEnum = pgEnum("price_unit", ["m2", "m", "un"]);
+export type PriceUnit = (typeof priceUnitEnum.enumValues)[number];
+
+/** Preço de tratamento de cada tipo de dano, por organização — base do orçamento automático. */
+export const treatmentPrices = pgTable("treatment_prices", {
+  id: id(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  typeId: uuid("type_id").notNull().references(() => damageTypes.id, { onDelete: "cascade" }),
+  treatment: text("treatment"),
+  unit: priceUnitEnum("unit").notNull(),
+  priceCents: integer("price_cents").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex("treatment_prices_org_type_idx").on(t.orgId, t.typeId)]);
 
 /* ───────────────────────── Convites e senhas ───────────────────────── */
 

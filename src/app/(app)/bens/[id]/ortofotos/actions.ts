@@ -35,6 +35,20 @@ const createSchema = z.object({
   /** Quando gerada a partir de um modelo 3D do Oraclo. */
   outputId: z.string().uuid().nullable().optional(),
   plane: z.object({ origin: z.array(z.number()).length(3), normal: z.array(z.number()).length(3), up: z.array(z.number()).length(3) }).nullable().optional(),
+  kind: z.enum(schema.vistaKindEnum.enumValues).catch("imagem").optional(),
+  campaignId: z.string().uuid().nullable().optional(),
+  /** Foto original (fachada retificada). */
+  sourceUrl: z.string().url().nullable().optional(),
+  rectification: z
+    .object({
+      corners: z.array(pt).length(4),
+      widthM: z.number().positive(),
+      heightM: z.number().positive(),
+      srcW: z.number().int().positive(),
+      srcH: z.number().int().positive(),
+    })
+    .nullable()
+    .optional(),
 });
 
 export async function createOrthophoto(siteId: string, input: z.input<typeof createSchema>) {
@@ -59,6 +73,17 @@ export async function createOrthophoto(siteId: string, input: z.input<typeof cre
       .where(and(eq(schema.outputs.id, data.outputId), eq(schema.outputs.siteId, siteId)));
     if (!out) data.outputId = null;
   }
+  if (data.campaignId) {
+    const [c] = await db
+      .select({ id: schema.campaigns.id })
+      .from(schema.campaigns)
+      .where(and(eq(schema.campaigns.id, data.campaignId), eq(schema.campaigns.siteId, siteId)));
+    if (!c) data.campaignId = null;
+  }
+  if (data.sourceUrl) {
+    const src = new URL(data.sourceUrl);
+    if (!src.hostname.endsWith(".blob.vercel-storage.com") || !src.pathname.slice(1).startsWith(`orgs/${user.orgId}/sites/${siteId}/`)) data.sourceUrl = null;
+  }
   const [o] = await db
     .insert(orthophotos)
     .values({
@@ -73,6 +98,10 @@ export async function createOrthophoto(siteId: string, input: z.input<typeof cre
       mmPerPixel: data.mmPerPixel,
       outputId: data.outputId ?? null,
       plane: data.plane ?? null,
+      kind: data.kind ?? (data.outputId ? "modelo_3d" : "imagem"),
+      campaignId: data.campaignId ?? null,
+      sourceUrl: data.sourceUrl ?? null,
+      rectification: data.rectification ?? null,
       createdBy: user.id,
     })
     .returning({ id: orthophotos.id });

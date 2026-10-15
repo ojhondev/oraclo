@@ -10,7 +10,8 @@ import { Field, SimpleSelect } from "@/components/form";
 import { fmtBytes } from "@/lib/format";
 import { createOrthophoto } from "../actions";
 
-type Props = { siteId: string; orgId: string; elements: { id: string; name: string }[] };
+type Opt = { id: string; name: string };
+type Props = { siteId: string; orgId: string; elements: Opt[]; campaigns: Opt[]; defaultCampaignId?: string | null; kind: "planta" | "imagem" };
 
 function readSize(file: File) {
   return new Promise<{ width: number; height: number }>((resolve, reject) => {
@@ -25,7 +26,7 @@ function readSize(file: File) {
   });
 }
 
-export function UploadForm({ siteId, orgId, elements }: Props) {
+export function UploadForm({ siteId, orgId, elements, campaigns, defaultCampaignId, kind }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [size, setSize] = useState<{ width: number; height: number } | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
@@ -39,7 +40,7 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
     setSize(null);
     if (!f) return;
     if (!["image/jpeg", "image/png"].includes(f.type)) {
-      setError("Envie a ortofoto em JPG ou PNG. (GeoTIFF entra numa próxima versão — exporte como JPG no software de origem.)");
+      setError(kind === "planta" ? "Envie a planta em JPG ou PNG (exporte o PDF/DWG como imagem)." : "Envie a imagem em JPG ou PNG. (GeoTIFF entra numa próxima versão — exporte como JPG no software de origem.)");
       return;
     }
     try {
@@ -52,9 +53,10 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
   }
 
   function submit(form: FormData) {
-    if (!file || !size) return setError("Escolha a imagem da ortofoto.");
+    if (!file || !size) return setError("Escolha a imagem.");
     const name = String(form.get("name") || "").trim();
     const elementId = String(form.get("elementId") || "");
+    const campaignId = String(form.get("campaignId") || "");
     const mmRaw = String(form.get("mmPerPixel") || "").replace(",", ".");
     const mmPerPixel = mmRaw ? Number(mmRaw) : null;
     if (mmPerPixel !== null && !(mmPerPixel > 0)) return setError("Escala inválida.");
@@ -62,7 +64,7 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
     start(async () => {
       try {
         const safe = file.name.toLowerCase().replace(/[^a-z0-9.]+/g, "-");
-        const blob = await upload(`orgs/${orgId}/sites/${siteId}/ortofotos/${safe}`, file, {
+        const blob = await upload(`orgs/${orgId}/sites/${siteId}/vistas/${safe}`, file, {
           access: "public",
           handleUploadUrl: "/api/upload",
           clientPayload: JSON.stringify({ siteId }),
@@ -71,6 +73,8 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
         });
         await createOrthophoto(siteId, {
           name,
+          kind,
+          campaignId: campaignId && campaignId !== "__none" ? campaignId : null,
           elementId: elementId && elementId !== "__none" ? elementId : null,
           url: blob.url,
           pathname: blob.pathname,
@@ -89,16 +93,16 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
   }
 
   return (
-    <form action={submit} className="grid max-w-2xl gap-6">
+    <form action={submit} className="grid max-w-3xl gap-6">
       <label
-        className="grid cursor-pointer place-items-center gap-2 rounded-xl border border-dashed bg-card px-6 py-10 text-center transition-colors hover:border-brand/50"
+        className="grid cursor-pointer place-items-center gap-2 rounded-xl border border-dashed bg-card px-6 py-10 text-center transition-colors hover:border-foreground/40"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
           pick(e.dataTransfer.files[0]);
         }}
       >
-        <span className="grid size-11 place-items-center rounded-full bg-brand-soft text-brand">
+        <span className="grid size-11 place-items-center rounded-full bg-muted">
           <ImageUp className="size-5" />
         </span>
         {file && size ? (
@@ -108,8 +112,12 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
           </span>
         ) : (
           <>
-            <span className="text-sm font-medium">Arraste a ortofoto aqui ou clique para escolher</span>
-            <span className="text-[12.5px] text-muted-foreground">JPG ou PNG, até 200 MB. Imagem retificada (sem perspectiva) da fachada, parede, piso ou forro.</span>
+            <span className="text-sm font-medium">{kind === "planta" ? "Arraste a planta aqui ou clique para escolher" : "Arraste a imagem aqui ou clique para escolher"}</span>
+            <span className="text-[12.5px] text-muted-foreground">
+              {kind === "planta"
+                ? "JPG ou PNG, até 200 MB. Planta baixa, corte ou elevação exportada do CAD ou escaneada."
+                : "JPG ou PNG, até 200 MB. Imagem já sem perspectiva (ortofoto de drone, software de fotogrametria, laser)."}
+            </span>
           </>
         )}
         <input type="file" accept="image/jpeg,image/png" className="sr-only" onChange={(e) => pick(e.target.files?.[0])} />
@@ -117,15 +125,24 @@ export function UploadForm({ siteId, orgId, elements }: Props) {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Nome" htmlFor="name" className="sm:col-span-2">
-          <Input ref={nameRef} id="name" name="name" required placeholder="Ex.: Fachada principal — ortofoto" />
+          <Input ref={nameRef} id="name" name="name" required placeholder={kind === "planta" ? "Ex.: Planta do térreo" : "Ex.: Fachada principal — ortofoto"} />
         </Field>
         <Field label="Área">
           <SimpleSelect name="elementId" options={elements.map((e) => ({ value: e.id, label: e.name }))} allowNone noneLabel="Nenhuma" />
         </Field>
+        <Field label="Vistoria">
+          <SimpleSelect
+            name="campaignId"
+            options={campaigns.map((c) => ({ value: c.id, label: c.name }))}
+            defaultValue={defaultCampaignId ?? undefined}
+            allowNone
+            noneLabel="Sem vistoria"
+          />
+        </Field>
         <Field
           label="Escala (mm por pixel)"
           htmlFor="mmPerPixel"
-          hint="Opcional — se não souber, calibre no editor com uma medida de trena."
+          hint={kind === "planta" ? "Opcional — o mais comum é calibrar no editor por uma cota conhecida." : "Opcional — se não souber, calibre no editor com uma medida de trena."}
         >
           <Input id="mmPerPixel" name="mmPerPixel" inputMode="decimal" placeholder="Ex.: 2,5" />
         </Field>

@@ -7,6 +7,7 @@ import { fmtBRL, unitLabels } from "@/lib/pricing";
 import type { Diagnosis } from "@/lib/diagnosis";
 import type { schema } from "@/lib/db";
 import { col, drawDamages, fit, wrap } from "./pdf";
+import { fmtPrecision } from "@/lib/rectify";
 import { LOGO_PNG_BASE64 } from "./logo";
 
 const A4: [number, number] = [595.28, 841.89];
@@ -177,8 +178,10 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
   /* ───────────── 2. Metodologia ───────────── */
   heading("2", "Metodologia");
   para(
-    "Inspeção visual do imóvel com registro fotográfico. As fachadas foram fotografadas e retificadas (correção de " +
-      "perspectiva por homografia de quatro pontos, a partir de medidas reais), gerando imagens em escala conhecida. " +
+    "Inspeção visual do imóvel com registro fotográfico. As fachadas foram fotografadas e retificadas: correção de " +
+      "perspectiva por homografia ajustada por mínimos quadrados a pontos de controle medidos em campo, com correção da " +
+      "distorção radial da lente quando indicada, gerando imagens ortogonais em escala conhecida. A precisão de cada vista " +
+      "é estimada com 95% de confiança e, quando há medidas de conferência, verificada contra distâncias medidas com trena. " +
       "Os danos foram apontados sobre essas vistas como pontos, linhas ou áreas e classificados segundo biblioteca " +
       "padronizada; áreas e extensões foram calculadas a partir da escala de cada vista.",
   );
@@ -229,6 +232,15 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
       { color: MUTED, size: 8.5 },
     );
     y -= 14;
+    const rt = v.rectification;
+    if (rt?.precisionMm != null) {
+      const checks = rt.checks?.length
+        ? ` · ${rt.checks.length} conferência(s), erro médio ${Math.round(rt.checkRmsMm ?? 0)} mm`
+        : " · sem medida de conferência";
+      const pts = 4 + (rt.controls?.length ?? 0);
+      text(`Retificação: precisão estimada ${fmtPrecision(rt.precisionMm)} (95%) · ${pts} pontos de controle${rt.lens ? " · lente corrigida" : ""}${checks}`, { color: MUTED, size: 8.5 });
+      y -= 14;
+    }
     const ds = dx.damages.filter((d) => d.orthophotoId === v.id);
     const img = embedded.get(v.id);
     if (img) {

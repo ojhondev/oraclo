@@ -244,7 +244,22 @@ export const orthophotos = pgTable("orthophotos", {
   kind: vistaKindEnum("kind").notNull().default("imagem"),
   /** Foto original e os 4 cantos usados na retificação (fachada). */
   sourceUrl: text("source_url"),
-  rectification: jsonb("rectification").$type<{ corners: [number, number][]; widthM: number; heightM: number; srcW: number; srcH: number }>(),
+  /** Parâmetros da retificação (v2: mínimos quadrados, lente, conferências, recorte e precisão). */
+  rectification: jsonb("rectification").$type<{
+    corners: [number, number][];
+    widthM: number;
+    heightM: number;
+    srcW: number;
+    srcH: number;
+    version?: number;
+    controls?: { img: [number, number]; plane: [number, number] }[];
+    checks?: { a: [number, number]; b: [number, number]; meters: number; measured: number }[];
+    lens?: { k1: number; cx: number; cy: number; norm: number; lines: number; rmsBefore: number; rmsAfter: number } | null;
+    extent?: number[];
+    residualRmsMm?: number | null;
+    checkRmsMm?: number | null;
+    precisionMm?: number;
+  }>(),
   elementId: uuid("element_id").references(() => elements.id, { onDelete: "set null" }),
   outputId: uuid("output_id").references(() => outputs.id, { onDelete: "set null" }),
   name: text("name").notNull(),

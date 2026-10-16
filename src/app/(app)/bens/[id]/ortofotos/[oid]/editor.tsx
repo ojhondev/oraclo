@@ -37,6 +37,7 @@ import { TREND_LABELS, URGENCY_LABELS, budget, damageCostCents, fmtBRL, gut, pri
 import type { schema } from "@/lib/db";
 import { calibrate, createDamage, deleteDamage, deleteOrthophoto, setScale, updateDamage } from "../actions";
 import { DamagePattern, lineStyle } from "./patterns";
+import { fmtPrecision } from "@/lib/rectify";
 import { getSam, type SamProgress } from "@/lib/sam/client";
 import type { SamMask, SamRegion } from "@/lib/sam/protocol";
 
@@ -769,6 +770,15 @@ export function DamageMapEditor({
                 <p className="text-muted-foreground">
                   Sem escala não há áreas nem comprimentos. Calibre com uma medida de trena ou informe o mm/pixel.
                 </p>
+                {ortho.rectification?.precisionMm != null && (
+                  <p className="mt-2 rounded-lg border bg-card px-2.5 py-2">
+                    Retificação: precisão estimada <b className="font-medium">{fmtPrecision(ortho.rectification.precisionMm)}</b> (95%)
+                    {ortho.rectification.checks?.length
+                      ? ` · ${ortho.rectification.checks.length} conferência(s), erro médio ${Math.round(ortho.rectification.checkRmsMm ?? 0)} mm`
+                      : " · sem conferência"}
+                    {ortho.rectification.lens ? " · lente corrigida" : ""}
+                  </p>
+                )}
               </div>
               {canEdit && (
                 <>

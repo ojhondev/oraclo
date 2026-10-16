@@ -3,22 +3,26 @@ import { ArrowUpRight, Menu } from "lucide-react";
 import { BrandLogo, BrandMark } from "@/components/brand";
 import { getUser } from "@/lib/auth";
 import { SiteThemeToggle } from "./site-theme-toggle";
+import { SiteLangToggle } from "./site-lang-toggle";
+import type { Lang } from "@/lib/site/lang";
 
-export const SITE_NAV = [
-  { href: "/#produto", label: "Produto" },
-  { href: "/empresas", label: "Para empresas" },
-  { href: "/historias", label: "Histórias" },
+export const siteNav = (lang: Lang) => [
+  { href: "/#produto", label: lang === "en" ? "Product" : "Produto" },
+  { href: "/empresas", label: lang === "en" ? "For business" : "Para empresas" },
+  { href: "/historias", label: lang === "en" ? "Stories" : "Histórias" },
   { href: "/index", label: "Index" },
-  { href: "/docs", label: "Documentação" },
+  { href: "/docs", label: lang === "en" ? "Docs" : "Documentação" },
 ];
 
 /** Cabeçalho do site público (home, empresas, histórias e Index). */
-export async function SiteHeader({ rootId }: { rootId: string }) {
+export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang }) {
   const user = await getUser();
+  const en = lang === "en";
+  const SITE_NAV = siteNav(lang);
   return (
     <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl">
       <div className="flex h-[60px] items-center gap-8 px-4 sm:px-6 lg:px-8">
-        <Link href="/" aria-label="ArchRay — início" className="flex shrink-0 items-center gap-2">
+        <Link href="/" aria-label={en ? "ArchRay — home" : "ArchRay — início"} className="flex shrink-0 items-center gap-2">
           <BrandMark className="h-[18px]" />
           <BrandLogo className="site-logo h-[17px]" />
         </Link>
@@ -30,19 +34,20 @@ export async function SiteHeader({ rootId }: { rootId: string }) {
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-1.5">
+          <SiteLangToggle lang={lang} className="hidden sm:flex" />
           <SiteThemeToggle rootId={rootId} />
           {user ? (
             <Link href="/" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium whitespace-nowrap text-background hover:opacity-85">
-              Abrir o ArchRay <ArrowUpRight className="size-3.5" />
+              {en ? "Open ArchRay" : "Abrir o ArchRay"} <ArrowUpRight className="size-3.5" />
             </Link>
           ) : (
             <>
               <Link href="/login" className="hidden h-9 items-center rounded-full bg-secondary px-4 text-[13.5px] font-medium hover:bg-accent sm:inline-flex">
-                Entrar
+                {en ? "Log in" : "Entrar"}
               </Link>
               <Link href="/cadastro" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium whitespace-nowrap text-background hover:opacity-85">
-                <span className="sm:hidden">Começar</span>
-                <span className="hidden sm:inline">Começar grátis</span>
+                <span className="sm:hidden">{en ? "Start" : "Começar"}</span>
+                <span className="hidden sm:inline">{en ? "Start free" : "Começar grátis"}</span>
                 <ArrowUpRight className="size-3.5" />
               </Link>
             </>
@@ -59,9 +64,13 @@ export async function SiteHeader({ rootId }: { rootId: string }) {
               ))}
               {!user && (
                 <Link href="/login" className="rounded-xl px-3 py-2 hover:bg-muted">
-                  Entrar
+                  {en ? "Log in" : "Entrar"}
                 </Link>
               )}
+              <div className="mt-1 flex items-center justify-between border-t px-3 pt-2.5 pb-1 text-[13px] text-muted-foreground">
+                {en ? "Language" : "Idioma"}
+                <SiteLangToggle lang={lang} />
+              </div>
             </nav>
           </details>
         </div>

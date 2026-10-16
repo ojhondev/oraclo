@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { fmtPostDate, type Post } from "@/lib/updates";
 import { fmtStoryDate, type Story } from "@/lib/site/stories";
+import type { Lang } from "@/lib/site/lang";
 
 /** Título de seção com "Ver tudo" à direita (padrão da home da OpenAI). */
 export function SectionHead({ title, href, more = "Ver tudo" }: { title: string; href?: string; more?: string }) {
@@ -43,14 +44,14 @@ export function SiteCover({ className }: { className?: string }) {
 }
 
 /** Linha do Index: miniatura quadrada + título + categoria e data. */
-export function PostRow({ post, delay = 0 }: { post: Post; delay?: number }) {
+export function PostRow({ post, delay = 0, lang = "pt" }: { post: Post; delay?: number; lang?: Lang }) {
   return (
     <Link href={`/index/${post.slug}`} className="group grid grid-cols-[104px_1fr] items-center gap-5 sm:grid-cols-[150px_1fr]" data-reveal data-reveal-delay={delay}>
       <SiteCover className="aspect-square rounded-lg" />
       <div className="min-w-0">
         <h3 className="text-[16px] leading-snug font-medium text-balance group-hover:underline group-hover:underline-offset-4 sm:text-[17px]">{post.title}</h3>
         <div className="mt-2">
-          <Meta label={post.category} date={fmtPostDate(post.date, "short")} />
+          <Meta label={post.category} date={fmtPostDate(post.date, "short", lang)} />
         </div>
       </div>
     </Link>
@@ -58,7 +59,7 @@ export function PostRow({ post, delay = 0 }: { post: Post; delay?: number }) {
 }
 
 /** Card de história: imagem (com paralaxe) e título por baixo. */
-export function StoryCard({ story, large, delay = 0 }: { story: Story; large?: boolean; delay?: number }) {
+export function StoryCard({ story, large, delay = 0, lang = "pt" }: { story: Story; large?: boolean; delay?: number; lang?: Lang }) {
   return (
     <Link href={`/historias/${story.slug}`} className="group block" data-reveal data-reveal-delay={delay}>
       <div className={cn("relative overflow-hidden rounded-lg bg-secondary", large ? "aspect-[16/9]" : "aspect-[4/5]")}>
@@ -76,14 +77,14 @@ export function StoryCard({ story, large, delay = 0 }: { story: Story; large?: b
         {story.title}
       </h3>
       <div className="mt-2">
-        <Meta label={story.segment} date={fmtStoryDate(story.date)} />
+        <Meta label={story.segment} date={fmtStoryDate(story.date, lang)} />
       </div>
     </Link>
   );
 }
 
 /** Card de segmento (ArchRay para empresas). */
-export function SegmentCard({ href, title, text, index, delay = 0 }: { href: string; title: string; text: string; index: number; delay?: number }) {
+export function SegmentCard({ href, title, text, index, delay = 0, more = "Saiba mais" }: { href: string; title: string; text: string; index: number; delay?: number; more?: string }) {
   return (
     <Link
       href={href}
@@ -96,7 +97,7 @@ export function SegmentCard({ href, title, text, index, delay = 0 }: { href: str
         <h3 className="text-[20px] leading-snug font-medium tracking-[-0.01em]">{title}</h3>
         <p className="mt-2 text-[14.5px] leading-6 text-muted-foreground">{text}</p>
         <span className="mt-4 inline-flex items-center gap-1 text-[13.5px] font-medium">
-          Saiba mais <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+          {more} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
       </div>
     </Link>

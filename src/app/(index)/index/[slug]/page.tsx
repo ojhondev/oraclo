@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { POSTS, fmtPostDate, getPost, type PostBlock } from "@/lib/updates";
+import { POSTS, fmtPostDate, getPost, getPosts, type PostBlock } from "@/lib/updates";
+import { getLang } from "@/lib/site/get-lang";
 import { PostCard } from "../../post-card";
 import { ShareButton, Toc } from "./toc";
 
@@ -9,7 +10,7 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: PageProps<"/index/[slug]">) {
-  const post = getPost((await params).slug);
+  const post = getPost((await params).slug, await getLang());
   return post ? { title: post.title, description: post.summary } : {};
 }
 
@@ -61,16 +62,18 @@ function Block({ b }: { b: PostBlock }) {
 }
 
 export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
-  const post = getPost((await params).slug);
+  const lang = await getLang();
+  const en = lang === "en";
+  const post = getPost((await params).slug, lang);
   if (!post) notFound();
-  const more = POSTS.filter((p) => p.slug !== post.slug).slice(0, 3);
+  const more = getPosts(lang).filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
     <article className="px-4 pb-24 sm:px-8">
       {/* cabeçalho centralizado */}
       <header className="mx-auto max-w-[800px] pt-16 text-center sm:pt-24">
         <p className="text-[14px] font-medium">
-          {fmtPostDate(post.date)}
+          {fmtPostDate(post.date, "long", lang)}
           <Link href="/index" className="ml-3 text-muted-foreground hover:text-foreground">
             {post.category}
           </Link>
@@ -79,13 +82,13 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
         <p className="mx-auto mt-6 max-w-[520px] text-[17px] leading-7 text-balance">{post.summary}</p>
         <div className="mx-auto mt-12 flex max-w-[600px] items-center justify-between border-t pt-4 text-[14px] font-medium">
           <span className="text-muted-foreground">{post.author}</span>
-          <ShareButton title={post.title} />
+          <ShareButton title={post.title} lang={lang} />
         </div>
       </header>
 
       {/* sumário fixo à esquerda + texto numa coluna estreita */}
       <div className="mx-auto mt-14 grid max-w-[1100px] gap-10 lg:grid-cols-[180px_minmax(0,600px)] lg:justify-center lg:gap-16">
-        <Toc items={post.sections.map((s) => ({ id: s.id, title: s.title }))} />
+        <Toc items={post.sections.map((s) => ({ id: s.id, title: s.title }))} label={en ? "On this page" : "Nesta página"} />
         <div className="grid gap-6 text-[17px] leading-7 tracking-[-0.01em]">
           {post.intro.map((t) => (
             <p key={t}>{t}</p>
@@ -106,12 +109,12 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
               </Link>
             </div>
             <div>
-              <h2 className="text-muted-foreground">Autor</h2>
+              <h2 className="text-muted-foreground">{en ? "Author" : "Autor"}</h2>
               <p className="mt-1">{post.author}</p>
             </div>
             {post.notes && (
               <div>
-                <h2 className="text-muted-foreground">Notas</h2>
+                <h2 className="text-muted-foreground">{en ? "Notes" : "Notas"}</h2>
                 <ol className="mt-2 grid gap-3">
                   {post.notes.map((n, i) => (
                     <li key={n} className="grid grid-cols-[20px_1fr]">
@@ -128,11 +131,11 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
 
       {more.length > 0 && (
         <section className="mx-auto mt-24 max-w-[1100px] border-t pt-8">
-          <h2 className="text-[22px] font-medium tracking-[-0.01em]">Continuar lendo</h2>
+          <h2 className="text-[22px] font-medium tracking-[-0.01em]">{en ? "Keep reading" : "Continuar lendo"}</h2>
           <ul className="mt-6 grid gap-6 sm:grid-cols-3">
             {more.map((p) => (
               <li key={p.slug}>
-                <PostCard post={p} />
+                <PostCard post={p} lang={lang} />
               </li>
             ))}
           </ul>

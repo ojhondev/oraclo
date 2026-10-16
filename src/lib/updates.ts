@@ -3,6 +3,9 @@
  * também alimenta o banner de atualizações dentro do app.
  */
 
+import { locale, type Lang } from "./site/lang";
+import { POSTS_EN } from "./updates-en";
+
 export type PostBlock =
   | { p: string }
   | { list: string[] }
@@ -162,10 +165,13 @@ export const POSTS: Post[] = [
 
 export const latestPost = POSTS[0];
 
-export const getPost = (slug: string) => POSTS.find((p) => p.slug === slug);
+export const getPost = (slug: string, lang: Lang = "pt") => getPosts(lang).find((p) => p.slug === slug);
 
-export const fmtPostDate = (iso: string, style: "long" | "short" = "long") =>
-  new Date(`${iso}T12:00:00`).toLocaleDateString("pt-BR", {
+/** Publicações no idioma do site público (o app usa sempre o português). */
+export const getPosts = (lang: Lang): Post[] => (lang === "en" ? POSTS_EN : POSTS);
+
+export const fmtPostDate = (iso: string, style: "long" | "short" = "long", lang: Lang = "pt") =>
+  new Date(`${iso}T12:00:00`).toLocaleDateString(locale(lang), {
     day: "numeric",
     month: style === "long" ? "long" : "short",
     year: "numeric",

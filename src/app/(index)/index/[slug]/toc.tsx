@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 /** Sumário fixo à esquerda; destaca a seção que está na tela. */
-export function Toc({ items }: { items: { id: string; title: string }[] }) {
+export function Toc({ items, label = "Nesta página" }: { items: { id: string; title: string }[]; label?: string }) {
   const [active, setActive] = useState(items[0]?.id);
   useEffect(() => {
     const els = items.map((i) => document.getElementById(i.id)).filter((e): e is HTMLElement => !!e);
@@ -22,7 +22,7 @@ export function Toc({ items }: { items: { id: string; title: string }[] }) {
   }, [items]);
 
   return (
-    <nav aria-label="Nesta página" className="hidden lg:block">
+    <nav aria-label={label} className="hidden lg:block">
       <ul className="sticky top-24 grid gap-2.5 text-[14px] leading-5">
         {items.map((i) => (
           <li key={i.id}>
@@ -39,14 +39,14 @@ export function Toc({ items }: { items: { id: string; title: string }[] }) {
   );
 }
 
-export function ShareButton({ title }: { title: string }) {
+export function ShareButton({ title, lang = "pt" }: { title: string; lang?: "pt" | "en" }) {
   async function share() {
     const url = window.location.href;
     try {
       if (navigator.share) await navigator.share({ title, url });
       else {
         await navigator.clipboard.writeText(url);
-        toast.success("Link copiado.");
+        toast.success(lang === "en" ? "Link copied." : "Link copiado.");
       }
     } catch {
       // compartilhamento cancelado
@@ -54,7 +54,7 @@ export function ShareButton({ title }: { title: string }) {
   }
   return (
     <button onClick={share} className="inline-flex items-center gap-1.5 hover:opacity-70">
-      <Link2 className="size-4" /> Compartilhar
+      <Link2 className="size-4" /> {lang === "en" ? "Share" : "Compartilhar"}
     </button>
   );
 }

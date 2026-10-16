@@ -3,51 +3,102 @@ import Link from "next/link";
 import { ArrowRight, ChevronRight, Lightbulb, Play, Wrench } from "lucide-react";
 import { getUser } from "@/lib/auth";
 import { DOC_FAQ, DOC_FLOW, DOC_GLOSSARY, DOC_STEPS } from "@/lib/site/docs";
+import { DOC_FAQ_EN, DOC_FLOW_EN, DOC_GLOSSARY_EN, DOC_STEPS_EN } from "@/lib/site/docs-en";
+import { getLang } from "@/lib/site/get-lang";
 import { DocsToc } from "@/components/site/docs-toc";
 
-export const metadata: Metadata = {
-  title: "Documentação",
-  description: "Aprenda o ArchRay passo a passo: da foto da fachada ao laudo, com prints de cada tela — retificação, danos, Contorno IA, GUT, orçamento e laudo.",
+const T = {
+  pt: {
+    title: "Documentação",
+    description: "Aprenda o ArchRay passo a passo: da foto da fachada ao laudo, com prints de cada tela — retificação, danos, Contorno IA, GUT, orçamento e laudo.",
+    h1: (n: number) => `Aprenda o ArchRay em ${n} etapas`,
+    lead: "Do cadastro do imóvel ao laudo pronto, com as telas reais de cada passo. Sem jargão: se é a sua primeira vez, comece pela etapa 1.",
+    note: null as string | null,
+    demo: "Fazer a demonstração guiada",
+    signup: "Criar conta e praticar",
+    first: "Ir para a etapa 1",
+    step: (i: number, n: number) => `Etapa ${i} de ${n}`,
+    tip: "Dica: ",
+    wrong: "Algo deu errado? ",
+    glossary: "Glossário",
+    faq: "Perguntas frequentes",
+    readyTitle: "Pronto para praticar?",
+    readyText: "A demonstração guiada repete todas estas etapas num caso real, em 13 missões — e pode ser refeita do zero quantas vezes você quiser.",
+    readyCta: "Começar a demonstração",
+    readySignup: "Criar conta grátis",
+  },
+  en: {
+    title: "Docs",
+    description: "Learn ArchRay step by step: from the facade photo to the report, with screenshots of every screen — rectification, damage, AI outlining, GUT, budget and report.",
+    h1: (n: number) => `Learn ArchRay in ${n} steps`,
+    lead: "From registering the building to a finished report, with the real screens for each step. No jargon: if this is your first time, start with step 1.",
+    note: "The site and these docs are in English; the app itself is currently in Portuguese. Button names appear as they are on screen, with the English meaning in parentheses." as string | null,
+    demo: "Try the guided demo",
+    signup: "Sign up and practise",
+    first: "Go to step 1",
+    step: (i: number, n: number) => `Step ${i} of ${n}`,
+    tip: "Tip: ",
+    wrong: "Something went wrong? ",
+    glossary: "Glossary",
+    faq: "Frequently asked questions",
+    readyTitle: "Ready to practise?",
+    readyText: "The guided demo repeats all of these steps on a real case, in 13 missions — and you can start over from scratch as many times as you like.",
+    readyCta: "Start the demo",
+    readySignup: "Sign up free",
+  },
 };
+
+export async function generateMetadata(): Promise<Metadata> {
+  const t = T[await getLang()];
+  return { title: t.title, description: t.description };
+}
 
 export default async function DocsPage() {
   const user = await getUser();
+  const lang = await getLang();
+  const t = T[lang];
+  const en = lang === "en";
+  const STEPS = en ? DOC_STEPS_EN : DOC_STEPS;
+  const FLOW = en ? DOC_FLOW_EN : DOC_FLOW;
+  const GLOSSARY = en ? DOC_GLOSSARY_EN : DOC_GLOSSARY;
+  const FAQ = en ? DOC_FAQ_EN : DOC_FAQ;
   const demoHref = user ? "/" : "/cadastro";
   const toc = [
-    ...DOC_STEPS.map((s, i) => ({ id: s.id, title: s.title, n: i + 1 })),
-    { id: "glossario", title: "Glossário" },
-    { id: "perguntas", title: "Perguntas frequentes" },
+    ...STEPS.map((s, i) => ({ id: s.id, title: s.title, n: i + 1 })),
+    { id: "glossario", title: t.glossary },
+    { id: "perguntas", title: t.faq },
   ];
 
   return (
     <div className="px-4 pb-28 sm:px-6 lg:px-8">
       {/* abertura */}
       <header className="mx-auto max-w-[900px] pt-20 text-center sm:pt-28">
-        <p className="site-fade-in text-[14px] font-medium text-muted-foreground">Documentação</p>
+        <p className="site-fade-in text-[14px] font-medium text-muted-foreground">{t.title}</p>
         <h1 className="site-fade-in mt-5 text-[40px] leading-[1.04] font-medium tracking-[-0.04em] text-balance sm:text-[68px]" style={{ "--d": "120ms" } as React.CSSProperties}>
-          Aprenda o ArchRay em {DOC_STEPS.length} etapas
+          {t.h1(STEPS.length)}
         </h1>
         <p className="site-fade-in mx-auto mt-6 max-w-[620px] text-[17px] leading-7 text-balance text-muted-foreground" style={{ "--d": "240ms" } as React.CSSProperties}>
-          Do cadastro do imóvel ao laudo pronto, com as telas reais de cada passo. Sem jargão: se é a sua primeira vez, comece pela etapa 1.
+          {t.lead}
         </p>
+        {t.note && <p className="site-fade-in mx-auto mt-4 max-w-[620px] rounded-xl border bg-card px-4 py-2.5 text-[13.5px] leading-6 text-muted-foreground">{t.note}</p>}
         <div className="site-fade-in mt-8 flex flex-wrap justify-center gap-3" style={{ "--d": "340ms" } as React.CSSProperties}>
           <Link href={demoHref} className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
-            <Play className="size-4" /> {user ? "Fazer a demonstração guiada" : "Criar conta e praticar"}
+            <Play className="size-4" /> {user ? t.demo : t.signup}
           </Link>
           <a href="#conta" className="inline-flex h-11 items-center gap-1.5 rounded-full border px-6 text-[15px] font-medium hover:bg-secondary">
-            Ir para a etapa 1 <ArrowRight className="size-4" />
+            {t.first} <ArrowRight className="size-4" />
           </a>
         </div>
 
         {/* o fluxo em uma linha */}
         <ol className="mx-auto mt-14 flex max-w-[860px] flex-wrap items-center justify-center gap-x-1.5 gap-y-2 text-[13.5px]" data-reveal>
-          {DOC_FLOW.map((f, i) => (
+          {FLOW.map((f, i) => (
             <li key={f} className="flex items-center gap-1.5">
               <span className="rounded-full border bg-card px-3 py-1.5">
                 <span className="mr-1.5 text-muted-foreground tabular-nums">{i + 1}</span>
                 {f}
               </span>
-              {i < DOC_FLOW.length - 1 && <ChevronRight className="size-3.5 text-muted-foreground" />}
+              {i < FLOW.length - 1 && <ChevronRight className="size-3.5 text-muted-foreground" />}
             </li>
           ))}
         </ol>
@@ -57,12 +108,12 @@ export default async function DocsPage() {
         <DocsToc items={toc} />
 
         <div className="min-w-0">
-          {DOC_STEPS.map((s, i) => (
+          {STEPS.map((s, i) => (
             <section key={s.id} id={s.id} className="scroll-mt-24 border-t py-14 first:border-t-0 first:pt-0">
               <div className="max-w-[720px]" data-reveal>
                 <p className="flex items-center gap-2 text-[13.5px] font-medium text-muted-foreground">
                   <span className="grid size-7 place-items-center rounded-full bg-foreground text-[12.5px] text-background tabular-nums">{i + 1}</span>
-                  Etapa {i + 1} de {DOC_STEPS.length}
+                  {t.step(i + 1, STEPS.length)}
                 </p>
                 <h2 className="mt-4 text-[28px] leading-[1.15] font-medium tracking-[-0.02em] text-balance sm:text-[36px]">{s.title}</h2>
                 <p className="mt-3 text-[17px] leading-7 text-muted-foreground">{s.lead}</p>
@@ -89,12 +140,12 @@ export default async function DocsPage() {
 
               {(s.tips?.length || s.issues?.length) && (
                 <div className="mt-8 grid max-w-[720px] gap-3" data-reveal>
-                  {s.tips?.map((t) => (
-                    <p key={t} className="flex gap-3 rounded-xl border bg-card px-4 py-3 text-[14.5px] leading-6">
+                  {s.tips?.map((tip) => (
+                    <p key={tip} className="flex gap-3 rounded-xl border bg-card px-4 py-3 text-[14.5px] leading-6">
                       <Lightbulb className="mt-0.5 size-4 shrink-0" />
                       <span>
-                        <b className="font-medium">Dica: </b>
-                        {t}
+                        <b className="font-medium">{t.tip}</b>
+                        {tip}
                       </span>
                     </p>
                   ))}
@@ -102,7 +153,7 @@ export default async function DocsPage() {
                     <details key={x.q} className="group rounded-xl border px-4 py-3 text-[14.5px] leading-6">
                       <summary className="flex cursor-pointer list-none items-center gap-3 font-medium">
                         <Wrench className="size-4 shrink-0" />
-                        <span className="flex-1">Algo deu errado? {x.q}</span>
+                        <span className="flex-1">{t.wrong}{x.q}</span>
                         <ChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90" />
                       </summary>
                       <p className="mt-2 pl-7 text-muted-foreground">{x.a}</p>
@@ -115,10 +166,10 @@ export default async function DocsPage() {
 
           <section id="glossario" className="scroll-mt-24 border-t py-14">
             <h2 className="text-[28px] font-medium tracking-[-0.02em] sm:text-[36px]" data-reveal>
-              Glossário
+              {t.glossary}
             </h2>
             <dl className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2" data-reveal>
-              {DOC_GLOSSARY.map((g) => (
+              {GLOSSARY.map((g) => (
                 <div key={g.term} className="border-t pt-4">
                   <dt className="text-[15px] font-medium">{g.term}</dt>
                   <dd className="mt-1 text-[14.5px] leading-6 text-muted-foreground">{g.def}</dd>
@@ -129,10 +180,10 @@ export default async function DocsPage() {
 
           <section id="perguntas" className="scroll-mt-24 border-t py-14">
             <h2 className="text-[28px] font-medium tracking-[-0.02em] sm:text-[36px]" data-reveal>
-              Perguntas frequentes
+              {t.faq}
             </h2>
             <div className="mt-8 grid max-w-[760px]" data-reveal>
-              {DOC_FAQ.map((f) => (
+              {FAQ.map((f) => (
                 <details key={f.q} className="group border-b py-4">
                   <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[16px] font-medium">
                     {f.q}
@@ -145,12 +196,12 @@ export default async function DocsPage() {
           </section>
 
           <section className="mt-6 rounded-3xl border bg-card px-6 py-12 text-center sm:px-12" data-reveal>
-            <h2 className="text-[26px] leading-tight font-medium tracking-[-0.02em] text-balance sm:text-[34px]">Pronto para praticar?</h2>
+            <h2 className="text-[26px] leading-tight font-medium tracking-[-0.02em] text-balance sm:text-[34px]">{t.readyTitle}</h2>
             <p className="mx-auto mt-3 max-w-[520px] text-[16px] leading-7 text-muted-foreground">
-              A demonstração guiada repete todas estas etapas num caso real, em 13 missões — e pode ser refeita do zero quantas vezes você quiser.
+              {t.readyText}
             </p>
             <Link href={demoHref} className="mt-7 inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
-              <Play className="size-4" /> {user ? "Começar a demonstração" : "Criar conta grátis"}
+              <Play className="size-4" /> {user ? t.readyCta : t.readySignup}
             </Link>
           </section>
         </div>

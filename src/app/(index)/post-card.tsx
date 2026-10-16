@@ -1,14 +1,15 @@
 import Link from "next/link";
 import { MARK_PATH } from "@/components/brand";
 import { fmtPostDate, type Post } from "@/lib/updates";
+import type { Lang } from "@/lib/site/lang";
 
-export function PostCard({ post }: { post: Post }) {
+export function PostCard({ post, lang = "pt" }: { post: Post; lang?: Lang }) {
   return (
     <Link href={`/index/${post.slug}`} className="group block">
       <Cover title={post.title} />
       <h3 className="mt-4 text-[17px] leading-6 font-medium group-hover:underline group-hover:underline-offset-4">{post.title}</h3>
       <p className="mt-1 text-[14px] font-medium text-muted-foreground">
-        {post.category} · {fmtPostDate(post.date, "short")}
+        {post.category} · {fmtPostDate(post.date, "short", lang)}
       </p>
     </Link>
   );

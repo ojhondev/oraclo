@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { restartDemo, startDemo } from "@/app/(app)/demo-actions";
 import type { DemoStatus } from "@/lib/demo";
+import { DEMO_RECT_EVENT } from "@/lib/demo-events";
 
 /**
  * Demonstração guiada (caso Carmo): missões em sequência sobre as telas reais. Cada missão é
@@ -19,7 +20,7 @@ import type { DemoStatus } from "@/lib/demo";
 const KEY = "archray:demo-tour";
 export const DEMO_EVENT = "archray:demo-tour";
 
-type Saved = { active: boolean; step: number; xp: number; startedAt: number; laudo?: boolean; precos?: boolean; ia?: boolean; finishedAt?: number; min?: boolean };
+type Saved = { active: boolean; step: number; xp: number; startedAt: number; laudo?: boolean; precos?: boolean; ia?: boolean; cantos?: boolean; lente?: boolean; conferencia?: boolean; finishedAt?: number; min?: boolean };
 type Ctx = { s: DemoStatus; path: string; saved: Saved };
 type Mission = {
   id: string;
@@ -34,6 +35,7 @@ type Mission = {
 };
 
 const site = (s: DemoStatus) => (s.siteId ? `/bens/${s.siteId}` : null);
+const nova = (s: DemoStatus) => (s.siteId ? `/bens/${s.siteId}/ortofotos/nova?tipo=fachada` : null);
 const editor = (s: DemoStatus) => (s.siteId && s.vistaId ? `/bens/${s.siteId}/ortofotos/${s.vistaId}` : null);
 
 export const MISSIONS: Mission[] = [
@@ -55,16 +57,50 @@ export const MISSIONS: Mission[] = [
     done: ({ s, path }) => !!s.vistaId || (!!s.siteId && path.startsWith(`/bens/${s.siteId}/ortofotos/nova`)),
   },
   {
+    id: "cantos",
+    title: "Marque os cantos e as medidas",
+    how: [
+      "A foto de 2010 está em perspectiva. Arraste os 4 pontos brancos até os alvos tracejados, nos cantos da fachada — a lupa mostra os pixels de perto.",
+      "Digite as medidas da trena: largura 18 m, altura 18,7 m.",
+    ],
+    xp: 100,
+    href: nova,
+    target: '[data-tour="retificar-foto"]',
+    done: ({ s, saved }) => !!saved.cantos || !!s.vistaId,
+  },
+  {
+    id: "lente",
+    title: "Corrija a lente",
+    how: [
+      "Clique na ferramenta Linha reta.",
+      "Clique 3 ou mais pontos ao longo da cornija (a guia azul tracejada), de uma ponta à outra. Enter conclui.",
+      "No painel, veja a retidão melhorar: a lente do celular encurva as linhas retas, e o ArchRay desfaz isso.",
+    ],
+    xp: 150,
+    href: nova,
+    target: '[data-tour="ferramenta-linha"]',
+    done: ({ s, saved }) => !!saved.lente || !!s.vistaId,
+  },
+  {
+    id: "conferencia",
+    title: "Confira a escala",
+    how: [
+      "Clique na ferramenta Conferência.",
+      "Clique nos 2 alvos amarelos, nas bordas da porta central.",
+      "Digite a medida de trena: 1,55 m. O erro real aparece em cm, e a precisão estimada vira medida.",
+    ],
+    xp: 150,
+    href: nova,
+    target: '[data-tour="ferramenta-conferencia"]',
+    done: ({ s, saved }) => !!saved.conferencia || !!s.vistaId,
+  },
+  {
     id: "retificar",
     title: "Retifique a foto",
-    how: [
-      "A foto de 2010 está em perspectiva. Arraste os 4 pontos brancos até os alvos tracejados, nos cantos da fachada.",
-      "Digite as medidas da trena: largura 18 m, altura 18,7 m.",
-      "Clique em Retificar e abrir no editor.",
-    ],
-    xp: 200,
-    href: (s) => editor(s) ?? (s.siteId ? `/bens/${s.siteId}/ortofotos/nova?tipo=fachada` : null),
-    target: '[data-tour="retificar-foto"]',
+    how: ["Confira a prévia e a precisão estimada.", "Clique em Retificar e abrir no editor: a imagem sai plana, em escala, e abre pronta para apontar os danos."],
+    xp: 100,
+    href: (s) => editor(s) ?? nova(s),
+    target: '[data-tour="retificar"]',
     done: ({ s }) => !!s.vistaId,
   },
   {
@@ -263,10 +299,20 @@ export function DemoTour() {
       if (cur?.active && MISSIONS[cur.step]?.id === "contorno-ia") write({ ...cur, ia: true });
     };
     document.addEventListener("click", onClick, true);
+    // a retificação (modo demonstração) avisa quando cantos, lente e conferência estão certos
+    const onRect = (e: Event) => {
+      const d = (e as CustomEvent<{ cantos: boolean; lente: boolean; conferencia: boolean }>).detail;
+      const cur = read();
+      if (!cur?.active) return;
+      const next = { ...cur, cantos: cur.cantos || d.cantos, lente: cur.lente || d.lente, conferencia: cur.conferencia || d.conferencia };
+      if (next.cantos !== cur.cantos || next.lente !== cur.lente || next.conferencia !== cur.conferencia) write(next);
+    };
     window.addEventListener("archray:contorno-ia", onAi);
+    window.addEventListener(DEMO_RECT_EVENT, onRect);
     return () => {
       document.removeEventListener("click", onClick, true);
       window.removeEventListener("archray:contorno-ia", onAi);
+      window.removeEventListener(DEMO_RECT_EVENT, onRect);
     };
   }, [saved?.active]);
 
@@ -325,7 +371,7 @@ export function DemoTour() {
           <p className="text-[12.5px] text-muted-foreground">Demonstração concluída{mins ? ` em ${mins} min` : ""}</p>
           <h2 className="mt-1 text-[22px] leading-tight font-medium">Você fez o fluxo inteiro do ArchRay</h2>
           <p className="mt-2 text-[14px] text-muted-foreground">
-            Da foto em perspectiva ao laudo: retificação, danos à mão e com IA, prioridade GUT, orçamento e painel.{" "}
+            Da foto em perspectiva ao laudo: retificação com lente e conferência, danos à mão e com IA, prioridade GUT, orçamento e painel.{" "}
             <b className="font-medium text-foreground">{saved.xp} de {TOTAL_XP} XP.</b>
           </p>
           <ul className="mt-4 grid grid-cols-2 gap-1.5 text-[12.5px]">
@@ -459,7 +505,7 @@ export function DemoLauncher({ variant = "card" }: { variant?: "card" | "button"
       </span>
       <span className="min-w-0 flex-1">
         <span className="block text-[14px] font-medium">Aprenda na prática: demonstração guiada</span>
-        <span className="block text-[12.5px] text-muted-foreground">10 missões com a Igreja do Carmo (Horta) — da foto em perspectiva ao laudo. Dá para refazer quantas vezes quiser.</span>
+        <span className="block text-[12.5px] text-muted-foreground">13 missões com a Igreja do Carmo (Horta) — da foto em perspectiva ao laudo, com retificação profissional. Dá para refazer quantas vezes quiser.</span>
       </span>
     </button>
   );

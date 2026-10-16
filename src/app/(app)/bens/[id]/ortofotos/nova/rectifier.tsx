@@ -22,10 +22,23 @@ import {
 } from "@/lib/rectify";
 import { RectifyEngine } from "@/lib/rectify-client";
 import { createOrthophoto } from "../actions";
+import { DEMO_RECT_EVENT } from "@/lib/demo-events";
 
 type Opt = { id: string; name: string };
 /** Modo demonstração (tour guiado): foto carregada sozinha e alvos nos cantos da fachada. */
-export type RectifierDemo = { src: string; targets: Pt[]; name: string; widthM: number; heightM: number; credit: string };
+export type RectifierDemo = {
+  src: string;
+  targets: Pt[];
+  name: string;
+  widthM: number;
+  heightM: number;
+  credit: string;
+  /** guia da linha reta (lente): dois pontos de uma aresta reta da fachada */
+  lineGuide: [Pt, Pt];
+  /** medida de conferência: as duas pontas na foto e a medida "de trena" */
+  check: { a: Pt; b: Pt; meters: number; label: string };
+};
+
 type Props = { siteId: string; orgId: string; elements: Opt[]; campaigns: Opt[]; defaultCampaignId?: string | null; demo?: RectifierDemo };
 
 type Tool = "ajustar" | "conferencia" | "controle" | "linha";
@@ -240,6 +253,31 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
   const hits = hit.filter(Boolean).length;
   const dimsOk = demo ? Math.abs(w - demo.widthM) <= demo.widthM * 0.05 && Math.abs(h - demo.heightM) <= demo.heightM * 0.05 : true;
 
+  // demonstração: linha reta ao longo da guia e conferência nos alvos da porta
+  const lineOk = useMemo(() => {
+    if (!demo) return false;
+    const [g1, g2] = demo.lineGuide;
+    const len = Math.hypot(g2[0] - g1[0], g2[1] - g1[1]);
+    const ux = (g2[0] - g1[0]) / len;
+    const uy = (g2[1] - g1[1]) / len;
+    return lines.some((l) => {
+      if (l.length < 3) return false;
+      const along = l.map((p) => (p[0] - g1[0]) * ux + (p[1] - g1[1]) * uy);
+      const off = l.every((p) => Math.abs(-(p[0] - g1[0]) * uy + (p[1] - g1[1]) * ux) <= Math.max(W, H) * 0.025);
+      return off && Math.max(...along) - Math.min(...along) >= len * 0.5;
+    });
+  }, [demo, lines, W, H]);
+  const checkOk = !!demo && checks.some((c) => {
+    if (!c.b) return false;
+    const ends = (near(c.a, demo.check.a) && near(c.b, demo.check.b)) || (near(c.a, demo.check.b) && near(c.b, demo.check.a));
+    return ends && Math.abs(num(c.m) - demo.check.meters) <= 0.05;
+  });
+  const cornersOk = !!demo && hits === 4 && w > 0 && h > 0 && dimsOk;
+  useEffect(() => {
+    if (!demo) return;
+    window.dispatchEvent(new CustomEvent(DEMO_RECT_EVENT, { detail: { cantos: cornersOk, lente: lineOk && lensOn, conferencia: checkOk } }));
+  }, [demo, cornersOk, lineOk, lensOn, checkOk]);
+
   function release() {
     if (demo && drag?.kind === "corner") {
       const p = corners[drag.i];
@@ -250,9 +288,14 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
   }
 
   function clickPhoto(e: React.PointerEvent) {
-    const p = toImage(e);
-    if (!p) return;
+    const hitPt = toImage(e);
+    if (!hitPt) return;
+    let p: Pt = hitPt;
     if (tool === "conferencia") {
+      if (demo) {
+        const t = [demo.check.a, demo.check.b].find((q) => near(p, q));
+        if (t) p = [t[0], t[1]];
+      }
       const open = checks.findIndex((c) => !c.b);
       if (open >= 0) setChecks((c) => c.map((q, i) => (i === open ? { ...q, b: p } : q)));
       else setChecks((c) => [...c, { a: p, b: null, m: "" }]);
@@ -437,6 +480,7 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
                   type="button"
                   role="radio"
                   aria-checked={tool === t.id}
+                  data-tour={`ferramenta-${t.id}`}
                   onClick={() => {
                     setTool(t.id);
                     setLineDraft([]);
@@ -485,6 +529,14 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
                     <circle cx={t[0]} cy={t[1]} r={tol} fill={hit[i] ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.12)"} stroke={hit[i] ? "#22c55e" : "white"} strokeWidth={sw} strokeDasharray={hit[i] ? undefined : `${handle / 1.5} ${handle / 2}`} style={{ filter: "drop-shadow(0 0 2px black)" }} />
                   </g>
                 ))}
+                {demo && (
+                  <g pointerEvents="none" style={{ filter: "drop-shadow(0 0 2px black)" }}>
+                    <line x1={demo.lineGuide[0][0]} y1={demo.lineGuide[0][1]} x2={demo.lineGuide[1][0]} y2={demo.lineGuide[1][1]} stroke="#38bdf8" strokeOpacity={lineOk ? 0.35 : 0.9} strokeWidth={sw * 1.5} strokeDasharray={`${handle} ${handle * 0.7}`} />
+                    {[demo.check.a, demo.check.b].map((t, i) => (
+                      <circle key={`ct${i}`} cx={t[0]} cy={t[1]} r={tol * 0.6} fill={checkOk ? "rgba(250,204,21,0.25)" : "rgba(250,204,21,0.12)"} stroke="#facc15" strokeWidth={sw} strokeDasharray={checkOk ? undefined : `${handle / 1.5} ${handle / 2}`} className={checkOk ? "" : "animate-pulse"} />
+                    ))}
+                  </g>
+                )}
                 {/* linhas retas (lente) */}
                 {[...lines, ...(lineDraft.length ? [lineDraft] : [])].map((line, i) => (
                   <polyline key={`l${i}`} points={line.map((p) => p.join(",")).join(" ")} fill="none" stroke="#38bdf8" strokeWidth={sw * 1.2} strokeDasharray={i >= lines.length ? `${handle} ${handle / 2}` : undefined} style={{ pointerEvents: "none" }} />
@@ -596,6 +648,9 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
             <p className="text-muted-foreground">
               Largura <b className="font-medium text-foreground">{String(demo.widthM).replace(".", ",")} m</b> · altura{" "}
               <b className="font-medium text-foreground">{String(demo.heightM).replace(".", ",")} m</b> — digite abaixo.
+            </p>
+            <p className="mt-1 text-muted-foreground">
+              Conferência: {demo.check.label} = <b className="font-medium text-foreground">{String(demo.check.meters).replace(".", ",")} m</b>.
             </p>
             {w > 0 && h > 0 && (
               <p className="mt-1 flex items-center gap-1">

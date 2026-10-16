@@ -147,7 +147,7 @@ export default async function DocsPage() {
           <section className="mt-6 rounded-3xl border bg-card px-6 py-12 text-center sm:px-12" data-reveal>
             <h2 className="text-[26px] leading-tight font-medium tracking-[-0.02em] text-balance sm:text-[34px]">Pronto para praticar?</h2>
             <p className="mx-auto mt-3 max-w-[520px] text-[16px] leading-7 text-muted-foreground">
-              A demonstração guiada repete todas estas etapas num caso real, em 10 missões — e pode ser refeita do zero quantas vezes você quiser.
+              A demonstração guiada repete todas estas etapas num caso real, em 13 missões — e pode ser refeita do zero quantas vezes você quiser.
             </p>
             <Link href={demoHref} className="mt-7 inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
               <Play className="size-4" /> {user ? "Começar a demonstração" : "Criar conta grátis"}

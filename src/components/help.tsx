@@ -148,7 +148,7 @@ export function HelpCenter() {
                     </button>
                     <div className="grid gap-2 rounded-xl border p-3">
                       <p className="text-[14px] font-medium">Demonstração guiada</p>
-                      <p className="text-[12.5px] text-muted-foreground">10 missões com a Igreja do Carmo: retificar, apontar danos, IA, GUT, orçamento e laudo.</p>
+                      <p className="text-[12.5px] text-muted-foreground">13 missões com a Igreja do Carmo: retificar (com lente e conferência), apontar danos, IA, GUT, orçamento e laudo.</p>
                       <div className="flex flex-wrap gap-2" onClick={() => setOpen(false)}>
                         <DemoLauncher variant="button" />
                         <Button size="sm" variant="outline" asChild>

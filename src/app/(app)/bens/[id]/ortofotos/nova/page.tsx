@@ -72,7 +72,7 @@ export default async function NewVistaPage({ params, searchParams }: PageProps<"
             defaultCampaignId={defaultCampaignId}
             demo={
               site.isDemo
-                ? { src: DEMO.photo, targets: DEMO.targets, name: DEMO.vistaName, widthM: DEMO.widthM, heightM: DEMO.heightM, credit: DEMO.credit }
+                ? { src: DEMO.photo, targets: DEMO.targets, name: DEMO.vistaName, widthM: DEMO.widthM, heightM: DEMO.heightM, credit: DEMO.credit, lineGuide: DEMO.lineGuide, check: DEMO.check }
                 : undefined
             }
           />

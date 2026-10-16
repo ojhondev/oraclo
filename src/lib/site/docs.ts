@@ -172,14 +172,14 @@ export const DOC_STEPS: DocStep[] = [
   {
     id: "demonstracao",
     title: "Pratique com a demonstração guiada",
-    lead: "A melhor forma de aprender é fazendo. A demonstração guiada leva você pelo fluxo inteiro num caso real — a Igreja do Carmo, na Horta (Açores) — em 10 missões.",
+    lead: "A melhor forma de aprender é fazendo. A demonstração guiada leva você pelo fluxo inteiro num caso real — a Igreja do Carmo, na Horta (Açores) — em 13 missões.",
     steps: [
       "Na tela inicial do app, clique em Aprenda na prática: demonstração guiada (ou em Ajuda › Demonstração guiada).",
       "O ArchRay cria um projeto de demonstração com a foto real de 2010. Um painel mostra a missão atual e destaca o botão certo em cada tela.",
-      "Cada missão só conta quando você faz a ação de verdade: retificar, apontar danos, usar a IA, ajustar a GUT, ver os preços e gerar o laudo. Cada uma vale XP.",
+      "Cada missão só conta quando você faz a ação de verdade: marcar os cantos, corrigir a lente, conferir a escala na porta central, retificar, apontar danos, usar a IA, ajustar a GUT, ver os preços e gerar o laudo. Cada uma vale XP.",
       "No fim, clique em Refazer do zero: tudo o que foi feito na demonstração é apagado e você recomeça da missão 1 — quantas vezes quiser.",
     ],
-    shot: { src: "/docs/10-missoes.jpg", alt: "Painel de missões da demonstração guiada sobre o editor", caption: "Missão 5 de 10: o painel explica o que fazer e destaca a varinha do Contorno IA." },
+    shot: { src: "/docs/10-missoes.jpg", alt: "Painel de missões da demonstração guiada sobre o editor", caption: "Missão 8 de 13: o painel explica o que fazer e destaca a varinha do Contorno IA." },
     tips: ["A demonstração não mexe nos seus outros projetos. Pode sair a qualquer momento (o X do painel) e voltar depois."],
   },
 ];

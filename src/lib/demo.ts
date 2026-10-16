@@ -22,6 +22,13 @@ export const DEMO = {
   ] as [number, number][],
   widthM: 18,
   heightM: 18.7,
+  /** guia da linha reta da lente: a cornija sob as torres */
+  lineGuide: [
+    [635, 296],
+    [1388, 458],
+  ] as [[number, number], [number, number]],
+  /** conferência: largura da porta central (bordas medidas na própria foto) */
+  check: { a: [1043, 1397] as [number, number], b: [1137, 1393] as [number, number], meters: 1.55, label: "largura da porta central" },
   vistaName: "Fachada principal (demonstração)",
   credit: "Foto: José Luís Ávila Silveira / Pedro Noronha e Costa, 27/08/2010 — domínio público (Wikimedia Commons).",
 };

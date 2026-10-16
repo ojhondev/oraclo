@@ -89,9 +89,13 @@ export default function SiteHome() {
         cta={{ href: "#fachada", label: "Conhecer o produto" }}
         items={PILLARS}
       >
-        <div className="site-edge-fade relative mx-auto mt-6 aspect-square w-full max-w-[760px] overflow-hidden" data-reveal="scale">
-          <div className="absolute inset-0" data-parallax="0.06">
-            <Image src="/site/notebook-livros.jpg" alt="Notebook com o editor de mapa de danos do ArchRay sobre uma pilha de livros de arquitetura e engenharia" fill sizes="(min-width: 768px) 760px, 100vw" className="object-contain" priority />
+        {/* bem grande, ocupando a tela; cresce enquanto a pessoa rola (zoom ligado à rolagem) */}
+        <div className="relative mt-8 aspect-square w-full overflow-hidden sm:aspect-auto sm:h-[min(110svh,1200px)] sm:min-h-[560px]">
+          <div className="absolute inset-0" data-zoom="0.72,1.06">
+            {/* a caixa tem o formato da foto: o esmaecimento acompanha as bordas dela durante o zoom */}
+            <div className="site-edge-fade relative mx-auto aspect-square h-full max-w-full">
+              <Image src="/site/notebook-livros.jpg" alt="Notebook com o editor de mapa de danos do ArchRay sobre uma pilha de livros de arquitetura e engenharia" fill sizes="(min-width: 640px) 1200px, 100vw" className="object-cover" priority />
+            </div>
           </div>
         </div>
       </ProductPanel>
@@ -132,9 +136,9 @@ export default function SiteHome() {
           cta={{ href: "/empresas", label: "ArchRay para empresas" }}
           items={FIELD}
         >
-          <div className="site-edge-fade-x relative mx-auto mt-10 aspect-[1507/1044] w-full max-w-[1100px] overflow-hidden" data-reveal="fade">
-            <div className="absolute inset-0">
-              <Image src="/site/tablet-mapa-de-danos.jpg" alt="Mulher consultando no tablet o mapa de danos de uma fachada" fill sizes="(min-width: 1100px) 1100px, 100vw" className="object-contain object-bottom" />
+          <div className="relative mt-10 aspect-[1507/1044] w-full overflow-hidden">
+            <div className="site-edge-fade-x absolute inset-0" data-zoom="0.78,1.04" style={{ transformOrigin: "50% 100%" }}>
+              <Image src="/site/tablet-mapa-de-danos.jpg" alt="Mulher consultando no tablet o mapa de danos de uma fachada" fill sizes="100vw" className="object-contain object-bottom" />
             </div>
           </div>
         </ProductPanel>

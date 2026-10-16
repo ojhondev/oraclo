@@ -231,6 +231,13 @@ html:has(.site-theme.site-light) {
   }
 }
 
+/* zoom ligado à rolagem: o JS escreve --zoom */
+[data-zoom] {
+  transform: scale(var(--zoom, 1));
+  transform-origin: 50% 40%;
+  will-change: transform;
+}
+
 /* fotos dos painéis claros: bordas esmaecidas para a foto se fundir ao fundo do painel */
 .site-edge-fade {
   mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 6%);

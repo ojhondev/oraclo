@@ -58,10 +58,24 @@ export function SiteMotion({ rootId }: { rootId: string }) {
     window.addEventListener("resize", onSweep);
 
     const layers = reduce ? [] : [...root.querySelectorAll<HTMLElement>("[data-parallax]")];
+    // zoom ligado à rolagem (como a Sana): a imagem cresce de "de" até "até" enquanto entra na tela.
+    // Com "reduzir movimento", a amplitude cai para 40%.
+    const zooms = [...root.querySelectorAll<HTMLElement>("[data-zoom]")].map((el) => {
+      const [a, b] = (el.dataset.zoom || "0.85,1.05").split(",").map(Number) as [number, number];
+      const k = reduce ? 0.4 : 1;
+      return { el, from: 1 - (1 - a) * k, to: 1 - (1 - b) * k };
+    });
     let frame = 0;
     const update = () => {
       frame = 0;
       const vh = window.innerHeight;
+      for (const z of zooms) {
+        const r = z.el.getBoundingClientRect();
+        if (r.bottom < -200 || r.top > vh + 200) continue;
+        const p = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.9)));
+        const e = 1 - (1 - p) ** 2; // desacelera no fim
+        z.el.style.setProperty("--zoom", (z.from + (z.to - z.from) * e).toFixed(4));
+      }
       for (const el of layers) {
         const r = (el.parentElement ?? el).getBoundingClientRect();
         if (r.bottom < -100 || r.top > vh + 100) continue;
@@ -73,7 +87,7 @@ export function SiteMotion({ rootId }: { rootId: string }) {
     const onScroll = () => {
       if (!frame) frame = requestAnimationFrame(update);
     };
-    if (layers.length) {
+    if (layers.length || zooms.length) {
       update();
       window.addEventListener("scroll", onScroll, { passive: true });
       window.addEventListener("resize", onScroll);

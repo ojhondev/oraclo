@@ -9,6 +9,7 @@ export const SITE_NAV = [
   { href: "/empresas", label: "Para empresas" },
   { href: "/historias", label: "Histórias" },
   { href: "/index", label: "Index" },
+  { href: "/docs", label: "Documentação" },
 ];
 
 /** Cabeçalho do site público (home, empresas, histórias e Index). */
@@ -31,7 +32,7 @@ export async function SiteHeader({ rootId }: { rootId: string }) {
         <div className="ml-auto flex items-center gap-1.5">
           <SiteThemeToggle rootId={rootId} />
           {user ? (
-            <Link href="/" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium text-background hover:opacity-85">
+            <Link href="/" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium whitespace-nowrap text-background hover:opacity-85">
               Abrir o ArchRay <ArrowUpRight className="size-3.5" />
             </Link>
           ) : (

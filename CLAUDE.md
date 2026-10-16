@@ -64,6 +64,8 @@ As rotas continuam em `/bens/...` e `/ortofotos/...` (nomes internos antigos).
   `.cache/tsconfig.check.json` (stub de `server-only`).
 - Fase 2 (não feito): contorno com IA no navegador (SAM/SlimSAM via transformers.js), sugestões de
   fissuras, foto 360°, comparação entre vistorias, tipos de dano personalizados.
+- **Demonstração guiada** (src/lib/demo.ts, src/components/demo-tour.tsx): cada organização tem no máximo um projeto `sites.is_demo` (Igreja do Carmo, foto de 2010 em public/demo, domínio público). As 10 missões são concluídas pelo que está no banco (GET /api/demo) ou por eventos/rotas; o progresso fica em localStorage (`archray:demo-tour`). "Refazer do zero" apaga o projeto e os blobs do prefixo e recria vazio. A retificação mostra alvos nos cantos quando o projeto é de demonstração. Mudou um passo do fluxo? Ajuste a missão correspondente.
+- **Documentação** (/docs, src/lib/site/docs.ts): prints reais em public/docs, gerados por `.cache/shots.mjs` (Edge headless via CDP, conta de teste local, projeto de demonstração). Mudou uma tela? Regere os prints.
 
 ## Env (Vercel + `.env.local`)
 `DATABASE_URL` (+ vars Neon), `AUTH_SECRET`, `BLOB_READ_WRITE_TOKEN`. (`PLATFORM_OPERATORS` era do fluxo BIM e não é mais usado.)

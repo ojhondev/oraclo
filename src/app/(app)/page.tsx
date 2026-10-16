@@ -5,6 +5,7 @@ import { listSites } from "@/lib/sites";
 import { db, schema } from "@/lib/db";
 import { siteKinds } from "@/lib/labels";
 import { HomeSearch, type HomeMap, type HomeSite } from "./home-search";
+import { DemoLauncher } from "@/components/demo-tour";
 
 export const metadata: Metadata = { title: "Início" };
 
@@ -46,6 +47,11 @@ export default async function HomePage({ searchParams }: PageProps<"/">) {
       <div className="flex flex-1 flex-col justify-center px-4 pt-10 pb-16 sm:px-6 lg:pt-0">
         <div className="lg:-mt-[6vh]">
           <HomeSearch sites={sites} maps={maps} canEdit={editors.includes(user.role)} autoFocus={buscar === "1"} />
+          {editors.includes(user.role) && (
+            <div className="mx-auto mt-6 w-full max-w-[640px]">
+              <DemoLauncher />
+            </div>
+          )}
         </div>
       </div>
     </div>

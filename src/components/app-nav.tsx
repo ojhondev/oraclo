@@ -261,6 +261,7 @@ export function AppSidebar({ user, recent, initialCollapsed }: { user: SessionUs
     });
   return (
     <aside
+      data-app-sidebar
       className={cn(
         "sticky top-0 hidden h-svh shrink-0 border-r border-sidebar-border bg-sidebar transition-[width] duration-200 lg:block",
         collapsed ? "w-[60px]" : "w-60",

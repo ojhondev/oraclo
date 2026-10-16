@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, ChevronRight, CircleHelp, Compass, Lightbulb, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { DemoLauncher } from "@/components/demo-tour";
 import { HELP_TOPICS, suggestedTopics, type HelpTopic } from "@/lib/help";
 
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -144,6 +146,18 @@ export function HelpCenter() {
                     >
                       <Compass className="size-4" /> Refazer o tour guiado
                     </button>
+                    <div className="grid gap-2 rounded-xl border p-3">
+                      <p className="text-[14px] font-medium">Demonstração guiada</p>
+                      <p className="text-[12.5px] text-muted-foreground">10 missões com a Igreja do Carmo: retificar, apontar danos, IA, GUT, orçamento e laudo.</p>
+                      <div className="flex flex-wrap gap-2" onClick={() => setOpen(false)}>
+                        <DemoLauncher variant="button" />
+                        <Button size="sm" variant="outline" asChild>
+                          <a href="/docs" target="_blank" rel="noreferrer">
+                            Documentação
+                          </a>
+                        </Button>
+                      </div>
+                    </div>
                   </>
                 )}
               </div>

@@ -8,6 +8,7 @@ import { PageBody, PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 import { UploadForm } from "./upload-form";
 import { Rectifier } from "./rectifier";
+import { DEMO } from "@/lib/demo";
 
 export const metadata: Metadata = { title: "Nova vista" };
 
@@ -63,7 +64,18 @@ export default async function NewVistaPage({ params, searchParams }: PageProps<"
           ))}
         </div>
         {tipo === "fachada" ? (
-          <Rectifier siteId={site.id} orgId={user.orgId} elements={elements} campaigns={campaigns} defaultCampaignId={defaultCampaignId} />
+          <Rectifier
+            siteId={site.id}
+            orgId={user.orgId}
+            elements={elements}
+            campaigns={campaigns}
+            defaultCampaignId={defaultCampaignId}
+            demo={
+              site.isDemo
+                ? { src: DEMO.photo, targets: DEMO.targets, name: DEMO.vistaName, widthM: DEMO.widthM, heightM: DEMO.heightM, credit: DEMO.credit }
+                : undefined
+            }
+          />
         ) : (
           <UploadForm
             key={tipo}

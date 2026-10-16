@@ -24,6 +24,7 @@ const COLS: { title: string; links: { href: string; label: string }[] }[] = [
   {
     title: "Recursos",
     links: [
+      { href: "/docs", label: "Documentação" },
       { href: "/index", label: "Index" },
       { href: "/historias", label: "Histórias" },
       { href: "/empresas", label: "ArchRay para empresas" },

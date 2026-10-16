@@ -146,13 +146,13 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
             )}
             {canEdit && (
               <Button variant="outline" asChild>
-                <Link href={`/bens/${site.id}/ortofotos/nova${qs}`}>
+                <Link href={`/bens/${site.id}/ortofotos/nova${qs}`} data-tour="nova-vista">
                   <ImagePlus /> Nova vista
                 </Link>
               </Button>
             )}
             <Button asChild>
-              <a href={`/bens/${site.id}/laudo${qs}`} target="_blank" rel="noreferrer">
+              <a href={`/bens/${site.id}/laudo${qs}`} target="_blank" rel="noreferrer" data-tour="gerar-laudo">
                 <FileText /> Gerar laudo
               </a>
             </Button>

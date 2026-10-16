@@ -78,6 +78,8 @@ export const sites = pgTable("sites", {
   processNumber: text("process_number"),
   period: text("period"),
   description: text("description"),
+  /** Projeto de demonstração do tour guiado (caso Carmo): pode ser apagado e recriado a qualquer momento. */
+  isDemo: boolean("is_demo").notNull().default(false),
   createdAt: createdAt(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [index("sites_org_idx").on(t.orgId)]);

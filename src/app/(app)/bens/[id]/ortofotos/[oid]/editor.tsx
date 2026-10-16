@@ -430,6 +430,8 @@ export function DamageMapEditor({
     if (!aiPolygon || aiStatus !== "idle") return;
     finishDraft(aiPolygon as Pt[], true);
     clearAi();
+    // avisa a demonstração guiada de que um dano foi salvo pelo Contorno IA
+    window.dispatchEvent(new Event("archray:contorno-ia"));
   }, [aiPolygon, aiStatus, finishDraft, clearAi]);
   const cycleAi = () => aiMasks.length > 1 && setAiIndex((i) => (i + 1) % aiMasks.length);
   const undoAi = () => {
@@ -850,7 +852,7 @@ export function DamageMapEditor({
             <span className="text-[12px] [writing-mode:vertical-rl] rotate-180">Biblioteca de danos</span>
           </button>
         )}
-        <aside className={cn("thin-scroll hidden w-56 shrink-0 overflow-y-auto border-r bg-sidebar 2xl:w-64", panels.lib && "md:block")}>
+        <aside data-tour="biblioteca-danos" className={cn("thin-scroll hidden w-56 shrink-0 overflow-y-auto border-r bg-sidebar 2xl:w-64", panels.lib && "md:block")}>
           <div className="sticky top-0 z-10 border-b bg-sidebar p-3">
             <p className="label mb-2">Biblioteca de danos</p>
             <div className="relative">
@@ -1136,7 +1138,7 @@ export function DamageMapEditor({
           </button>
         )}
         {/* com um dano selecionado o painel abre mesmo recolhido, para editar; ao fechar o dano ele recolhe de novo */}
-        <aside className={cn("thin-scroll hidden w-72 shrink-0 overflow-y-auto border-l bg-background 2xl:w-80", (panels.side || selDamage) && "lg:block")}>
+        <aside data-tour="painel-orcamento" className={cn("thin-scroll hidden w-72 shrink-0 overflow-y-auto border-l bg-background 2xl:w-80", (panels.side || selDamage) && "lg:block")}>
           {selDamage ? (
             <DamagePanel
               key={selDamage.id}
@@ -1383,7 +1385,7 @@ function DamagePanel({
           onValueChange={(v) => canEdit && onPatch({ severity: v as Damage["severity"] })}
         />
       </label>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2" data-tour="gut">
         <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
           Urgência
           <SimpleSelect

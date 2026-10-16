@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { upload } from "@vercel/blob/client";
-import { Camera, Loader2, RotateCcw } from "lucide-react";
+import { Camera, Check, Loader2, RotateCcw, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Field, SimpleSelect } from "@/components/form";
@@ -11,7 +11,9 @@ import { outputSize, rectify, type Pt } from "@/lib/rectify";
 import { createOrthophoto } from "../actions";
 
 type Opt = { id: string; name: string };
-type Props = { siteId: string; orgId: string; elements: Opt[]; campaigns: Opt[]; defaultCampaignId?: string | null };
+/** Modo demonstração (tour guiado): foto carregada sozinha e alvos nos cantos da fachada. */
+export type RectifierDemo = { src: string; targets: Pt[]; name: string; widthM: number; heightM: number; credit: string };
+type Props = { siteId: string; orgId: string; elements: Opt[]; campaigns: Opt[]; defaultCampaignId?: string | null; demo?: RectifierDemo };
 
 const LABELS = ["superior esquerdo", "superior direito", "inferior direito", "inferior esquerdo"];
 const num = (v: FormDataEntryValue | null) => Number(String(v ?? "").replace(",", "."));
@@ -26,7 +28,7 @@ function order(pts: Pt[]): Pt[] {
   return [0, 1, 2, 3].map((k) => sorted[(start + k) % 4]!);
 }
 
-export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignId }: Props) {
+export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignId, demo }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [img, setImg] = useState<HTMLImageElement | null>(null);
   const [pts, setPts] = useState<Pt[]>([]);
@@ -54,17 +56,33 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
       setFile(f);
       // cantos iniciais num retângulo interno — o usuário arrasta até os cantos reais
       const { naturalWidth: W, naturalHeight: H } = im;
+      // na demonstração os pontos começam longe dos alvos, para a pessoa arrastar cada um
+      const m = demo ? 0.08 : 0.2;
       setPts([
-        [W * 0.2, H * 0.2],
-        [W * 0.8, H * 0.2],
-        [W * 0.8, H * 0.8],
-        [W * 0.2, H * 0.8],
+        [W * m, H * m],
+        [W * (1 - m), H * m],
+        [W * (1 - m), H * (1 - m)],
+        [W * m, H * (1 - m)],
       ]);
-      if (nameRef.current && !nameRef.current.value) nameRef.current.value = f.name.replace(/\.[^.]+$/, "");
+      if (nameRef.current && !nameRef.current.value) nameRef.current.value = demo?.name ?? f.name.replace(/\.[^.]+$/, "");
     };
     im.onerror = () => setError("Não foi possível ler a foto.");
     im.src = URL.createObjectURL(f);
   }
+
+  // demonstração: carrega a foto do caso sozinha
+  useEffect(() => {
+    if (!demo) return;
+    let off = false;
+    fetch(demo.src)
+      .then((r) => r.blob())
+      .then((b) => !off && pick(new File([b], demo.src.split("/").pop() || "fachada.jpg", { type: "image/jpeg" })))
+      .catch(() => !off && setError("Não foi possível carregar a foto da demonstração."));
+    return () => {
+      off = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- só ao abrir
+  }, [demo?.src]);
 
   function toImage(e: { clientX: number; clientY: number }): Pt | null {
     const box = boxRef.current;
@@ -136,6 +154,21 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
   const H = img?.naturalHeight ?? 1;
   const ordered = pts.length === 4 ? order(pts) : pts;
   const handle = Math.max(W, H) / 70;
+  // demonstração: quais alvos já têm um ponto em cima (tolerância ~3% da foto)
+  const tol = Math.max(W, H) * 0.03;
+  const near = (p: Pt, t: Pt) => Math.hypot(p[0] - t[0], p[1] - t[1]) <= tol;
+  const hit = demo ? demo.targets.map((t) => pts.some((p) => near(p, t))) : [];
+  const hits = hit.filter(Boolean).length;
+  const dimsOk = demo ? Math.abs(w - demo.widthM) <= demo.widthM * 0.05 && Math.abs(h - demo.heightM) <= demo.heightM * 0.05 : true;
+  const release = () => {
+    // solta perto de um alvo = encaixa nele
+    if (demo && drag !== null) {
+      const p = pts[drag];
+      const t = p && demo.targets.find((q) => near(p, q));
+      if (t) setPts((cur) => cur.map((q, i) => (i === drag ? [t[0], t[1]] : q)));
+    }
+    setDrag(null);
+  };
 
   return (
     <form action={submit} className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -161,10 +194,22 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
           </label>
         ) : (
           <>
-            <p className="text-[13px] text-muted-foreground">
-              Arraste os 4 pontos até os cantos de um retângulo real da parede (cantos da fachada, de uma janela grande, de
-              um painel). Depois informe a largura e a altura reais desse retângulo.
-            </p>
+            {demo ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-xl border bg-card px-3 py-2 text-[13px]">
+                <Target className="size-4 shrink-0" />
+                <span className="min-w-0 flex-1">
+                  Arraste cada ponto branco até um <b className="font-medium">alvo tracejado</b> — os cantos da fachada da igreja. Ao chegar perto, ele encaixa.
+                </span>
+                <span className={hits === 4 ? "rounded-full bg-foreground px-2.5 py-0.5 text-[12px] font-medium text-background" : "rounded-full bg-muted px-2.5 py-0.5 text-[12px] tabular-nums"}>
+                  {hits === 4 ? "4/4 cantos ✓" : `${hits}/4 cantos`}
+                </span>
+              </div>
+            ) : (
+              <p className="text-[13px] text-muted-foreground">
+                Arraste os 4 pontos até os cantos de um retângulo real da parede (cantos da fachada, de uma janela grande, de
+                um painel). Depois informe a largura e a altura reais desse retângulo.
+              </p>
+            )}
             <div
               ref={boxRef}
               className="relative w-full touch-none select-none overflow-hidden rounded-xl border bg-muted"
@@ -174,8 +219,9 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
                 const p = toImage(e);
                 if (p) setPts((cur) => cur.map((q, i) => (i === drag ? p : q)));
               }}
-              onPointerUp={() => setDrag(null)}
-              onPointerLeave={() => setDrag(null)}
+              onPointerUp={release}
+              onPointerLeave={release}
+              data-tour="retificar-foto"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={img.src} alt="" className="absolute inset-0 size-full" draggable={false} />
@@ -189,6 +235,11 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
                     style={{ filter: "drop-shadow(0 0 2px black)" }}
                   />
                 )}
+                {demo?.targets.map((t, i) => (
+                  <g key={`t${i}`} className={hit[i] ? "" : "animate-pulse"} pointerEvents="none">
+                    <circle cx={t[0]} cy={t[1]} r={tol} fill={hit[i] ? "rgba(34,197,94,0.25)" : "rgba(255,255,255,0.12)"} stroke={hit[i] ? "#22c55e" : "white"} strokeWidth={handle / 5} strokeDasharray={hit[i] ? undefined : `${handle / 1.5} ${handle / 2}`} style={{ filter: "drop-shadow(0 0 2px black)" }} />
+                  </g>
+                ))}
                 {pts.map((p, i) => (
                   <g key={i} style={{ cursor: "grab" }} onPointerDown={(e) => {
                     try {
@@ -199,11 +250,12 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
                     setDrag(i);
                   }}>
                     <circle cx={p[0]} cy={p[1]} r={handle * 1.8} fill="transparent" />
-                    <circle cx={p[0]} cy={p[1]} r={handle * 0.55} fill="white" stroke="black" strokeWidth={handle / 5} />
+                    <circle cx={p[0]} cy={p[1]} r={handle * 0.55} fill={demo && demo.targets.some((t) => near(p, t)) ? "#22c55e" : "white"} stroke="black" strokeWidth={handle / 5} />
                   </g>
                 ))}
               </svg>
             </div>
+            {demo && <p className="text-[11.5px] text-muted-foreground">{demo.credit}</p>}
             <div className="flex flex-wrap items-center gap-2 text-[12.5px] text-muted-foreground">
               <span>
                 Foto {W} × {H} px · cantos: {ordered.map((_, i) => LABELS[i]).join(", ")}
@@ -229,7 +281,21 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
         <Field label="Nome da vista" htmlFor="name">
           <Input ref={nameRef} id="name" name="name" required placeholder="Ex.: Fachada principal" />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
+        {demo && (
+          <div className="rounded-xl border bg-card px-3 py-2.5 text-[12.5px]">
+            <p className="font-medium">Medidas da fachada (trena)</p>
+            <p className="text-muted-foreground">
+              Largura <b className="font-medium text-foreground">{String(demo.widthM).replace(".", ",")} m</b> · altura{" "}
+              <b className="font-medium text-foreground">{String(demo.heightM).replace(".", ",")} m</b> — digite abaixo.
+            </p>
+            {w > 0 && h > 0 && (
+              <p className="mt-1 flex items-center gap-1">
+                {dimsOk ? <><Check className="size-3.5" /> Medidas certas.</> : "Confira: os valores não batem com a trena."}
+              </p>
+            )}
+          </div>
+        )}
+        <div className="grid grid-cols-2 gap-3" data-tour="medidas">
           <Field label="Largura real (m)" htmlFor="w">
             <Input id="w" inputMode="decimal" placeholder="Ex.: 12,40" value={dims.w} onChange={(e) => setDims((d) => ({ ...d, w: e.target.value }))} />
           </Field>
@@ -261,7 +327,7 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
         </p>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <div className="flex flex-wrap items-center gap-2">
-          <Button type="submit" disabled={pending || !ready}>
+          <Button type="submit" disabled={pending || !ready} data-tour="retificar">
             {pending && <Loader2 className="animate-spin" />}
             {pending ? stage ?? "Processando…" : "Retificar e abrir no editor"}
           </Button>

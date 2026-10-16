@@ -231,6 +231,16 @@ html:has(.site-theme.site-light) {
   }
 }
 
+/* fotos dos painéis claros: bordas esmaecidas para a foto se fundir ao fundo do painel */
+.site-edge-fade {
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent), linear-gradient(to bottom, transparent, #000 6%);
+  mask-composite: intersect;
+}
+
+.site-edge-fade-x {
+  mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
+}
+
 /* logotipo em PNG preto: inverte no tema escuro do site (independe do tema do app) */
 .site-theme .site-logo {
   filter: invert(1);

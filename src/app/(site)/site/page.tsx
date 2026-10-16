@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Calculator, FileText, Frame, WandSparkles } from "lucide-react";
-import { POSTS, fmtPostDate } from "@/lib/updates";
+import { ArrowRight, Calculator, CloudOff, FileText, Frame, Gauge, ListOrdered, Play, Smartphone, WandSparkles } from "lucide-react";
+import { POSTS } from "@/lib/updates";
 import { STORIES } from "@/lib/site/stories";
 import { CARMO } from "@/lib/site/carmo";
 import { fmtBRL, priority } from "@/lib/pricing";
 import { DamageMap } from "@/components/site/damage-map";
-import { ProductShot } from "@/components/site/product-shot";
-import { HeroPrompt } from "@/components/site/hero-prompt";
 import { Meta, PostRow, SectionHead, SegmentCard, SiteCover, StoryCard } from "@/components/site/blocks";
 
 // Servida em "/" para quem não está logado (reescrita em src/proxy.ts).
@@ -17,14 +15,6 @@ export const metadata: Metadata = {
   description:
     "Fotos de fachadas e plantas viram mapas de danos em escala, com área medida, orçamento do tratamento, prioridade GUT e laudo em PDF. Direto no navegador.",
 };
-
-const CHIPS = [
-  { href: "#fachada", label: "Fachada em escala" },
-  { href: "#contorno", label: "Contorno com IA" },
-  { href: "#orcamento", label: "Orçamento e GUT" },
-  { href: "#laudo", label: "Laudo" },
-  { href: "/empresas", label: "Para empresas" },
-];
 
 const AUDIENCES = ["Estúdios de restauro", "Inspeção predial", "Retrofit", "Patrimônio histórico", "Condomínios", "Construtoras", "Dioceses", "Museus"];
 
@@ -42,79 +32,47 @@ const PILLARS = [
   { icon: FileText, title: "Laudar", text: "PDF, prancha A3 e DXF" },
 ];
 
-const HERO = "Que dano vamos mapear hoje?";
+const FIELD = [
+  { icon: Smartphone, title: "Campo", text: "Fotos pelo celular, por vistoria" },
+  { icon: CloudOff, title: "Sem sinal", text: "O envio continua quando volta" },
+  { icon: Gauge, title: "Precisão", text: "Erro medido em cm, no laudo" },
+  { icon: ListOrdered, title: "Prioridade", text: "GUT diz o que tratar primeiro" },
+];
+
+const HERO = "Mapa de danos com IA";
 
 export default function SiteHome() {
   const igr = CARMO.igreja;
   const rows = [...CARMO.convento.damages, ...igr.damages].filter((d) => d.geometry === "area").sort((a, b) => b.gut - a.gut).slice(0, 6);
-  const post = POSTS[0];
   const story = STORIES[0]!;
 
   return (
     <>
-      {/* hero: pergunta + campo de "prompt" (como a home da OpenAI) */}
-      <section className="flex min-h-[calc(78svh-60px)] flex-col items-center justify-center px-4 pt-16 pb-10 text-center sm:px-6 lg:px-8">
-        <h1 className="site-rise text-[34px] leading-[1.1] font-medium tracking-[-0.03em] text-balance sm:text-[44px]" aria-label={HERO}>
+      {/* topo: manchete grande e centralizada (como a Sana), palavras sobem em sequência */}
+      <section className="px-4 pt-20 pb-14 text-center sm:px-6 sm:pt-28 lg:px-8">
+        <h1 className="site-rise mx-auto max-w-[15ch] text-[44px] leading-[1.02] font-medium tracking-[-0.045em] text-balance sm:text-[84px]" aria-label={HERO}>
           {HERO.split(" ").map((w, i) => (
             <span key={i} style={{ "--w": i } as React.CSSProperties} aria-hidden>
               {w}&nbsp;
             </span>
           ))}
         </h1>
-        <div className="site-fade-in mt-8 w-full" style={{ "--d": "450ms" } as React.CSSProperties}>
-          <HeroPrompt />
-        </div>
-        <ul className="site-fade-in mt-5 flex flex-wrap justify-center gap-2" style={{ "--d": "650ms" } as React.CSSProperties}>
-          {CHIPS.map((c) => (
-            <li key={c.href}>
-              <Link href={c.href} className="inline-flex h-9 items-center rounded-full border px-4 text-[13.5px] font-medium text-foreground/85 transition-colors hover:bg-secondary hover:text-foreground">
-                {c.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      {/* destaque: card grande + coluna de cards */}
-      <section className="grid gap-8 px-4 pb-20 sm:px-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:px-8">
-        <Link href={post ? `/index/${post.slug}` : "/#produto"} className="group block min-w-0" data-reveal="scale">
-          <div className="overflow-hidden rounded-lg">
-            <ProductShot />
-          </div>
-          <h2 className="mt-6 max-w-[22ch] text-[30px] leading-[1.08] font-medium tracking-[-0.03em] text-balance group-hover:underline group-hover:underline-offset-[6px] sm:text-[46px]">
-            ArchRay: do dano apontado ao laudo pronto
-          </h2>
-          {post && (
-            <div className="mt-3">
-              <Meta label={post.category} date={fmtPostDate(post.date, "short")} extra="Leitura de 6 minutos" />
-            </div>
-          )}
-        </Link>
-        <div className="grid content-start gap-8 sm:grid-cols-2 lg:grid-cols-1">
-          <Link href={`/historias/${story.slug}`} className="group block" data-reveal data-reveal-delay={150}>
-            <div className="relative aspect-[4/3] overflow-hidden rounded-lg bg-secondary">
-              <Image src="/site/carmo-igreja-2021.jpg" alt="Igreja do Carmo da Horta restaurada" fill sizes="(min-width:1024px) 300px, 50vw" className="site-kenburns object-cover" />
-            </div>
-            <h3 className="mt-3 text-[16px] leading-snug font-medium group-hover:underline group-hover:underline-offset-4">Carmo da Horta: o diagnóstico de 2010, refeito no ArchRay</h3>
-            <div className="mt-1.5">
-              <Meta label="História" date="15 de out. de 2026" />
-            </div>
+        <p className="site-fade-in mx-auto mt-6 max-w-[34ch] text-[18px] leading-7 text-balance text-muted-foreground sm:text-[20px] sm:leading-8" style={{ "--d": "380ms" } as React.CSSProperties}>
+          Da foto da fachada ao laudo com orçamento — em horas, não em dias.
+        </p>
+        <div className="site-fade-in mt-9 flex flex-wrap justify-center gap-3" style={{ "--d": "520ms" } as React.CSSProperties}>
+          <Link href="/cadastro" className="inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+            Começar grátis
           </Link>
-          <Link href="#contorno" className="group block" data-reveal data-reveal-delay={300}>
-            <div className="relative overflow-hidden rounded-lg bg-[#1a1a1a]">
-              <DamageMap src={igr.src} w={igr.w} h={igr.h} damages={igr.damages} alt="Fachada retificada com danos" labels={false} className="block aspect-[4/3] h-auto w-full object-cover" />
-            </div>
-            <h3 className="mt-3 text-[16px] leading-snug font-medium group-hover:underline group-hover:underline-offset-4">Clique na mancha. A IA contorna — no seu navegador.</h3>
-            <div className="mt-1.5">
-              <Meta label="Produto" date="Contorno IA" />
-            </div>
+          <Link href="/docs#demonstracao" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-secondary px-6 text-[15px] font-medium hover:bg-accent">
+            <Play className="size-4" /> Ver a demonstração
           </Link>
         </div>
       </section>
 
-      {/* faixa contínua de públicos */}
-      <section className="site-marquee-mask overflow-hidden border-y py-6" aria-label="Para quem é o ArchRay">
-        <ul className="site-marquee gap-14 pr-14 text-[22px] font-medium tracking-[-0.02em] whitespace-nowrap text-foreground/45 sm:text-[28px]">
+      {/* para quem é (no lugar da fileira de logos) */}
+      <section className="site-marquee-mask overflow-hidden pb-16 sm:pb-24" aria-label="Para quem é o ArchRay">
+        <ul className="site-marquee gap-14 pr-14 text-[20px] font-medium tracking-[-0.02em] whitespace-nowrap text-foreground/45 sm:text-[24px]">
           {[...AUDIENCES, ...AUDIENCES].map((a, i) => (
             <li key={i} aria-hidden={i >= AUDIENCES.length}>
               {a}
@@ -122,6 +80,65 @@ export default function SiteHome() {
           ))}
         </ul>
       </section>
+
+      {/* painel do produto: claro, arredondado, com a foto do notebook sobre os livros */}
+      <ProductPanel
+        id="produto"
+        title="ArchRay"
+        text="A central visual de diagnóstico de edificações: o imóvel aparece na tela, você aponta os danos e a plataforma mede, orça, prioriza e documenta."
+        cta={{ href: "#fachada", label: "Conhecer o produto" }}
+        items={PILLARS}
+      >
+        <div className="site-edge-fade relative mx-auto mt-6 aspect-square w-full max-w-[760px] overflow-hidden" data-reveal="scale">
+          <div className="absolute inset-0" data-parallax="0.06">
+            <Image src="/site/notebook-livros.jpg" alt="Notebook com o editor de mapa de danos do ArchRay sobre uma pilha de livros de arquitetura e engenharia" fill sizes="(min-width: 768px) 760px, 100vw" className="object-contain" priority />
+          </div>
+        </div>
+      </ProductPanel>
+
+      {/* pessoa real, tela larga */}
+      <section className="px-3 pt-6 sm:px-4 lg:px-6">
+        <div className="relative overflow-hidden rounded-[28px] bg-[#1b1b1b]" data-reveal="fade">
+          <div className="relative aspect-[4/5] sm:aspect-[16/8] lg:aspect-[21/9]">
+            <div className="absolute inset-0" data-parallax="0.1">
+              <Image src="/site/arquiteta-escritorio.jpg" alt="Arquiteta de capacete no escritório, pensando no próximo diagnóstico" fill sizes="100vw" className="object-cover object-[70%_center]" />
+            </div>
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent sm:bg-gradient-to-r sm:from-black/80 sm:via-black/35 sm:to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 p-7 text-white sm:inset-y-0 sm:right-auto sm:flex sm:max-w-[620px] sm:flex-col sm:justify-center sm:p-14">
+              <p className="text-[13.5px] text-white/70">Feito para quem vive entre o canteiro e o escritório</p>
+              <p className="mt-4 text-[30px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[48px]">Menos tempo montando o laudo. Mais tempo na obra.</p>
+              <p className="mt-4 max-w-[44ch] text-[15.5px] leading-7 text-white/75">
+                Aprenda o fluxo inteiro em 13 missões, num caso real: a Igreja do Carmo, nos Açores. Dá para refazer do zero quantas vezes quiser.
+              </p>
+              <div className="mt-7 flex flex-wrap gap-3">
+                <Link href="/docs#demonstracao" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-5 text-[15px] font-medium text-black hover:bg-white/90">
+                  <Play className="size-4" /> Fazer a demonstração guiada
+                </Link>
+                <Link href="/docs" className="inline-flex h-11 items-center rounded-full bg-white/15 px-5 text-[15px] font-medium text-white backdrop-blur hover:bg-white/25">
+                  Ler a documentação
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* segundo painel: do campo ao cliente, com a foto do tablet */}
+      <div className="pt-6">
+        <ProductPanel
+          id="campo"
+          title="Do campo ao cliente"
+          text="A equipe fotografa na visita, o técnico aponta e confere a precisão, o cliente recebe um laudo que entende. Tudo no navegador — do celular ao computador."
+          cta={{ href: "/empresas", label: "ArchRay para empresas" }}
+          items={FIELD}
+        >
+          <div className="site-edge-fade-x relative mx-auto mt-10 aspect-[1507/1044] w-full max-w-[1100px] overflow-hidden" data-reveal="fade">
+            <div className="absolute inset-0">
+              <Image src="/site/tablet-mapa-de-danos.jpg" alt="Mulher consultando no tablet o mapa de danos de uma fachada" fill sizes="(min-width: 1100px) 1100px, 100vw" className="object-contain object-bottom" />
+            </div>
+          </div>
+        </ProductPanel>
+      </div>
 
       {/* dores */}
       <section className="px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
@@ -133,7 +150,7 @@ export default function SiteHome() {
         </p>
         <ul className="mt-14 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {PAINS.map((p, i) => (
-            <li key={p.title} className="flex min-h-[220px] flex-col justify-between rounded-lg border bg-[var(--site-elev)] p-6" data-reveal data-reveal-delay={i * 110}>
+            <li key={p.title} className="flex min-h-[220px] flex-col justify-between rounded-2xl border bg-[var(--site-elev)] p-6" data-reveal data-reveal-delay={i * 110}>
               <span className="text-[13px] text-muted-foreground tabular-nums">0{i + 1}</span>
               <div>
                 <h3 className="text-[19px] leading-snug font-medium tracking-[-0.01em]">{p.title}</h3>
@@ -145,28 +162,6 @@ export default function SiteHome() {
         <p className="mt-16 max-w-[28ch] text-[28px] leading-[1.15] font-medium tracking-[-0.025em] text-balance sm:text-[40px]" data-reveal>
           Com o ArchRay, é um lugar só. <span className="text-muted-foreground">Aponte, e o resto sai pronto.</span>
         </p>
-      </section>
-
-      {/* produto */}
-      <section id="produto" className="scroll-mt-16 border-t px-4 pt-24 sm:px-6 sm:pt-32 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-end">
-          <div data-reveal>
-            <p className="text-[13.5px] font-medium text-muted-foreground">Produto</p>
-            <h2 className="mt-3 text-[44px] leading-[1.02] font-medium tracking-[-0.045em] sm:text-[80px]">ArchRay</h2>
-            <p className="mt-5 max-w-lg text-[17px] leading-7 text-muted-foreground">
-              A central visual de diagnóstico de edificações: o imóvel aparece na tela, você aponta os danos e a plataforma mede, orça, prioriza e documenta.
-            </p>
-          </div>
-          <ul className="grid grid-cols-2 gap-px overflow-hidden rounded-lg border bg-border sm:grid-cols-4">
-            {PILLARS.map((p, i) => (
-              <li key={p.title} className="bg-background p-5" data-reveal data-reveal-delay={i * 90}>
-                <p.icon className="size-[18px]" strokeWidth={1.6} />
-                <p className="mt-6 text-[15px] font-medium">{p.title}</p>
-                <p className="mt-0.5 text-[13px] leading-5 text-muted-foreground">{p.text}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
       </section>
 
       <Feature
@@ -354,6 +349,53 @@ export default function SiteHome() {
         </div>
       </section>
     </>
+  );
+}
+
+/** Painel claro e arredondado (como os da Sana): título, texto, botão, 4 recursos e uma foto grande. */
+function ProductPanel({
+  id,
+  title,
+  text,
+  cta,
+  items,
+  children,
+}: {
+  id: string;
+  title: string;
+  text: string;
+  cta: { href: string; label: string };
+  items: { icon: React.ComponentType<{ className?: string; strokeWidth?: number }>; title: string; text: string }[];
+  children: React.ReactNode;
+}) {
+  return (
+    <section id={id} className="scroll-mt-16 px-3 sm:px-4 lg:px-6">
+      <div className="overflow-hidden rounded-[28px] bg-[#f0f0ee] text-[#0a0a0a]">
+        <div className="mx-auto max-w-3xl px-6 pt-16 text-center sm:pt-24">
+          <h2 className="text-[40px] leading-[1.02] font-medium tracking-[-0.045em] sm:text-[68px]" data-reveal>
+            {title}
+          </h2>
+          <p className="mx-auto mt-5 max-w-[46ch] text-[16.5px] leading-7 text-black/60 sm:text-[18px]" data-reveal data-reveal-delay={100}>
+            {text}
+          </p>
+          <div data-reveal data-reveal-delay={180}>
+            <Link href={cta.href} className="mt-8 inline-flex h-10 items-center gap-1.5 rounded-full bg-[#0a0a0a] px-5 text-[14.5px] font-medium text-white hover:bg-black/80">
+              {cta.label} <ArrowRight className="size-4" />
+            </Link>
+          </div>
+        </div>
+        <ul className="mx-auto mt-14 grid max-w-5xl grid-cols-2 gap-x-6 gap-y-8 px-6 sm:grid-cols-4">
+          {items.map((p, i) => (
+            <li key={p.title} className="text-center" data-reveal data-reveal-delay={220 + i * 90}>
+              <p.icon className="mx-auto size-5" strokeWidth={1.6} />
+              <p className="mt-3 text-[15px] font-medium">{p.title}</p>
+              <p className="mt-0.5 text-[13.5px] leading-5 text-black/55">{p.text}</p>
+            </li>
+          ))}
+        </ul>
+        {children}
+      </div>
+    </section>
   );
 }
 

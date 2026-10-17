@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Building2, Calculator, Lock, MonitorSmartphone, Smartphone, Users } from "lucide-react";
+import { Camera, FileStack, Gauge, Lock, MonitorSmartphone, UserRound } from "lucide-react";
 import { getStories } from "@/lib/site/stories";
 import { getLang } from "@/lib/site/get-lang";
 import type { Lang } from "@/lib/site/lang";
@@ -8,13 +8,13 @@ import { SectionHead, StoryCard } from "@/components/site/blocks";
 
 const T = {
   pt: {
-    title: "ArchRay para empresas",
-    description: "Mapa de danos, orçamento e laudo para estúdios de restauro, inspeção predial, retrofit e patrimônio — com equipe, papéis e tabela de preços do escritório.",
-    kicker: "ArchRay para empresas",
-    h1: "Diagnóstico de edificações para o escritório inteiro",
-    lead: "Do campo ao laudo, a mesma plataforma para quem fotografa, quem desenha os danos e quem aprova o orçamento.",
-    cta: "Criar a conta do escritório",
-    cta2: "Conhecer o produto",
+    title: "Setores que atendemos",
+    description: "Diagnóstico de danos para restauro, inspeção predial, retrofit e patrimônio — feito por arquitetos de restauro do Estúdio Restaura, com tecnologia própria.",
+    kicker: "Setores que atendemos",
+    h1: "Diagnóstico de danos para quem decide a obra",
+    lead: "Restauro, inspeção, retrofit ou patrimônio: fazemos a vistoria, mapeamos cada dano e entregamos quantitativos, orçamento e laudo prontos para a sua decisão.",
+    cta: "Solicitar diagnóstico",
+    cta2: "Como funciona",
     segments: [
       {
         id: "restauro",
@@ -41,29 +41,29 @@ const T = {
         gain: ["Projetos com proteção, órgão e processo registrados", "Vistorias datadas para comparar antes e agora", "Laudo de estado de conservação pronto para arquivar"],
       },
     ],
-    teamTitle: "Feito para trabalhar em equipe",
+    teamTitle: "Como trabalhamos com você",
     team: [
-      ["Equipe e papéis", "Administrador, técnico, campo e leitor. Cada pessoa vê e edita só o que deve."],
-      ["Campo pelo celular", "A equipe tira as fotos da vistoria no celular; o envio continua quando o sinal volta."],
-      ["Preços do escritório", "Tratamento e preço por tipo de dano, em m², metro ou unidade. O orçamento usa a sua tabela."],
-      ["Uma organização, vários projetos", "Todos os imóveis, vistorias e laudos do escritório num lugar só, com busca."],
-      ["Dados separados por organização", "Cada escritório só acessa os próprios projetos. Convites e senhas com link seguro."],
-      ["Nada para instalar", "Roda no navegador, inclusive em computadores simples. A IA de contorno também."],
+      ["Um especialista por imóvel", "Um arquiteto do Estúdio Restaura acompanha o diagnóstico do briefing à entrega."],
+      ["Vistoria em campo", "Fotografamos e medimos no local, com medidas de conferência para garantir a escala."],
+      ["Precisão medida", "Cada vista sai com a precisão estimada em cm — e esse número vai para o laudo."],
+      ["Acesso online para a sua equipe", "Você e o seu time acompanham vistas, danos, orçamento e laudo numa área própria."],
+      ["Entregáveis prontos para o projeto", "Laudo em PDF, prancha A3 e DXF em metros, com uma camada por tipo de dano."],
+      ["Sigilo e dados separados", "Os dados do seu imóvel ficam numa área só sua, com acesso por convite."],
     ],
-    stories: "Histórias",
+    stories: "Casos",
     seeAll: "Ver tudo",
-    finalTitle: "Traga o próximo projeto do escritório",
-    finalText: "Crie a organização, convide a equipe e monte o primeiro mapa de danos hoje.",
-    finalCta: "Começar grátis",
+    finalTitle: "Conte qual é o imóvel. Um arquiteto responde.",
+    finalText: "Descreva o imóvel e o objetivo. Depois do briefing, enviamos o orçamento do diagnóstico, sem compromisso.",
+    finalCta: "Solicitar diagnóstico",
   },
   en: {
-    title: "ArchRay for business",
-    description: "Damage maps, budgets and reports for restoration studios, building inspection, retrofit and heritage — with teams, roles and your firm's price table.",
-    kicker: "ArchRay for business",
-    h1: "Building diagnosis for the whole firm",
-    lead: "From the site to the report, one platform for the people who take the photos, the people who draw the damage and the people who approve the budget.",
-    cta: "Create your firm's account",
-    cta2: "Explore the product",
+    title: "Sectors we serve",
+    description: "Damage diagnosis for restoration, building inspection, retrofit and heritage — produced by Estúdio Restaura's restoration architects, with in-house technology.",
+    kicker: "Sectors we serve",
+    h1: "Damage diagnosis for those who decide the works",
+    lead: "Restoration, inspection, retrofit or heritage: we survey the building, map every damage and deliver quantities, a budget and a report ready for your decision.",
+    cta: "Request a diagnosis",
+    cta2: "How it works",
     segments: [
       {
         id: "restauro",
@@ -90,24 +90,24 @@ const T = {
         gain: ["Projects with protection status, agency and case number recorded", "Dated surveys to compare before and now", "Condition report ready to file"],
       },
     ],
-    teamTitle: "Built for teamwork",
+    teamTitle: "How we work with you",
     team: [
-      ["Team and roles", "Administrator, technician, field and viewer. Everyone sees and edits only what they should."],
-      ["Field work by phone", "The team takes survey photos on the phone; uploads resume when the signal comes back."],
-      ["Your firm's prices", "Treatment and price per damage type, per m², metre or unit. The budget uses your table."],
-      ["One organisation, many projects", "All of the firm's buildings, surveys and reports in one place, with search."],
-      ["Data separated by organisation", "Each firm only accesses its own projects. Invitations and passwords via secure links."],
-      ["Nothing to install", "Runs in the browser, even on modest computers. The AI outlining too."],
+      ["One specialist per building", "An Estúdio Restaura architect follows the diagnosis from briefing to delivery."],
+      ["Site survey", "We photograph and measure on site, with check measurements to guarantee the scale."],
+      ["Measured precision", "Every view comes with its estimated precision in cm — and that number goes into the report."],
+      ["Online access for your team", "You and your team follow views, damage, budget and report in your own area."],
+      ["Deliverables ready for design", "PDF report, A3 drawing and DXF in metres, with one layer per damage type."],
+      ["Confidential, separated data", "Your building's data stays in an area of its own, with access by invitation."],
     ],
-    stories: "Stories",
+    stories: "Cases",
     seeAll: "See all",
-    finalTitle: "Bring in your firm's next project",
-    finalText: "Create the organisation, invite the team and build your first damage map today.",
-    finalCta: "Start free",
+    finalTitle: "Tell us about the building. An architect will reply.",
+    finalText: "Describe the building and your goal. After the briefing, we send a quote for the diagnosis, with no obligation.",
+    finalCta: "Request a diagnosis",
   },
 } satisfies Record<Lang, unknown>;
 
-const TEAM_ICONS = [Users, Smartphone, Calculator, Building2, Lock, MonitorSmartphone];
+const TEAM_ICONS = [UserRound, Camera, Gauge, MonitorSmartphone, FileStack, Lock];
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = T[await getLang()];
@@ -129,10 +129,10 @@ export default async function EmpresasPage() {
           {t.lead}
         </p>
         <div className="site-fade-in mt-8 flex flex-wrap gap-3" style={{ "--d": "380ms" } as React.CSSProperties}>
-          <Link href="/cadastro" className="inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+          <Link href="/contato" className="inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
             {t.cta}
           </Link>
-          <Link href="/#produto" className="inline-flex h-11 items-center rounded-full border px-6 text-[15px] font-medium hover:bg-secondary">
+          <Link href="/#como-funciona" className="inline-flex h-11 items-center rounded-full border px-6 text-[15px] font-medium hover:bg-secondary">
             {t.cta2}
           </Link>
         </div>
@@ -193,7 +193,7 @@ export default async function EmpresasPage() {
         <div className="rounded-lg bg-foreground px-6 py-20 text-center text-background sm:py-28" data-reveal="scale">
           <h2 className="mx-auto max-w-[20ch] text-[32px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[48px]">{t.finalTitle}</h2>
           <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-background/70">{t.finalText}</p>
-          <Link href="/cadastro" className="mt-8 inline-flex h-11 items-center rounded-full bg-background px-6 text-[15px] font-medium text-foreground hover:opacity-90">
+          <Link href="/contato" className="mt-8 inline-flex h-11 items-center rounded-full bg-background px-6 text-[15px] font-medium text-foreground hover:opacity-90">
             {t.finalCta}
           </Link>
         </div>

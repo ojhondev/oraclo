@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Calculator, CloudOff, FileText, Frame, Gauge, ListOrdered, Play, Smartphone, WandSparkles } from "lucide-react";
+import { ArrowRight, Calculator, CalendarDays, Check, ChevronRight, FileStack, FileText, Map as MapIcon, Ruler, UserRound } from "lucide-react";
 import { getPosts } from "@/lib/updates";
 import { getStories } from "@/lib/site/stories";
 import { CARMO } from "@/lib/site/carmo";
@@ -19,8 +19,8 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: { absolute: t.metaTitle }, description: t.metaDescription };
 }
 
-const PILLAR_ICONS = [Frame, WandSparkles, Calculator, FileText];
-const FIELD_ICONS = [Smartphone, CloudOff, Gauge, ListOrdered];
+const DELIVER_ICONS = [MapIcon, Ruler, Calculator, FileText];
+const FOLLOW_ICONS = [UserRound, CalendarDays, Calculator, FileStack];
 
 export default async function SiteHome() {
   const lang = await getLang();
@@ -30,31 +30,47 @@ export default async function SiteHome() {
   const stories = getStories(lang);
   const story = stories[0]!;
   const posts = getPosts(lang);
-  const pillars = t.pillars.map(([title, text], i) => ({ icon: PILLAR_ICONS[i]!, title, text }));
-  const field = t.field.map(([title, text], i) => ({ icon: FIELD_ICONS[i]!, title, text }));
+  const deliver = t.deliver.map(([title, text], i) => ({ icon: DELIVER_ICONS[i]!, title, text }));
+  const follow = t.follow.map(([title, text], i) => ({ icon: FOLLOW_ICONS[i]!, title, text }));
+  const words = t.hero.split(" ");
 
   return (
     <>
       {/* topo: manchete grande e centralizada (como a Sana), palavras sobem em sequência */}
-      <section className="px-4 pt-20 pb-14 text-center sm:px-6 sm:pt-28 lg:px-8">
-        <h1 className="site-rise mx-auto max-w-[15ch] text-[44px] leading-[1.02] font-medium tracking-[-0.045em] text-balance sm:text-[84px]" aria-label={t.hero}>
-          {t.hero.split(" ").map((w, i) => (
-            <span key={i} style={{ "--w": i } as React.CSSProperties} aria-hidden>
-              {w}&nbsp;
-            </span>
-          ))}
+      <section className="px-4 pt-16 pb-14 text-center sm:px-6 sm:pt-24 lg:px-8">
+        <p className="site-fade-in mx-auto inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] text-foreground/80">
+          <span className="size-1.5 rounded-full bg-foreground" /> {t.kicker}
+        </p>
+        <h1 className="mx-auto mt-7 max-w-[20ch] text-[40px] leading-[1.03] font-medium tracking-[-0.045em] text-balance sm:text-[76px]" aria-label={`${t.hero} ${t.hero2}`}>
+          <span className="site-rise block" aria-hidden>
+            {words.map((w, i) => (
+              <span key={i} style={{ "--w": i } as React.CSSProperties}>
+                {w}&nbsp;
+              </span>
+            ))}
+          </span>
+          <span className="site-fade-in mt-1 block text-muted-foreground" style={{ "--d": `${words.length * 70 + 200}ms` } as React.CSSProperties} aria-hidden>
+            {t.hero2}
+          </span>
         </h1>
-        <p className="site-fade-in mx-auto mt-6 max-w-[34ch] text-[18px] leading-7 text-balance text-muted-foreground sm:text-[20px] sm:leading-8" style={{ "--d": "380ms" } as React.CSSProperties}>
+        <p className="site-fade-in mx-auto mt-7 max-w-[60ch] text-[17px] leading-7 text-balance text-muted-foreground sm:text-[19px] sm:leading-8" style={{ "--d": "700ms" } as React.CSSProperties}>
           {t.heroLead}
         </p>
-        <div className="site-fade-in mt-9 flex flex-wrap justify-center gap-3" style={{ "--d": "520ms" } as React.CSSProperties}>
-          <Link href="/cadastro" className="inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
-            {t.start}
+        <div className="site-fade-in mt-9 flex flex-wrap justify-center gap-3" style={{ "--d": "820ms" } as React.CSSProperties}>
+          <Link href="/contato" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+            {t.request} <ArrowRight className="size-4" />
           </Link>
-          <Link href="/docs#demonstracao" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-secondary px-6 text-[15px] font-medium hover:bg-accent">
-            <Play className="size-4" /> {t.seeDemo}
+          <Link href="/historias/carmo-da-horta" className="inline-flex h-11 items-center rounded-full bg-secondary px-6 text-[15px] font-medium hover:bg-accent">
+            {t.seeCase}
           </Link>
         </div>
+        <ul className="site-fade-in mx-auto mt-10 flex max-w-4xl flex-wrap justify-center gap-x-6 gap-y-2 text-[13.5px] text-muted-foreground" style={{ "--d": "940ms" } as React.CSSProperties}>
+          {t.proof.map((p) => (
+            <li key={p} className="inline-flex items-center gap-1.5">
+              <Check className="size-3.5 text-foreground" /> {p}
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* para quem é (no lugar da fileira de logos) */}
@@ -69,7 +85,7 @@ export default async function SiteHome() {
       </section>
 
       {/* painel do produto: claro, arredondado, com a foto do notebook sobre os livros */}
-      <ProductPanel id="produto" title="ArchRay" text={t.productText} cta={{ href: "#fachada", label: t.productCta }} items={pillars}>
+      <ProductPanel id="produto" title={t.deliverTitle} text={t.deliverText} cta={{ href: "/contato", label: t.deliverCta }} items={deliver}>
         {/* bem grande, ocupando a tela; cresce enquanto a pessoa rola (zoom ligado à rolagem) */}
         <div className="relative mt-8 aspect-square w-full overflow-hidden sm:aspect-auto sm:h-[min(110svh,1200px)] sm:min-h-[560px]">
           <div className="absolute inset-0" data-zoom="0.72,1.06">
@@ -94,10 +110,10 @@ export default async function SiteHome() {
               <p className="mt-4 text-[30px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[48px]">{t.personTitle}</p>
               <p className="mt-4 max-w-[44ch] text-[15.5px] leading-7 text-white/75">{t.personText}</p>
               <div className="mt-7 flex flex-wrap gap-3">
-                <Link href="/docs#demonstracao" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-5 text-[15px] font-medium text-black hover:bg-white/90">
-                  <Play className="size-4" /> {t.personCta}
+                <Link href="/contato" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-white px-5 text-[15px] font-medium text-black hover:bg-white/90">
+                  {t.personCta} <ArrowRight className="size-4" />
                 </Link>
-                <Link href="/docs" className="inline-flex h-11 items-center rounded-full bg-white/15 px-5 text-[15px] font-medium text-white backdrop-blur hover:bg-white/25">
+                <Link href="/historias/carmo-da-horta" className="inline-flex h-11 items-center rounded-full bg-white/15 px-5 text-[15px] font-medium text-white backdrop-blur hover:bg-white/25">
                   {t.personCta2}
                 </Link>
               </div>
@@ -108,7 +124,7 @@ export default async function SiteHome() {
 
       {/* segundo painel: do campo ao cliente, com a foto do tablet */}
       <div className="pt-6">
-        <ProductPanel id="campo" title={t.fieldTitle} text={t.fieldText} cta={{ href: "/empresas", label: t.fieldCta }} items={field}>
+        <ProductPanel id="campo" title={t.followTitle} text={t.followText} cta={{ href: "#como-funciona", label: t.followCta }} items={follow}>
           <div className="relative mt-10 aspect-[1507/1044] w-full overflow-hidden">
             <div className="site-edge-fade-x absolute inset-0" data-zoom="0.78,1.04" style={{ transformOrigin: "50% 100%" }}>
               <Image src="/site/tablet-mapa-de-danos.jpg" alt={t.tabletAlt} fill sizes="100vw" className="object-contain object-bottom" />
@@ -116,6 +132,31 @@ export default async function SiteHome() {
           </div>
         </ProductPanel>
       </div>
+
+      {/* como funciona: 4 etapas (como a Teiva) */}
+      <section id="como-funciona" className="scroll-mt-16 px-4 pt-24 sm:px-6 sm:pt-32 lg:px-8">
+        <p className="text-[13.5px] font-medium text-muted-foreground" data-reveal>
+          {t.stepsKicker}
+        </p>
+        <h2 className="mt-3 max-w-[20ch] text-[34px] leading-[1.06] font-medium tracking-[-0.035em] text-balance sm:text-[56px]" data-reveal data-reveal-delay={60}>
+          {t.stepsTitle}
+        </h2>
+        <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {t.steps.map(([title, text], i) => (
+            <li key={title} className="relative flex min-h-[240px] flex-col rounded-2xl border bg-[var(--site-elev)] p-6" data-reveal data-reveal-delay={i * 110}>
+              <span className="grid size-9 place-items-center rounded-full bg-foreground text-[14px] font-medium text-background tabular-nums">{i + 1}</span>
+              <h3 className="mt-6 text-[19px] leading-snug font-medium tracking-[-0.01em]">{title}</h3>
+              <p className="mt-2 text-[14.5px] leading-6 text-muted-foreground">{text}</p>
+              {i < t.steps.length - 1 && <ChevronRight className="absolute top-1/2 -right-3 hidden size-5 -translate-y-1/2 text-muted-foreground lg:block" />}
+            </li>
+          ))}
+        </ol>
+        <div className="mt-10" data-reveal>
+          <Link href="/contato" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+            {t.request} <ArrowRight className="size-4" />
+          </Link>
+        </div>
+      </section>
 
       {/* dores */}
       <section className="px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
@@ -138,6 +179,19 @@ export default async function SiteHome() {
         </ul>
         <p className="mt-16 max-w-[28ch] text-[28px] leading-[1.15] font-medium tracking-[-0.025em] text-balance sm:text-[40px]" data-reveal>
           {t.painsEnd} <span className="text-muted-foreground">{t.painsEnd2}</span>
+        </p>
+      </section>
+
+      {/* a tecnologia por trás do serviço */}
+      <section className="border-t px-4 pt-24 sm:px-6 sm:pt-32 lg:px-8">
+        <p className="text-[13.5px] font-medium text-muted-foreground" data-reveal>
+          {t.techKicker}
+        </p>
+        <h2 className="mt-3 max-w-[18ch] text-[34px] leading-[1.06] font-medium tracking-[-0.035em] text-balance sm:text-[56px]" data-reveal data-reveal-delay={60}>
+          {t.techTitle}
+        </h2>
+        <p className="mt-5 max-w-xl text-[17px] leading-7 text-muted-foreground" data-reveal data-reveal-delay={120}>
+          {t.techText}
         </p>
       </section>
 
@@ -227,7 +281,27 @@ export default async function SiteHome() {
         </Link>
       </section>
 
-      {/* Index · Histórias · Para empresas (padrão OpenAI) */}
+      {/* perguntas frequentes */}
+      <section id="perguntas" className="scroll-mt-16 px-4 pb-24 sm:px-6 lg:px-8">
+        <div className="grid gap-10 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
+          <h2 className="text-[34px] leading-[1.06] font-medium tracking-[-0.035em] sm:text-[48px]" data-reveal>
+            {t.faqTitle}
+          </h2>
+          <div data-reveal data-reveal-delay={100}>
+            {t.faq.map(([q, a]) => (
+              <details key={q} className="group border-b py-5 first:border-t">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 text-[17px] font-medium">
+                  {q}
+                  <ChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90" />
+                </summary>
+                <p className="mt-3 max-w-[62ch] text-[15.5px] leading-7 text-muted-foreground">{a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Index · Casos · Setores (padrão OpenAI) */}
       <section className="grid gap-24 px-4 pb-24 sm:px-6 lg:px-8">
         <div>
           <SectionHead title="Index" href="/index" more={t.seeMore} />
@@ -275,17 +349,17 @@ export default async function SiteHome() {
       {/* chamada final */}
       <section className="px-4 pb-24 text-center sm:px-6 lg:px-8">
         <div className="border-t pt-24 sm:pt-32">
-          <h2 className="mx-auto max-w-[16ch] text-[38px] leading-[1.04] font-medium tracking-[-0.04em] text-balance sm:text-[64px]" data-reveal>
+          <h2 className="mx-auto max-w-[20ch] text-[38px] leading-[1.04] font-medium tracking-[-0.04em] text-balance sm:text-[60px]" data-reveal>
             {t.finalTitle}
           </h2>
           <p className="mx-auto mt-5 max-w-md text-[16.5px] leading-7 text-muted-foreground" data-reveal data-reveal-delay={100}>
             {t.finalText}
           </p>
           <div className="mt-9 flex justify-center gap-3" data-reveal data-reveal-delay={200}>
-            <Link href="/cadastro" className="inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
-              {t.start}
+            <Link href="/contato" className="inline-flex h-11 items-center gap-1.5 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+              {t.request} <ArrowRight className="size-4" />
             </Link>
-            <Link href="/empresas" className="inline-flex h-11 items-center rounded-full bg-secondary px-6 text-[15px] font-medium hover:bg-accent">
+            <Link href="/docs" className="inline-flex h-11 items-center rounded-full bg-secondary px-6 text-[15px] font-medium hover:bg-accent">
               {t.finalCta2}
             </Link>
           </div>

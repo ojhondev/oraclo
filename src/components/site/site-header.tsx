@@ -7,9 +7,10 @@ import { SiteLangToggle } from "./site-lang-toggle";
 import type { Lang } from "@/lib/site/lang";
 
 export const siteNav = (lang: Lang) => [
-  { href: "/#produto", label: lang === "en" ? "Product" : "Produto" },
-  { href: "/empresas", label: lang === "en" ? "For business" : "Para empresas" },
-  { href: "/historias", label: lang === "en" ? "Stories" : "Histórias" },
+  { href: "/#produto", label: lang === "en" ? "Service" : "Serviço" },
+  { href: "/#como-funciona", label: lang === "en" ? "How it works" : "Como funciona" },
+  { href: "/empresas", label: lang === "en" ? "Sectors" : "Setores" },
+  { href: "/historias", label: lang === "en" ? "Cases" : "Casos" },
   { href: "/index", label: "Index" },
   { href: "/docs", label: lang === "en" ? "Docs" : "Documentação" },
 ];
@@ -43,11 +44,11 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
           ) : (
             <>
               <Link href="/login" className="hidden h-9 items-center rounded-full bg-secondary px-4 text-[13.5px] font-medium hover:bg-accent sm:inline-flex">
-                {en ? "Log in" : "Entrar"}
+                {en ? "Client area" : "Área do cliente"}
               </Link>
-              <Link href="/cadastro" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium whitespace-nowrap text-background hover:opacity-85">
-                <span className="sm:hidden">{en ? "Start" : "Começar"}</span>
-                <span className="hidden sm:inline">{en ? "Start free" : "Começar grátis"}</span>
+              <Link href="/contato" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium whitespace-nowrap text-background hover:opacity-85">
+                <span className="sm:hidden">{en ? "Request" : "Solicitar"}</span>
+                <span className="hidden sm:inline">{en ? "Request a diagnosis" : "Solicitar diagnóstico"}</span>
                 <ArrowUpRight className="size-3.5" />
               </Link>
             </>
@@ -64,7 +65,7 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
               ))}
               {!user && (
                 <Link href="/login" className="rounded-xl px-3 py-2 hover:bg-muted">
-                  {en ? "Log in" : "Entrar"}
+                  {en ? "Client area" : "Área do cliente"}
                 </Link>
               )}
               <div className="mt-1 flex items-center justify-between border-t px-3 pt-2.5 pb-1 text-[13px] text-muted-foreground">

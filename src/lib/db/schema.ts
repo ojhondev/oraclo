@@ -360,3 +360,22 @@ export const passwordResets = pgTable("password_resets", {
   usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: createdAt(),
 }, (t) => [uniqueIndex("password_resets_token_idx").on(t.tokenHash), index("password_resets_user_idx").on(t.userId)]);
+
+/** Pedido de diagnóstico feito pelo site público (serviço do ArchRay / Estúdio Restaura). */
+export const leads = pgTable("leads", {
+  id: id(),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone"),
+  company: text("company"),
+  /** Tipo de imóvel / descrição curta. */
+  building: text("building"),
+  city: text("city"),
+  /** Objetivo: restauro, inspeção, retrofit, compra, patrimônio, outro. */
+  goal: text("goal"),
+  message: text("message"),
+  lang: text("lang").notNull().default("pt"),
+  /** novo | em_contato | proposta | fechado | descartado */
+  status: text("status").notNull().default("novo"),
+  createdAt: createdAt(),
+}, (t) => [index("leads_created_idx").on(t.createdAt)]);

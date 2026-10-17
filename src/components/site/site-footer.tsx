@@ -7,17 +7,17 @@ type Col = { title: string; links: { href: string; label: string }[] };
 const COLS: Record<Lang, Col[]> = {
   pt: [
     {
-      title: "Produto",
+      title: "Serviço",
       links: [
-        { href: "/#produto", label: "Visão geral" },
-        { href: "/#fachada", label: "Fachada em escala" },
-        { href: "/#contorno", label: "Contorno com IA" },
-        { href: "/#orcamento", label: "Orçamento e GUT" },
-        { href: "/#laudo", label: "Laudo e pranchas" },
+        { href: "/#produto", label: "O que entregamos" },
+        { href: "/#como-funciona", label: "Como funciona" },
+        { href: "/#fachada", label: "Tecnologia própria" },
+        { href: "/#perguntas", label: "Perguntas frequentes" },
+        { href: "/contato", label: "Solicitar diagnóstico" },
       ],
     },
     {
-      title: "Soluções",
+      title: "Setores",
       links: [
         { href: "/empresas#restauro", label: "Estúdios de restauro" },
         { href: "/empresas#inspecao", label: "Inspeção predial" },
@@ -28,33 +28,32 @@ const COLS: Record<Lang, Col[]> = {
     {
       title: "Recursos",
       links: [
-        { href: "/docs", label: "Documentação" },
+        { href: "/historias", label: "Casos" },
         { href: "/index", label: "Index" },
-        { href: "/historias", label: "Histórias" },
-        { href: "/empresas", label: "ArchRay para empresas" },
+        { href: "/docs", label: "Documentação" },
       ],
     },
     {
-      title: "Conta",
+      title: "Clientes",
       links: [
-        { href: "/cadastro", label: "Criar conta" },
-        { href: "/login", label: "Entrar" },
+        { href: "/login", label: "Área do cliente" },
+        { href: "/contato", label: "Fale com um especialista" },
       ],
     },
   ],
   en: [
     {
-      title: "Product",
+      title: "Service",
       links: [
-        { href: "/#produto", label: "Overview" },
-        { href: "/#fachada", label: "Facades to scale" },
-        { href: "/#contorno", label: "AI outlining" },
-        { href: "/#orcamento", label: "Budget and GUT" },
-        { href: "/#laudo", label: "Reports and drawings" },
+        { href: "/#produto", label: "What we deliver" },
+        { href: "/#como-funciona", label: "How it works" },
+        { href: "/#fachada", label: "In-house technology" },
+        { href: "/#perguntas", label: "FAQ" },
+        { href: "/contato", label: "Request a diagnosis" },
       ],
     },
     {
-      title: "Solutions",
+      title: "Sectors",
       links: [
         { href: "/empresas#restauro", label: "Restoration studios" },
         { href: "/empresas#inspecao", label: "Building inspection" },
@@ -65,17 +64,16 @@ const COLS: Record<Lang, Col[]> = {
     {
       title: "Resources",
       links: [
-        { href: "/docs", label: "Docs" },
+        { href: "/historias", label: "Cases" },
         { href: "/index", label: "Index" },
-        { href: "/historias", label: "Stories" },
-        { href: "/empresas", label: "ArchRay for business" },
+        { href: "/docs", label: "Docs" },
       ],
     },
     {
-      title: "Account",
+      title: "Clients",
       links: [
-        { href: "/cadastro", label: "Sign up" },
-        { href: "/login", label: "Log in" },
+        { href: "/login", label: "Client area" },
+        { href: "/contato", label: "Talk to a specialist" },
       ],
     },
   ],
@@ -93,8 +91,8 @@ export function SiteFooter({ lang }: { lang: Lang }) {
           </Link>
           <p className="mt-4 max-w-xs text-[14px] leading-6 text-muted-foreground">
             {en
-              ? "AI damage mapping. Point out the damage, and the budget and the report come out ready."
-              : "Mapa de danos com IA. Aponte os danos, e o orçamento e o laudo saem prontos."}
+              ? "ArchRay is Estúdio Restaura's diagnosis arm: damage maps, budgets and condition reports, produced by restoration architects with in-house technology."
+              : "O ArchRay é o braço de diagnóstico do Estúdio Restaura: mapa de danos, orçamento e laudo, feitos por arquitetos de restauro com tecnologia própria."}
           </p>
         </div>
         {COLS[lang].map((c) => (

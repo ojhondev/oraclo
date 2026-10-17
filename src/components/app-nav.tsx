@@ -14,6 +14,7 @@ import {
   Plus,
   Search,
   Sparkles,
+  Inbox,
   ImageIcon,
   UserRound,
   Users,
@@ -204,7 +205,13 @@ function NavContent({
           <Plus className="size-[18px]" />
           {!collapsed && "Novo"}
         </Link>
-        {ITEMS.map(({ href, label, icon: Icon, match }) => {
+        {[
+          ...ITEMS,
+          // pedidos de diagnóstico do site: só para a equipe do ArchRay
+          ...(user.platformRole === "operador"
+            ? [{ href: "/solicitacoes", label: "Solicitações", icon: Inbox, match: (p: string) => p.startsWith("/solicitacoes") }]
+            : []),
+        ].map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
           return (
             <Link

@@ -5,14 +5,14 @@ import { StoryCard } from "@/components/site/blocks";
 
 const T = {
   pt: {
-    title: "Histórias",
-    description: "Casos reais de diagnóstico de edificações montados no ArchRay.",
-    lead: "Imóveis reais, do levantamento ao orçamento. Cada história mostra os dados e as imagens usados, com os créditos.",
+    title: "Casos",
+    description: "Diagnósticos de edificações feitos com o ArchRay, o braço de diagnóstico do Estúdio Restaura.",
+    lead: "Imóveis reais, do levantamento ao orçamento. Cada caso mostra os dados e as imagens usados, com os créditos.",
   },
   en: {
-    title: "Stories",
-    description: "Real building diagnosis cases built in ArchRay.",
-    lead: "Real buildings, from survey to budget. Each story shows the data and images used, with credits.",
+    title: "Cases",
+    description: "Building diagnoses produced with ArchRay, Estúdio Restaura’s diagnosis arm.",
+    lead: "Real buildings, from survey to budget. Each case shows the data and images used, with credits.",
   },
 };
 

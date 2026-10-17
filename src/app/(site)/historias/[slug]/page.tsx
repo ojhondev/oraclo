@@ -12,7 +12,7 @@ import { DamageMap } from "@/components/site/damage-map";
 
 const T = {
   pt: {
-    back: "Histórias",
+    back: "Casos",
     stats: ["Danos mapeados", "Área afetada", "Orçamento estimado", "Prioridade alta (GUT ≥ 64)"],
     building: "O imóvel",
     buildingP: [
@@ -39,10 +39,10 @@ const T = {
     afterCap: "2021 — restaurada e reaberta ao culto.",
     sources: "Fontes e créditos",
     wiki: "História do imóvel: Wikipedia (pt), “Igreja de Nossa Senhora do Carmo (Horta)”.",
-    cta: "Monte o seu mapa de danos",
+    cta: "Solicitar diagnóstico do seu imóvel",
   },
   en: {
-    back: "Stories",
+    back: "Cases",
     stats: ["Damages mapped", "Affected area", "Estimated budget", "High priority (GUT ≥ 64)"],
     building: "The building",
     buildingP: [
@@ -69,7 +69,7 @@ const T = {
     afterCap: "2021 — restored and reopened for worship.",
     sources: "Sources and credits",
     wiki: "Building history: Wikipedia (pt), “Igreja de Nossa Senhora do Carmo (Horta)”.",
-    cta: "Build your own damage map",
+    cta: "Request a diagnosis of your building",
   },
 };
 
@@ -235,7 +235,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
           ))}
           <li>{t.wiki}</li>
         </ul>
-        <Link href="/cadastro" className="mt-10 inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+        <Link href="/contato" className="mt-10 inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
           {t.cta}
         </Link>
       </footer>

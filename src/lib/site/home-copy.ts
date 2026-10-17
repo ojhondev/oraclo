@@ -11,8 +11,8 @@ export const HOME = {
     metaDescription:
       "Mapa de danos em escala, quantitativos, orçamento do tratamento e laudo com prioridades — feitos por arquitetos de restauro do Estúdio Restaura, com tecnologia própria.",
     kicker: "ArchRay · o braço de diagnóstico do Estúdio Restaura",
-    hero: "O estado real do seu imóvel, dano a dano.",
-    hero2: "Para quem não pode errar na obra.",
+    hero: "Laudo com Mapa de danos com tecnologia própria",
+    hero2: "",
     heroLead:
       "Vistoriamos, retificamos e mapeamos cada dano das fachadas com tecnologia própria — e entregamos quantitativos, orçamento do tratamento e laudo com prioridades, prontos para decidir, aprovar e contratar a obra.",
     request: "Solicitar diagnóstico",
@@ -139,8 +139,8 @@ export const HOME = {
     metaDescription:
       "Scaled damage maps, quantities, treatment budgets and prioritised condition reports — produced by Estúdio Restaura's restoration architects, with in-house technology.",
     kicker: "ArchRay · Estúdio Restaura's diagnosis arm",
-    hero: "The real condition of your building, damage by damage.",
-    hero2: "For those who can't get the works wrong.",
+    hero: "Condition reports with damage mapping, built on in-house technology",
+    hero2: "",
     heroLead:
       "We survey, rectify and map every damage on your facades with in-house technology — and deliver quantities, a treatment budget and a prioritised report, ready to decide on, approve and contract the works.",
     request: "Request a diagnosis",

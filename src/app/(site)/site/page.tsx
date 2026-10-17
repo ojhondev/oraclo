@@ -41,7 +41,7 @@ export default async function SiteHome() {
         <p className="site-fade-in mx-auto inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-[13px] text-foreground/80">
           <span className="size-1.5 rounded-full bg-foreground" /> {t.kicker}
         </p>
-        <h1 className="mx-auto mt-7 max-w-[20ch] text-[40px] leading-[1.03] font-medium tracking-[-0.045em] text-balance sm:text-[76px]" aria-label={`${t.hero} ${t.hero2}`}>
+        <h1 className="mx-auto mt-7 max-w-[20ch] text-[40px] leading-[1.03] font-medium tracking-[-0.045em] text-balance sm:text-[76px]" aria-label={`${t.hero} ${t.hero2}`.trim()}>
           <span className="site-rise block" aria-hidden>
             {words.map((w, i) => (
               <span key={i} style={{ "--w": i } as React.CSSProperties}>
@@ -49,9 +49,9 @@ export default async function SiteHome() {
               </span>
             ))}
           </span>
-          <span className="site-fade-in mt-1 block text-muted-foreground" style={{ "--d": `${words.length * 70 + 200}ms` } as React.CSSProperties} aria-hidden>
+          {t.hero2 && <span className="site-fade-in mt-1 block text-muted-foreground" style={{ "--d": `${words.length * 70 + 200}ms` } as React.CSSProperties} aria-hidden>
             {t.hero2}
-          </span>
+          </span>}
         </h1>
         <p className="site-fade-in mx-auto mt-7 max-w-[60ch] text-[17px] leading-7 text-balance text-muted-foreground sm:text-[19px] sm:leading-8" style={{ "--d": "700ms" } as React.CSSProperties}>
           {t.heroLead}

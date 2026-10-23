@@ -13,8 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/form";
 import { parsePointCloud, type PointCloud } from "@/lib/pointcloud";
-import type { OutputMeta } from "@/lib/model-formats";
+import type { ModelScale, OutputMeta } from "@/lib/model-formats";
 import { createOrthophoto } from "../../ortofotos/actions";
+import { clearModelScale, saveModelScale } from "./actions";
 
 type Tool = "orbitar" | "medir" | "ortofoto";
 type Output = { id: string; name: string; url: string; format: string; meta: OutputMeta | null };
@@ -67,6 +68,11 @@ export function ModelViewer({
   const [orthoPts, setOrthoPts] = useState<THREE.Vector3[]>([]);
   const [pointSize, setPointSize] = useState(2);
   const [gen, setGen] = useState<string | null>(null);
+  const [scale, setScale] = useState<ModelScale | null>(output.meta?.scale ?? null);
+  const [realM, setRealM] = useState("");
+  const [savingScale, setSavingScale] = useState(false);
+  /** Metros por unidade do modelo: 1 enquanto não calibrado (o ArchRay presume metros). */
+  const k = scale?.factor ?? 1;
   const [form, setForm] = useState({ name: "", elementId: "", mm: "", front: "1,5", back: "1,5" });
   const toolRef = useRef(tool);
   toolRef.current = tool;
@@ -272,17 +278,17 @@ export function ModelViewer({
   }, []);
 
   const frame = orthoPts.length === 3 ? orthoFrame(orthoPts) : null;
-  const defaultMm = frame ? Math.max(1, Math.round((Math.max(frame.width, frame.height) * 1000) / 5000)) : 2;
+  const defaultMm = frame ? Math.max(1, Math.round((Math.max(frame.width, frame.height) * k * 1000) / 5000)) : 2;
   const mmValue = Number(form.mm.replace(",", ".")) || defaultMm;
-  const pxW = frame ? Math.round((frame.width * 1000) / mmValue) : 0;
-  const pxH = frame ? Math.round((frame.height * 1000) / mmValue) : 0;
+  const pxW = frame ? Math.round((frame.width * k * 1000) / mmValue) : 0;
+  const pxH = frame ? Math.round((frame.height * k * 1000) / mmValue) : 0;
 
   /* ── gerar ortofoto ── */
   async function generate() {
     const t = three.current;
     if (!t || !frame) return;
-    const front = Number(form.front.replace(",", ".")) || 1.5;
-    const back = Number(form.back.replace(",", ".")) || 1.5;
+    const front = (Number(form.front.replace(",", ".")) || 1.5) / k;
+    const back = (Number(form.back.replace(",", ".")) || 1.5) / k;
     if (pxW < 50 || pxH < 50) return toast.error("Área muito pequena para essa resolução.");
     if (Math.max(pxW, pxH) > 16000 || pxW * pxH > 150_000_000) return toast.error("Imagem grande demais. Aumente o mm/pixel.");
     setGen("Renderizando…");
@@ -309,7 +315,7 @@ export function ModelViewer({
           const du = w.dot(frame.u), dv = w.dot(frame.v), dn = w.dot(frame.n);
           if (du >= 0 && du <= frame.width && dv >= 0 && dv <= frame.height && dn <= front && dn >= -back) inside++;
         }
-        const spacing = Math.sqrt((frame.width * frame.height) / Math.max(1, inside)); // m
+        const spacing = Math.sqrt((frame.width * frame.height) / Math.max(1, inside)) * k; // m
         (pts.material as THREE.PointsMaterial).size = Math.min(12, Math.max(1.5, ((spacing * 1000) / mmValue) * 1.4));
       }
       const oldBg = t.scene.background;
@@ -382,7 +388,34 @@ export function ModelViewer({
     }
   }
 
-  const dist = measure.length === 2 ? measure[0]!.distanceTo(measure[1]!) : null;
+  const rawDist = measure.length === 2 ? measure[0]!.distanceTo(measure[1]!) : null;
+  const dist = rawDist == null ? null : rawDist * k;
+
+  async function calibrate() {
+    if (measure.length !== 2) return;
+    const meters = Number(realM.replace(",", "."));
+    if (!(meters > 0)) return toast.error("Informe a distância real em metros.");
+    setSavingScale(true);
+    const res = await saveModelScale(siteId, output.id, {
+      a: measure[0]!.toArray() as [number, number, number],
+      b: measure[1]!.toArray() as [number, number, number],
+      meters,
+    });
+    setSavingScale(false);
+    if ("error" in res) return toast.error(res.error);
+    setScale(res.scale);
+    setRealM("");
+    toast.success("Escala calibrada.");
+  }
+
+  async function resetScale() {
+    setSavingScale(true);
+    const res = await clearModelScale(siteId, output.id);
+    setSavingScale(false);
+    if ("error" in res) return toast.error(res.error);
+    setScale(null);
+    toast.success("Calibração removida. O modelo volta a ser tratado como metros.");
+  }
 
   return (
     <div className="flex h-[calc(100svh-3.5rem)] min-h-0 flex-col lg:h-svh">
@@ -441,7 +474,7 @@ export function ModelViewer({
           {info && (
             <div className="pointer-events-none absolute bottom-3 left-3 rounded-full bg-black/65 px-3 py-1.5 text-[12px] text-white">
               {info.count.toLocaleString("pt-BR")} {output.format === "glb" ? "vértices" : "pontos"}
-              {info.total > info.count && ` (de ${info.total.toLocaleString("pt-BR")})`} · {nf(info.dims[0], 1)} × {nf(info.dims[1], 1)} × {nf(info.dims[2], 1)} m
+              {info.total > info.count && ` (de ${info.total.toLocaleString("pt-BR")})`} · {nf(info.dims[0] * k, 1)} × {nf(info.dims[1] * k, 1)} × {nf(info.dims[2] * k, 1)} m
             </div>
           )}
         </div>
@@ -456,7 +489,7 @@ export function ModelViewer({
                   <input type="range" min={1} max={8} step={0.5} value={pointSize} onChange={(e) => setPointSize(Number(e.target.value))} className="accent-current" />
                 </label>
               )}
-              {info && Math.max(...info.dims) > 2000 && (
+              {!scale && info && Math.max(...info.dims) > 2000 && (
                 <p className="rounded-lg bg-muted p-3">As dimensões parecem grandes demais — o arquivo pode estar em milímetros. O ArchRay considera metros.</p>
               )}
             </div>
@@ -473,6 +506,36 @@ export function ModelViewer({
                   <Trash2 /> Limpar
                 </Button>
               )}
+              <div className="grid gap-2 rounded-xl border p-3">
+                <p className="font-medium">Escala do modelo</p>
+                {scale ? (
+                  <p className="text-muted-foreground">
+                    Calibrado: {nf(scale.meters, 3)} m medidos entre dois pontos (fator {scale.factor.toPrecision(5)}). As medidas, áreas e ortofotos já usam essa escala.
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">
+                    Sem calibração: o ArchRay presume que o arquivo está em metros. Meça algo de tamanho conhecido (um vão de porta, por exemplo) e informe a medida real.
+                  </p>
+                )}
+                {canEdit ? (
+                  <>
+                    <label className="grid gap-1">
+                      <span className="text-[12px] text-muted-foreground">Distância real entre os dois pontos (m)</span>
+                      <Input inputMode="decimal" value={realM} onChange={(e) => setRealM(e.target.value)} placeholder="Ex.: 2,10" disabled={measure.length !== 2} />
+                    </label>
+                    <Button size="sm" onClick={calibrate} disabled={measure.length !== 2 || !realM.trim() || savingScale}>
+                      {savingScale ? <Loader2 className="animate-spin" /> : <Ruler />} Calibrar com estes pontos
+                    </Button>
+                    {scale && (
+                      <Button variant="ghost" size="sm" onClick={resetScale} disabled={savingScale}>
+                        Remover calibração
+                      </Button>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-muted-foreground">Somente técnicos e administradores calibram o modelo.</p>
+                )}
+              </div>
             </div>
           )}
           {tool === "ortofoto" && (
@@ -488,7 +551,7 @@ export function ModelViewer({
               {frame ? (
                 <>
                   <p className="rounded-lg bg-muted px-3 py-2">
-                    Área: <b className="font-medium">{nf(frame.width)} × {nf(frame.height)} m</b>
+                    Área: <b className="font-medium">{nf(frame.width * k)} × {nf(frame.height * k)} m</b>
                   </p>
                   {canEdit ? (
                     <div className="grid gap-3">

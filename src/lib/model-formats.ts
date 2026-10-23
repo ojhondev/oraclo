@@ -27,4 +27,13 @@ export function formatOf(filename: string) {
   return f ? { ext, ...f } : null;
 }
 
-export type OutputMeta = { viewable?: boolean; upAxis?: "y" | "z"; source?: string };
+/** Escala calibrada: metros por unidade do modelo e os dois pontos (na cena do visualizador) usados. */
+export type ModelScale = {
+  factor: number;
+  meters: number;
+  a: [number, number, number];
+  b: [number, number, number];
+  at: string;
+};
+
+export type OutputMeta = { viewable?: boolean; upAxis?: "y" | "z"; source?: string; scale?: ModelScale };

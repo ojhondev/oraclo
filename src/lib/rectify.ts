@@ -15,7 +15,8 @@
  */
 
 export type Pt = [number, number];
-export type Lens = { k1: number; cx: number; cy: number; norm: number };
+/** Distorção radial: r' = r·(1 + k1·r² + k2·r⁴), com r normalizado pela meia-diagonal. k2 é opcional (retificações antigas só têm k1). */
+export type Lens = { k1: number; k2?: number; cx: number; cy: number; norm: number };
 export type Control = { img: Pt; plane: Pt };
 export type Check = { a: Pt; b: Pt; meters: number };
 export type Extent = [number, number, number, number]; // x0, y0, x1, y1 (m)
@@ -104,22 +105,24 @@ export const lensFor = (w: number, h: number, k1 = 0): Lens => ({ k1, cx: w / 2,
 
 /** Foto sem distorção → foto real. */
 export function distort([x, y]: Pt, L: Lens): Pt {
-  if (!L.k1) return [x, y];
+  if (!L.k1 && !L.k2) return [x, y];
   const dx = (x - L.cx) / L.norm;
   const dy = (y - L.cy) / L.norm;
-  const f = 1 + L.k1 * (dx * dx + dy * dy);
+  const r2 = dx * dx + dy * dy;
+  const f = 1 + L.k1 * r2 + (L.k2 ?? 0) * r2 * r2;
   return [L.cx + dx * f * L.norm, L.cy + dy * f * L.norm];
 }
 
 /** Foto real → foto sem distorção (inversa numérica). */
 export function undistort([x, y]: Pt, L: Lens): Pt {
-  if (!L.k1) return [x, y];
+  if (!L.k1 && !L.k2) return [x, y];
   const px = (x - L.cx) / L.norm;
   const py = (y - L.cy) / L.norm;
   let ux = px;
   let uy = py;
-  for (let i = 0; i < 20; i++) {
-    const f = 1 + L.k1 * (ux * ux + uy * uy);
+  for (let i = 0; i < 30; i++) {
+    const r2 = ux * ux + uy * uy;
+    const f = 1 + L.k1 * r2 + (L.k2 ?? 0) * r2 * r2;
     ux = px / f;
     uy = py / f;
   }
@@ -153,31 +156,87 @@ const straightRms = (lines: Pt[][], L: Lens) => {
   return Math.sqrt(sse / Math.max(1, n));
 };
 
+/** Mínimo de uma função unimodal em [a, b] pela razão áurea. */
+function golden(fn: (x: number) => number, a: number, b: number, iters = 60) {
+  const g = (Math.sqrt(5) - 1) / 2;
+  let c = b - g * (b - a);
+  let d = a + g * (b - a);
+  let fc = fn(c);
+  let fd = fn(d);
+  for (let i = 0; i < iters; i++) {
+    if (fc < fd) {
+      b = d; d = c; fd = fc; c = b - g * (b - a); fc = fn(c);
+    } else {
+      a = c; c = d; fc = fd; d = a + g * (b - a); fd = fn(d);
+    }
+  }
+  return (a + b) / 2;
+}
+
+/** Nelder-Mead em 2 variáveis, com limites. Devolve o melhor ponto. */
+function nelderMead2(fn: (x: number, y: number) => number, start: [number, number], step: [number, number], lo: [number, number], hi: [number, number], iters = 160) {
+  const clamp = (v: [number, number]): [number, number] => [Math.min(hi[0], Math.max(lo[0], v[0])), Math.min(hi[1], Math.max(lo[1], v[1]))];
+  let pts = ([start, [start[0] + step[0], start[1]], [start[0], start[1] + step[1]]] as [number, number][]).map((q) => {
+    const c = clamp(q);
+    return { x: c, f: fn(c[0], c[1]) };
+  });
+  for (let it = 0; it < iters; it++) {
+    pts.sort((a, b) => a.f - b.f);
+    const [best, , worst] = pts as [(typeof pts)[0], (typeof pts)[0], (typeof pts)[0]];
+    const mid: [number, number] = [(pts[0]!.x[0] + pts[1]!.x[0]) / 2, (pts[0]!.x[1] + pts[1]!.x[1]) / 2];
+    const at = (t: number): { x: [number, number]; f: number } => {
+      const c = clamp([mid[0] + t * (worst.x[0] - mid[0]), mid[1] + t * (worst.x[1] - mid[1])]);
+      return { x: c, f: fn(c[0], c[1]) };
+    };
+    const refl = at(-1);
+    if (refl.f < best.f) {
+      const exp = at(-2);
+      pts[2] = exp.f < refl.f ? exp : refl;
+    } else if (refl.f < pts[1]!.f) {
+      pts[2] = refl;
+    } else {
+      const con = at(refl.f < worst.f ? -0.5 : 0.5);
+      if (con.f < Math.min(refl.f, worst.f)) pts[2] = con;
+      else {
+        // encolhe em direção ao melhor
+        pts = pts.map((q, i) => {
+          if (i === 0) return q;
+          const c = clamp([best.x[0] + 0.5 * (q.x[0] - best.x[0]), best.x[1] + 0.5 * (q.x[1] - best.x[1])]);
+          return { x: c, f: fn(c[0], c[1]) };
+        });
+      }
+    }
+  }
+  pts.sort((a, b) => a.f - b.f);
+  return pts[0]!.x;
+}
+
+/** Com poucas linhas o segundo termo ajusta ruído: só tenta com pelo menos isto. */
+export const MIN_LINES_K2 = 6;
+
 /**
- * Estima k1 a partir de linhas que deveriam ser retas (cada uma com 3 ou mais pontos na foto).
- * Busca pela razão áurea em [-0,4; 0,4]. Retorna o desvio de retidão antes e depois (px).
+ * Estima a lente a partir de linhas que deveriam ser retas (cada uma com 3 ou mais pontos na foto).
+ * Primeiro k1 (razão áurea em [-0,4; 0,4]); com 6 ou mais linhas, tenta também k2 (em [-0,3; 0,3]) e só o
+ * mantém se houver curvatura residual real (> 0,1 px) e ele a reduzir em mais de 15%. Retorna o desvio de retidão antes e depois (px).
  */
 export function estimateLens(lines: Pt[][], w: number, h: number) {
   const valid = lines.filter((l) => l.length >= 3);
   const base = lensFor(w, h);
   if (!valid.length) return { lens: base, rmsBefore: 0, rmsAfter: 0 };
-  const f = (k: number) => straightRms(valid, { ...base, k1: k });
-  let a = -0.4;
-  let b = 0.4;
-  const g = (Math.sqrt(5) - 1) / 2;
-  let c = b - g * (b - a);
-  let d = a + g * (b - a);
-  let fc = f(c);
-  let fd = f(d);
-  for (let i = 0; i < 60; i++) {
-    if (fc < fd) {
-      b = d; d = c; fd = fc; c = b - g * (b - a); fc = f(c);
-    } else {
-      a = c; c = d; fc = fd; d = a + g * (b - a); fd = f(d);
+  const f = (k1: number, k2 = 0) => straightRms(valid, { ...base, k1, k2 });
+  const k1a = golden((k) => f(k), -0.4, 0.4);
+  const rms1 = f(k1a);
+  let lens: Lens = { ...base, k1: k1a };
+  let rmsAfter = rms1;
+  if (valid.length >= MIN_LINES_K2) {
+    const [k1, k2] = nelderMead2(f, [k1a, 0], [0.05, 0.05], [-0.4, -0.3], [0.4, 0.3]);
+    const rms2 = f(k1, k2);
+    if (rms1 > 0.1 && rms2 < 0.85 * rms1) {
+      lens = { ...base, k1, k2 };
+      rmsAfter = rms2;
     }
   }
-  const k1 = (a + b) / 2;
-  return { lens: { ...base, k1 }, rmsBefore: f(0), rmsAfter: f(k1) };
+  return { lens, rmsBefore: f(0), rmsAfter };
 }
 
 /* ───────────── solução ───────────── */
@@ -191,6 +250,11 @@ export type Solution = {
   /** resíduo de cada ponto de controle (mm) — só significativo com mais de 4 pontos */
   residualsMm: number[];
   residualRmsMm: number | null;
+  /** erro de previsão de cada ponto quando ele fica de fora do ajuste (mm); exige 5+ pontos. Nulo no ponto cujo "sem ele" fica degenerado (pontos alinhados). */
+  looMm: (number | null)[] | null;
+  looRmsMm: number | null;
+  /** índice (em controls) do ponto que parece mal marcado: tirá-lo derruba o resíduo dos demais; exige 6+ pontos */
+  suspects: number[];
   checks: { real: number; measured: number; errMm: number; errPct: number }[];
   checkRmsMm: number | null;
   /** tamanho no plano de 1 pixel da foto, no pior ponto de controle (mm) */
@@ -221,6 +285,22 @@ export function solveRectification({ controls, lens, checks = [], clickPx = 0.7 
   });
   const dof = controls.length - 4;
   const residualRmsMm = dof > 0 ? Math.sqrt(residualsMm.reduce((s, r) => s + r * r, 0) / dof) : null;
+  // "deixa um de fora": quanto o ajuste feito sem o ponto erra a posição dele (previsão fora da amostra)
+  const looMm =
+    controls.length >= 5
+      ? und.map((u, i) => {
+          const keep = controls.map((_, k) => k).filter((k) => k !== i);
+          try {
+            const Hi = fitHomography(keep.map((k) => und[k]!), keep.map((k) => controls[k]!.plane));
+            const p = apply(Hi, u);
+            return Math.hypot(p[0] - controls[i]!.plane[0], p[1] - controls[i]!.plane[1]) * 1000;
+          } catch {
+            return null; // sem esse ponto sobram 3 alinhados: não dá para prever
+          }
+        })
+      : null;
+  const looValid = looMm?.filter((e): e is number => e != null) ?? [];
+  const looRmsMm = looValid.length ? Math.sqrt(looValid.reduce((s, r) => s + r * r, 0) / looValid.length) : null;
   const cs = checks
     .filter((c) => c.meters > 0)
     .map((c) => {
@@ -237,8 +317,34 @@ export function solveRectification({ controls, lens, checks = [], clickPx = 0.7 
   // incerteza de marcação; sem conferências, só a marcação dos pontos pode ser estimada
   const click = clickPx * avgFoot;
   const measured = Math.sqrt((checkRmsMm ?? 0) ** 2 + (residualRmsMm ?? 0) ** 2);
-  const sigma = checkRmsMm != null || residualRmsMm != null ? Math.max(measured, click) : click;
-  return { Hpi, Hip, lens, residualsMm, residualRmsMm, checks: cs, checkRmsMm, mmPerSrcPx, precisionMm: 1.96 * sigma };
+  const known = checkRmsMm != null || residualRmsMm != null;
+  // o erro de previsão (fora da amostra) é a melhor medida de exatidão com 5+ pontos: vale o maior dos dois
+  const sigma = known ? Math.max(measured, looRmsMm ?? 0, click) : click;
+  // ponto suspeito: o ajuste sem ele deixa os demais com resíduo bem menor (influência); só o de maior efeito
+  let suspects: number[] = [];
+  if (controls.length >= 6 && residualRmsMm != null && residualRmsMm > 5 * avgFoot) {
+    let best = -1;
+    let bestRms = Infinity;
+    controls.forEach((_, i) => {
+      const keep = controls.map((__, k) => k).filter((k) => k !== i);
+      try {
+        const Hi = fitHomography(keep.map((k) => und[k]!), keep.map((k) => controls[k]!.plane));
+        const ss = keep.reduce((acc, k) => {
+          const p = apply(Hi, und[k]!);
+          return acc + ((p[0] - controls[k]!.plane[0]) ** 2 + (p[1] - controls[k]!.plane[1]) ** 2) * 1e6;
+        }, 0);
+        const rms = Math.sqrt(ss / (keep.length - 4));
+        if (rms < bestRms) {
+          bestRms = rms;
+          best = i;
+        }
+      } catch {
+        // combinação degenerada: ignora
+      }
+    });
+    if (best >= 0 && bestRms < 0.3 * residualRmsMm) suspects = [best];
+  }
+  return { Hpi, Hip, lens, residualsMm, residualRmsMm, looMm, looRmsMm, suspects, checks: cs, checkRmsMm, mmPerSrcPx, precisionMm: 1.96 * sigma };
 }
 
 /* ───────────── extensão e resolução da saída ───────────── */

@@ -7,6 +7,10 @@ import { loadDiagnosis } from "@/lib/diagnosis";
 import { fmtArea, fmtLength, fmtMmPerPixel } from "@/lib/geometry";
 import { fmtBRL } from "@/lib/pricing";
 import { nextStep } from "@/lib/next-step";
+import { getLaudoDraft } from "@/lib/laudo-draft";
+import { laudoDefaults, resolveLaudo } from "@/lib/laudo-text";
+import { db, schema } from "@/lib/db";
+import { eq } from "drizzle-orm";
 import type { OutputMeta } from "@/lib/model-formats";
 import { elementKinds, protectionLevels, purposes, severities, siteKinds, vistaKinds } from "@/lib/labels";
 import { fmtBytes, fmtDate, todayISO } from "@/lib/format";
@@ -19,6 +23,7 @@ import { ConfirmButton } from "@/components/confirm-button";
 import { deleteCampaign, deleteElement } from "../actions";
 import { AddCampaignForm, AddElementForm, NewCaptureForm } from "./panels";
 import { ImportModelForm } from "./import-model";
+import { LaudoEditor } from "./laudo-editor";
 import { Bar, Kpi, PriorityBar, Section, TabBar, parseTab, tabHref, type TabId } from "./project-ui";
 import { startCapture } from "./capturas/actions";
 
@@ -40,6 +45,18 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
     loadDiagnosis(user.orgId, id, vistoria),
   ]);
   const canEdit = editors.includes(user.role);
+  // só a aba Laudo precisa do rascunho e do registro profissional de quem emite
+  const laudo =
+    tab === "laudo"
+      ? await (async () => {
+          const [draft, me] = await Promise.all([
+            getLaudoDraft(site.id, dx.campaign?.id ?? null),
+            db.select({ professionalId: schema.users.professionalId }).from(schema.users).where(eq(schema.users.id, user.id)).then((r) => r[0]),
+          ]);
+          const base = { author: { name: user.name, professionalId: me?.professionalId ?? null }, summaryFacts: { ...dx.kpis, vistas: dx.vistas.length } };
+          return { defaults: laudoDefaults(base), initial: resolveLaudo(draft, base) };
+        })()
+      : null;
   const canCapture = capturers.includes(user.role);
   const elementName = Object.fromEntries(elements.map((e) => [e.id, e.name]));
   const qs = dx.campaign ? `?vistoria=${dx.campaign.id}` : "";
@@ -191,7 +208,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
 
       <PageBody className="grid gap-5 pt-5">
         {/* filtro por vistoria: só faz sentido com mais de uma, e só nas abas que dependem dele */}
-        {dx.campaigns.length > 1 && (tab === "resumo" || tab === "vistas" || tab === "danos") && (
+        {dx.campaigns.length > 1 && (tab === "resumo" || tab === "vistas" || tab === "danos" || tab === "laudo") && (
           <nav className="flex flex-wrap items-center gap-1.5 text-[13px]" aria-label="Filtrar por vistoria">
             <span className="mr-1 text-muted-foreground">Vistoria:</span>
             {[{ id: null as string | null, name: "Todas" }, ...dx.campaigns].map((c) => {
@@ -463,6 +480,27 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
               </ul>
             )}
           </Section>
+        )}
+
+        {/* ───────── Laudo ───────── */}
+        {tab === "laudo" && laudo && (
+          <div className="grid gap-4">
+            <div className="flex flex-wrap items-start gap-3">
+              <p className="min-w-0 flex-1 text-[13.5px] text-muted-foreground">
+                Edite o texto do laudo antes de gerar o PDF. Cada campo já vem com o texto padrão; só o que você mudar fica salvo
+                {dx.campaign ? <> para a vistoria <b className="font-medium text-foreground">{dx.campaign.name}</b></> : " para o laudo de todas as vistorias"}.
+              </p>
+            </div>
+            <LaudoEditor
+              key={dx.campaign?.id ?? "all"}
+              siteId={site.id}
+              campaignId={dx.campaign?.id ?? null}
+              defaults={laudo.defaults}
+              initial={laudo.initial}
+              pdfHref={`/bens/${site.id}/laudo${qs}`}
+              canEdit={canEdit}
+            />
+          </div>
         )}
 
         {/* ───────── Modelo 3D (beta) ───────── */}

@@ -94,6 +94,46 @@ describe("lente", () => {
     expect(est.rmsAfter).toBeLessThan(0.5);
   });
 
+  it("distort e undistort continuam inversas com dois termos (k1 e k2)", () => {
+    const L = { ...lensFor(W, H, 0.05), k2: -0.04 };
+    for (const p of [[100, 100], [2000, 1500], [3900, 2900], [50, 2800]] as Pt[]) {
+      const [x, y] = undistort(distort(p, L), L);
+      expect(x).toBeCloseTo(p[0], 3);
+      expect(y).toBeCloseTo(p[1], 3);
+    }
+  });
+
+  /** Linhas retas (horizontais e verticais, até os cantos) vistas por uma lente com k1 e k2. */
+  const gridLines = (L: ReturnType<typeof lensFor>) => {
+    const lines: Pt[][] = [];
+    for (const y of [60, 700, 1500, 2300, 2940]) lines.push(Array.from({ length: 14 }, (_, i) => distort([40 + i * 300, y] as Pt, L)));
+    for (const x of [60, 1000, 2000, 3000, 3940]) lines.push(Array.from({ length: 12 }, (_, i) => distort([x, 40 + i * 260] as Pt, L)));
+    return lines;
+  };
+
+  it("com muitas linhas até os cantos, recupera k1 e k2 de uma grande-angular", () => {
+    const trueL = { ...lensFor(W, H, 0.04), k2: -0.05 };
+    const est = estimateLens(gridLines(trueL), W, H);
+    expect(est.lens.k2).toBeDefined();
+    expect(est.rmsAfter).toBeLessThan(0.5);
+    // k1 e k2 são correlacionados: o que importa é o efeito. Corrigir com a lente estimada leva cada ponto de volta
+    for (const x of [0, 1000, 2000, 3000, 4000]) {
+      for (const y of [0, 750, 1500, 2250, 3000]) {
+        const back = undistort(distort([x, y], trueL), est.lens);
+        expect(Math.hypot(back[0] - x, back[1] - y), `(${x}, ${y})`).toBeLessThan(2); // px
+      }
+    }
+    // o termo único sozinho deixaria curvatura residual bem maior
+    const poucas = estimateLens(gridLines(trueL).slice(0, 5), W, H);
+    expect(poucas.lens.k2).toBeUndefined(); // poucas linhas: não arrisca o segundo termo
+  });
+
+  it("não inventa k2 quando a lente só tem k1", () => {
+    const est = estimateLens(gridLines(lensFor(W, H, 0.06)), W, H);
+    expect(est.lens.k1).toBeCloseTo(0.06, 2);
+    expect(est.lens.k2).toBeUndefined();
+  });
+
   it("sem linhas válidas devolve lente neutra", () => {
     expect(estimateLens([[[0, 0], [1, 1]]], W, H).lens.k1).toBe(0);
   });
@@ -162,6 +202,52 @@ describe("solução da retificação", () => {
     expect(sol.residualsMm).toHaveLength(5);
     expect(sol.residualRmsMm).not.toBeNull();
     expect(Math.max(...sol.residualsMm)).toBeLessThan(0.01);
+  });
+});
+
+describe("validação dos pontos de controle", () => {
+  // nenhum extra fica na diagonal dos cantos (três pontos alinhados quebrariam o ajuste sem eles)
+  const planeExtra: Pt[] = [[3, 1], [7, 5], [2, 4], [8, 1], [5, 3]];
+  const all = (shiftIndex: number | null, shiftPx = 0): Control[] =>
+    [...corners, ...planeExtra].map((p, i) => {
+      const q = toImg(p);
+      return { img: i === shiftIndex ? ([q[0] + shiftPx, q[1] - shiftPx * 0.6] as Pt) : q, plane: p };
+    });
+  const solve = (c: Control[]) => solveRectification({ controls: c, lens: lensFor(W, H, 0) });
+
+  it("dados exatos: ninguém é suspeito e o erro de previsão é desprezível", () => {
+    const sol = solve(all(null));
+    expect(sol.suspects).toEqual([]);
+    expect(sol.looMm).toHaveLength(9);
+    expect(sol.looRmsMm!).toBeLessThan(0.01);
+  });
+
+  it("um clique errado em um ponto extra é apontado como suspeito", () => {
+    const sol = solve(all(6, 40)); // ponto de índice 6 deslocado 40 px
+    expect(sol.suspects).toEqual([6]);
+  });
+
+  it("pontos de controle alinhados não derrubam a validação", () => {
+    // o centro (5, 3) fica na diagonal dos cantos: sem um canto, sobram três pontos alinhados
+    const sol = solve([...corners, [5, 3]].map((p) => ({ img: toImg(p as Pt), plane: p as Pt })));
+    expect(sol.looMm).toHaveLength(5);
+    expect(sol.looMm!.some((e) => e === null)).toBe(true);
+    expect(Number.isFinite(sol.precisionMm)).toBe(true);
+  });
+
+  it("com 5 pontos há erro de previsão, mas ainda não dá para apontar o culpado", () => {
+    const sol = solve(all(null).slice(0, 5));
+    expect(sol.looMm).toHaveLength(5);
+    expect(sol.suspects).toEqual([]);
+    expect(solve(all(null).slice(0, 4)).looMm).toBeNull();
+  });
+
+  it("a precisão estimada considera o erro de previsão fora da amostra", () => {
+    const limpo = solve(all(null));
+    const sujo = solve(all(6, 40));
+    expect(sujo.looRmsMm!).toBeGreaterThan(limpo.looRmsMm! + 100);
+    expect(sujo.precisionMm).toBeGreaterThanOrEqual(1.96 * sujo.looRmsMm! * 0.999);
+    expect(sujo.precisionMm).toBeGreaterThan(limpo.precisionMm);
   });
 });
 

@@ -9,6 +9,7 @@ export const TABS = [
   { id: "danos", label: "Danos" },
   { id: "vistorias", label: "Vistorias" },
   { id: "areas", label: "Áreas" },
+  { id: "laudo", label: "Laudo" },
   { id: "modelo3d", label: "Modelo 3D", beta: true },
   { id: "ficha", label: "Ficha" },
 ] as const;

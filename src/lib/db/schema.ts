@@ -13,6 +13,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";
+import type { LaudoDraft } from "@/lib/laudo-text";
 
 const id = () => uuid("id").primaryKey().defaultRandom();
 const createdAt = () => timestamp("created_at", { withTimezone: true }).notNull().defaultNow();
@@ -254,7 +255,7 @@ export const orthophotos = pgTable("orthophotos", {
     version?: number;
     controls?: { img: [number, number]; plane: [number, number] }[];
     checks?: { a: [number, number]; b: [number, number]; meters: number; measured: number }[];
-    lens?: { k1: number; cx: number; cy: number; norm: number; lines: number; rmsBefore: number; rmsAfter: number } | null;
+    lens?: { k1: number; k2?: number; cx: number; cy: number; norm: number; lines: number; rmsBefore: number; rmsAfter: number } | null;
     extent?: number[];
     residualRmsMm?: number | null;
     checkRmsMm?: number | null;
@@ -319,6 +320,16 @@ export const damages = pgTable("damages", {
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 }, (t) => [index("damages_site_idx").on(t.siteId)]);
+
+/** Rascunho do laudo (texto editado pelo profissional) de um projeto, por vistoria ("all" = todas). */
+export const reportDrafts = pgTable("report_drafts", {
+  id: id(),
+  siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
+  campaignKey: text("campaign_key").notNull().default("all"),
+  content: jsonb("content").$type<LaudoDraft>().notNull(),
+  updatedBy: uuid("updated_by").references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex("report_drafts_site_campaign_idx").on(t.siteId, t.campaignKey)]);
 
 /** Unidade de cobrança do tratamento de um dano. */
 export const priceUnitEnum = pgEnum("price_unit", ["m2", "m", "un"]);

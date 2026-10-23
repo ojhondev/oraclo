@@ -9,6 +9,7 @@ import type { schema } from "@/lib/db";
 import { col, drawDamages, fit, wrap } from "./pdf";
 import { fmtPrecision } from "@/lib/rectify";
 import { LOGO_PNG_BASE64 } from "./logo";
+import { paragraphs, type LaudoText } from "@/lib/laudo-text";
 
 const A4: [number, number] = [595.28, 841.89];
 const M = 48;
@@ -26,6 +27,8 @@ export type LaudoInput = {
   orgName: string;
   /** Imagem de cada vista (id → bytes). Vistas sem imagem saem só com a tabela. */
   images: Map<string, Uint8Array>;
+  /** Texto final do laudo (padrão + rascunho do profissional). */
+  text: LaudoText;
 };
 
 const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
@@ -37,10 +40,10 @@ const qtyText = (geometry: string, d: { areaM2: number | null; lengthM: number |
  * Laudo de estado de conservação (A4): capa, identificação, metodologia, resumo, vistas com
  * os danos desenhados, tabela de danos com prioridade GUT, orçamento estimado e assinatura.
  */
-export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInput) {
+export async function buildLaudo({ site, dx, author, orgName, images, text: t }: LaudoInput) {
   const pdf = await PDFDocument.create();
-  pdf.setTitle(`Laudo de estado de conservação — ${site.name}`);
-  pdf.setAuthor(author.name);
+  pdf.setTitle(`${t.title} — ${site.name}`);
+  pdf.setAuthor(t.signerName || author.name);
   pdf.setCreator("ArchRay");
   pdf.setProducer("ArchRay");
   const font = await pdf.embedFont(StandardFonts.Helvetica);
@@ -69,6 +72,8 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
     dx.damages.filter((d) => d.orthophotoId === v.id).forEach((d, i) => idOf.set(d.id, `${d.type.code}-${i + 1}`));
   }
 
+  let sec = 0;
+  const nextSec = () => `${++sec}`;
   let page!: PDFPage;
   let y = 0;
   const newPage = () => {
@@ -106,7 +111,7 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
   const lh = 16;
   page.drawImage(logo, { x: M, y: PH - M - lh, width: (logo.width / logo.height) * lh, height: lh });
   y = PH - 250;
-  page.drawText("LAUDO DE ESTADO DE CONSERVAÇÃO", { x: M, y, size: 11, font: bold, color: MUTED });
+  page.drawText(fit(bold, t.title.toUpperCase(), 11, CW), { x: M, y, size: 11, font: bold, color: MUTED });
   y -= 36;
   for (const l of wrap(bold, site.name, 26, CW).slice(0, 3)) {
     page.drawText(l, { x: M, y, size: 26, font: bold, color: INK });
@@ -122,7 +127,7 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
     ["Danos apontados", String(dx.kpis.damages)],
     ["Área afetada", fmtArea(dx.kpis.areaM2)],
     ["Fissuras e linhas", fmtLength(dx.kpis.cracksM)],
-    ["Orçamento estimado", fmtBRL(dx.kpis.totalCents)],
+    t.includeBudget ? ["Orçamento estimado", fmtBRL(dx.kpis.totalCents)] : ["Prioridade imediata", String(dx.kpis.urgent)],
   ];
   const bw = CW / 4;
   page.drawRectangle({ x: M, y: y - 52, width: CW, height: 64, color: SOFT });
@@ -137,7 +142,7 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
       "Vistoria",
       dx.campaign ? `${dx.campaign.name} · ${purposes[dx.campaign.purpose]} · ${fmtDate(dx.campaign.date)}` : "Todas as vistorias do projeto",
     ],
-    ["Responsável técnico", `${author.name}${author.professionalId ? ` · ${author.professionalId}` : ""}`],
+    [t.signerRole, [t.signerName, t.signerRegistry, t.artRrt && `ART/RRT ${t.artRrt}`].filter(Boolean).join(" · ")],
     ["Organização", orgName],
     ["Emitido em", today],
   ];
@@ -150,7 +155,7 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
 
   /* ───────────── 1. Identificação ───────────── */
   newPage();
-  heading("1", "Identificação do imóvel");
+  heading(nextSec(), "Identificação do imóvel");
   const facts: [string, string | null][] = [
     ["Projeto", site.name],
     ["Tipo", siteKinds[site.kind]],
@@ -176,59 +181,44 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
   y -= 10;
 
   /* ───────────── 2. Metodologia ───────────── */
-  heading("2", "Metodologia");
-  para(
-    "Inspeção visual do imóvel com registro fotográfico. As fachadas foram fotografadas e retificadas: correção de " +
-      "perspectiva por homografia ajustada por mínimos quadrados a pontos de controle medidos em campo, com correção da " +
-      "distorção radial da lente quando indicada, gerando imagens ortogonais em escala conhecida. A precisão de cada vista " +
-      "é estimada com 95% de confiança e, quando há medidas de conferência, verificada contra distâncias medidas com trena. " +
-      "Os danos foram apontados sobre essas vistas como pontos, linhas ou áreas e classificados segundo biblioteca " +
-      "padronizada; áreas e extensões foram calculadas a partir da escala de cada vista.",
-  );
-  para(
-    "A priorização usa a matriz GUT: Gravidade (baixa = 2, média = 3, alta = 4, crítica = 5) × Urgência (1 a 5) × " +
-      "Tendência (1 a 5). Faixas: GUT a partir de 64, prioridade 1 (imediata); de 27 a 63, prioridade 2 (curto prazo); " +
-      "de 12 a 26, prioridade 3 (médio prazo); abaixo de 12, prioridade 4 (monitorar).",
-  );
-  para(
-    "O orçamento é estimativo: quantidade medida de cada dano × preço unitário de tratamento da tabela do escritório. " +
-      "Não inclui andaimes, canteiro, BDI, impostos nem serviços não visíveis na inspeção.",
-  );
+  if (t.scope) {
+    heading(nextSec(), "Objeto e finalidade");
+    for (const p of paragraphs(t.scope)) para(p);
+    y -= 10;
+  }
+
+  /* ───────────── Metodologia ───────────── */
+  heading(nextSec(), "Metodologia");
+  for (const p of paragraphs(t.methodology)) para(p);
   y -= 10;
 
   /* ───────────── 3. Resumo ───────────── */
-  heading("3", "Resumo do diagnóstico");
-  para(
-    `Foram apontados ${plural(dx.kpis.damages, "dano", "danos")} em ${plural(dx.vistas.length, "vista", "vistas")}, somando ${fmtArea(dx.kpis.areaM2)} de ` +
-      `área afetada e ${fmtLength(dx.kpis.cracksM)} de fissuras e elementos lineares. ` +
-      (dx.kpis.urgent ? `${plural(dx.kpis.urgent, "dano exige", "danos exigem")} ação imediata (prioridade 1).` : "Nenhum dano exige ação imediata.") +
-      ` O tratamento completo está estimado em ${fmtBRL(dx.kpis.totalCents)}` +
-      (dx.kpis.missing ? `, sem contar ${dx.kpis.missing} dano(s) em vistas sem escala.` : "."),
-  );
+  heading(nextSec(), "Resumo do diagnóstico");
+  for (const p of paragraphs(t.summary)) para(p);
   const prioNames = ["1 — Imediata", "2 — Curto prazo", "3 — Médio prazo", "4 — Monitorar"];
   ensure(24 + 4 * 15);
   const pc = [M, M + 200, M + 290];
   page.drawText("PRIORIDADE", { x: pc[0]!, y, size: 7, font: bold, color: MUTED });
   page.drawText("DANOS", { x: pc[1]!, y, size: 7, font: bold, color: MUTED });
-  page.drawText("CUSTO ESTIMADO", { x: pc[2]!, y, size: 7, font: bold, color: MUTED });
+  if (t.includeBudget) page.drawText("CUSTO ESTIMADO", { x: pc[2]!, y, size: 7, font: bold, color: MUTED });
   y -= 6;
   page.drawLine({ start: { x: M, y }, end: { x: M + 400, y }, color: LINE, thickness: 0.5 });
   y -= 13;
   dx.byPriority.forEach((r, i) => {
     page.drawText(prioNames[i]!, { x: pc[0]!, y, size: 9, font, color: INK });
     page.drawText(String(r.count), { x: pc[1]!, y, size: 9, font, color: INK });
-    page.drawText(fmtBRL(r.cents), { x: pc[2]!, y, size: 9, font, color: INK });
+    if (t.includeBudget) page.drawText(fmtBRL(r.cents), { x: pc[2]!, y, size: 9, font, color: INK });
     y -= 15;
   });
 
   /* ───────────── 4. Vistas ───────────── */
   dx.vistas.forEach((v, vi) => {
     newPage();
-    if (vi === 0) heading("4", "Vistas e mapa de danos");
-    text(`4.${vi + 1}  ${v.name}`, { f: bold, size: 11 });
+    if (vi === 0) heading(nextSec(), "Vistas e mapa de danos");
+    text(`${sec}.${vi + 1}  ${v.name}`, { f: bold, size: 11 });
     y -= 14;
     text(
-      [vistaKinds[v.kind], v.elementName, fmtMmPerPixel(v.mmPerPixel), plural(v.damageCount, "dano", "danos"), fmtBRL(v.costCents)].filter(Boolean).join(" · "),
+      [vistaKinds[v.kind], v.elementName, fmtMmPerPixel(v.mmPerPixel), plural(v.damageCount, "dano", "danos"), t.includeBudget && fmtBRL(v.costCents)].filter(Boolean).join(" · "),
       { color: MUTED, size: 8.5 },
     );
     y -= 14;
@@ -284,7 +274,7 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
 
   /* ───────────── 5. Tabela de danos ───────────── */
   newPage();
-  heading("5", "Danos por prioridade");
+  heading(nextSec(), "Danos por prioridade");
   const cols = [
     { h: "ID", x: M, w: 44 },
     { h: "DANO", x: M + 44, w: 150 },
@@ -292,7 +282,7 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
     { h: "QTD.", x: M + 286, w: 58 },
     { h: "GRAV.", x: M + 344, w: 44 },
     { h: "GUT", x: M + 388, w: 30 },
-    { h: "CUSTO", x: M + 418, w: CW - 418 },
+    ...(t.includeBudget ? [{ h: "CUSTO", x: M + 418, w: CW - 418 }] : []),
   ];
   const tableHead = () => {
     for (const c of cols) {
@@ -321,7 +311,7 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
       qtyText(d.type.geometry, d),
       severities[d.severity],
       String(d.gut),
-      d.costCents == null ? "—" : fmtBRL(d.costCents),
+      ...(t.includeBudget ? [d.costCents == null ? "—" : fmtBRL(d.costCents)] : []),
     ];
     cells.forEach((c, i) => {
       const cl = cols[i]!;
@@ -340,62 +330,75 @@ export async function buildLaudo({ site, dx, author, orgName, images }: LaudoInp
     y -= 4;
   }
 
-  /* ───────────── 6. Orçamento ───────────── */
-  heading("6", "Orçamento estimado do tratamento");
-  const oc = [
-    { h: "TRATAMENTO", x: M, w: 250 },
-    { h: "QTD.", x: M + 250, w: 70 },
-    { h: "UNITÁRIO", x: M + 320, w: 90 },
-    { h: "TOTAL", x: M + 410, w: CW - 410 },
-  ];
-  ensure(30);
-  for (const c of oc) {
-    const x = c.h === "TOTAL" ? PW - M - bold.widthOfTextAtSize(c.h, 7) : c.x;
-    page.drawText(c.h, { x, y, size: 7, font: bold, color: MUTED });
-  }
-  y -= 6;
-  page.drawLine({ start: { x: M, y }, end: { x: PW - M, y }, color: LINE, thickness: 0.5 });
-  y -= 13;
-  for (const r of dx.byType) {
-    ensure(26);
-    const qty = r.price.unit === "un" ? `${r.count} un.` : r.price.unit === "m2" ? fmtArea(r.qty) : fmtLength(r.qty);
-    page.drawText(fit(bold, r.type.name, 8.5, oc[0]!.w - 8), { x: M, y, size: 8.5, font: bold, color: INK });
-    page.drawText(qty, { x: oc[1]!.x, y, size: 8.5, font, color: INK });
-    page.drawText(`${fmtBRL(r.price.priceCents)}/${unitLabels[r.price.unit]}`, { x: oc[2]!.x, y, size: 8.5, font, color: INK });
-    const tt = fmtBRL(r.cents);
-    page.drawText(tt, { x: PW - M - font.widthOfTextAtSize(tt, 8.5), y, size: 8.5, font, color: INK });
-    y -= 10;
-    if (r.price.treatment) {
-      page.drawText(fit(font, r.price.treatment, 7.5, oc[0]!.w + 60), { x: M, y, size: 7.5, font, color: MUTED });
-      y -= 10;
+  if (t.includeBudget) {
+    /* ───────────── Orçamento ───────────── */
+    heading(nextSec(), "Orçamento estimado do tratamento");
+    const oc = [
+      { h: "TRATAMENTO", x: M, w: 250 },
+      { h: "QTD.", x: M + 250, w: 70 },
+      { h: "UNITÁRIO", x: M + 320, w: 90 },
+      { h: "TOTAL", x: M + 410, w: CW - 410 },
+    ];
+    ensure(30);
+    for (const c of oc) {
+      const x = c.h === "TOTAL" ? PW - M - bold.widthOfTextAtSize(c.h, 7) : c.x;
+      page.drawText(c.h, { x, y, size: 7, font: bold, color: MUTED });
     }
-    y -= 5;
+    y -= 6;
+    page.drawLine({ start: { x: M, y }, end: { x: PW - M, y }, color: LINE, thickness: 0.5 });
+    y -= 13;
+    for (const r of dx.byType) {
+      ensure(26);
+      const qty = r.price.unit === "un" ? `${r.count} un.` : r.price.unit === "m2" ? fmtArea(r.qty) : fmtLength(r.qty);
+      page.drawText(fit(bold, r.type.name, 8.5, oc[0]!.w - 8), { x: M, y, size: 8.5, font: bold, color: INK });
+      page.drawText(qty, { x: oc[1]!.x, y, size: 8.5, font, color: INK });
+      page.drawText(`${fmtBRL(r.price.priceCents)}/${unitLabels[r.price.unit]}`, { x: oc[2]!.x, y, size: 8.5, font, color: INK });
+      const tt = fmtBRL(r.cents);
+      page.drawText(tt, { x: PW - M - font.widthOfTextAtSize(tt, 8.5), y, size: 8.5, font, color: INK });
+      y -= 10;
+      if (r.price.treatment) {
+        page.drawText(fit(font, r.price.treatment, 7.5, oc[0]!.w + 60), { x: M, y, size: 7.5, font, color: MUTED });
+        y -= 10;
+      }
+      y -= 5;
+    }
+    ensure(30);
+    page.drawLine({ start: { x: M, y: y + 4 }, end: { x: PW - M, y: y + 4 }, color: INK, thickness: 0.8 });
+    y -= 10;
+    page.drawText("TOTAL ESTIMADO", { x: M, y, size: 9.5, font: bold, color: INK });
+    const tot = fmtBRL(dx.kpis.totalCents);
+    page.drawText(tot, { x: PW - M - bold.widthOfTextAtSize(tot, 12), y, size: 12, font: bold, color: INK });
+    y -= 22;
+    para("Valores de referência da tabela do escritório, sujeitos a confirmação após levantamento detalhado e definição do projeto de intervenção.", 8);
   }
-  ensure(30);
-  page.drawLine({ start: { x: M, y: y + 4 }, end: { x: PW - M, y: y + 4 }, color: INK, thickness: 0.8 });
-  y -= 10;
-  page.drawText("TOTAL ESTIMADO", { x: M, y, size: 9.5, font: bold, color: INK });
-  const tot = fmtBRL(dx.kpis.totalCents);
-  page.drawText(tot, { x: PW - M - bold.widthOfTextAtSize(tot, 12), y, size: 12, font: bold, color: INK });
-  y -= 22;
-  para("Valores de referência da tabela do escritório, sujeitos a confirmação após levantamento detalhado e definição do projeto de intervenção.", 8);
+
+  if (t.conclusion) {
+    heading(nextSec(), "Conclusões e recomendações");
+    for (const p of paragraphs(t.conclusion)) para(p);
+    y -= 10;
+  }
+  if (t.limitations) {
+    heading(nextSec(), "Ressalvas e limitações");
+    for (const p of paragraphs(t.limitations)) para(p);
+    y -= 10;
+  }
 
   /* ───────────── Assinatura ───────────── */
   ensure(110);
   y -= 50;
   page.drawLine({ start: { x: M, y }, end: { x: M + 240, y }, color: INK, thickness: 0.6 });
   y -= 13;
-  text(author.name, { f: bold, size: 9.5 });
+  text(t.signerName, { f: bold, size: 9.5 });
   y -= 12;
-  text([author.professionalId, orgName].filter(Boolean).join(" · "), { color: MUTED, size: 8.5 });
+  text([t.signerRegistry, t.artRrt && `ART/RRT ${t.artRrt}`, orgName].filter(Boolean).join(" · "), { color: MUTED, size: 8.5 });
   y -= 12;
-  text(`Responsável técnico · ${today}`, { color: MUTED, size: 8.5 });
+  text(`${t.signerRole} · ${today}`, { color: MUTED, size: 8.5 });
 
   /* ── rodapé em todas as páginas (menos a capa) ── */
   const all = pdf.getPages();
   all.forEach((p, i) => {
     if (i === 0) return;
-    const foot = fit(font, `${site.name} · Laudo de estado de conservação · ${today}`, 7.5, CW - 60);
+    const foot = fit(font, `${site.name} · ${t.title} · ${today}`, 7.5, CW - 60);
     p.drawLine({ start: { x: M, y: M - 6 }, end: { x: PW - M, y: M - 6 }, color: LINE, thickness: 0.5 });
     p.drawText(foot, { x: M, y: M - 18, size: 7.5, font, color: MUTED });
     const pn = `${i + 1} / ${all.length}`;

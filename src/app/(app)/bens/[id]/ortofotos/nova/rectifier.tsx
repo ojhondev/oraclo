@@ -163,7 +163,7 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
     if (!img || !lensOn || !valid.length) return null;
     const est = estimateLens(valid, W, H);
     // distorção desprezível: não corrige (e não anuncia "lente corrigida")
-    return Math.abs(est.lens.k1) < 1e-3 ? { ...est, lens: { ...est.lens, k1: 0 } } : est;
+    return Math.abs(est.lens.k1) < 1e-3 && Math.abs(est.lens.k2 ?? 0) < 1e-3 ? { ...est, lens: { ...est.lens, k1: 0, k2: undefined } } : est;
   }, [lines, lensOn, img, W, H]);
 
   const solved = useMemo((): { sol: Solution | null; err: string | null } => {
@@ -388,7 +388,7 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
             srcH: img.naturalHeight,
             controls: validCtrl.map((c) => ({ img: c.img, plane: [num(c.x), num(c.y)] as Pt })),
             checks: validChecks.map((c, i) => ({ a: c.a, b: c.b!, meters: num(c.m), measured: sol.checks[i]?.measured ?? 0 })),
-            lens: lensEst && sol.lens.k1 ? { ...sol.lens, lines: lines.length, rmsBefore: lensEst.rmsBefore, rmsAfter: lensEst.rmsAfter } : null,
+            lens: lensEst && (sol.lens.k1 || sol.lens.k2) ? { ...sol.lens, lines: lines.length, rmsBefore: lensEst.rmsBefore, rmsAfter: lensEst.rmsAfter } : null,
             extent,
             residualRmsMm: sol.residualRmsMm,
             checkRmsMm: sol.checkRmsMm,
@@ -739,7 +739,10 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
                   <Input inputMode="decimal" placeholder="x m" aria-label={`x do ponto P${i + 5} (m)`} className="h-7 w-16 text-[12.5px]" value={c.x} onChange={(e) => setControls((l) => l.map((q, k) => (k === i ? { ...q, x: e.target.value } : q)))} />
                   <Input inputMode="decimal" placeholder="y m" aria-label={`y do ponto P${i + 5} (m)`} className="h-7 w-16 text-[12.5px]" value={c.y} onChange={(e) => setControls((l) => l.map((q, k) => (k === i ? { ...q, y: e.target.value } : q)))} />
                   {sol && sol.residualRmsMm != null && c.x.trim() && c.y.trim() && (
-                    <span className="truncate text-muted-foreground tabular-nums">resíduo {Math.round(sol.residualsMm[4 + controls.slice(0, i).filter((x) => x.x.trim() && x.y.trim()).length] ?? 0)} mm</span>
+                    <span className={cn("truncate tabular-nums", sol.suspects.includes(4 + controls.slice(0, i).filter((x) => x.x.trim() && x.y.trim()).length) ? "font-medium text-destructive" : "text-muted-foreground")}>
+                      resíduo {Math.round(sol.residualsMm[4 + controls.slice(0, i).filter((x) => x.x.trim() && x.y.trim()).length] ?? 0)} mm
+                      {sol.suspects.includes(4 + controls.slice(0, i).filter((x) => x.x.trim() && x.y.trim()).length) ? " · confira" : ""}
+                    </span>
                   )}
                   <button type="button" aria-label="Remover ponto" onClick={() => setControls((l) => l.filter((_, k) => k !== i))} className="ml-auto text-muted-foreground hover:text-foreground">
                     <X className="size-3.5" />
@@ -796,9 +799,14 @@ export function Rectifier({ siteId, orgId, elements, campaigns, defaultCampaignI
               {sol.checkRmsMm != null
                 ? `Medida em ${sol.checks.length} conferência(s): erro médio ${Math.round(sol.checkRmsMm)} mm.`
                 : "Sem conferência: estimada só pela marcação dos pontos. Adicione uma medida de conferência para medir o erro real."}
-              {sol.lens.k1 ? " Lente corrigida." : ""}
+              {sol.lens.k1 || sol.lens.k2 ? (sol.lens.k2 ? " Lente corrigida (2 termos)." : " Lente corrigida.") : ""}
               {sol.residualRmsMm != null ? ` Ajuste com ${4 + controls.filter((c) => c.x.trim() && c.y.trim()).length} pontos (resíduo ${Math.round(sol.residualRmsMm)} mm).` : ""}
             </p>
+            {sol.suspects.length > 0 && (
+              <p className="rounded-lg bg-destructive/10 px-2.5 py-1.5 text-[11.5px] leading-snug text-destructive">
+                {sol.suspects.map((i) => (i < 4 ? ["o canto superior esquerdo", "o canto superior direito", "o canto inferior direito", "o canto inferior esquerdo"][i] : `o ponto P${i + 1}`)).join(", ")} parece mal marcado: sem ele, os demais pontos se ajustam bem melhor. Confira a posição na foto e a medida digitada.
+              </p>
+            )}
           </div>
         )}
         {solved.err && <p className="text-sm text-destructive">{solved.err}</p>}

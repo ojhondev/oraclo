@@ -4,6 +4,8 @@ import { db, schema } from "@/lib/db";
 import { loadDiagnosis } from "@/lib/diagnosis";
 import { fetchImage, slug } from "@/lib/exports/common";
 import { buildLaudo } from "@/lib/exports/laudo";
+import { getLaudoDraft } from "@/lib/laudo-draft";
+import { resolveLaudo } from "@/lib/laudo-text";
 
 export const maxDuration = 60;
 
@@ -39,7 +41,9 @@ export async function GET(req: Request, ctx: RouteContext<"/bens/[id]/laudo">) {
       }
     }),
   );
-  const bytes = await buildLaudo({ site, dx, author, orgName: user.orgName, images });
+  const draft = await getLaudoDraft(id, dx.campaign?.id ?? null);
+  const text = resolveLaudo(draft, { author, summaryFacts: { ...dx.kpis, vistas: dx.vistas.length } });
+  const bytes = await buildLaudo({ site, dx, author, orgName: user.orgName, images, text });
   const name = `${slug(`laudo-${site.name}${dx.campaign ? `-${dx.campaign.name}` : ""}`) || "laudo"}.pdf`;
   return new Response(Buffer.from(bytes), {
     headers: {

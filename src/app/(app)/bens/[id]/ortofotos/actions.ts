@@ -51,7 +51,7 @@ const createSchema = z.object({
       controls: z.array(z.object({ img: pt, plane: pt })).max(50).optional(),
       checks: z.array(z.object({ a: pt, b: pt, meters: z.number().positive(), measured: z.number() })).max(50).optional(),
       lens: z
-        .object({ k1: z.number(), cx: z.number(), cy: z.number(), norm: z.number(), lines: z.number().int(), rmsBefore: z.number(), rmsAfter: z.number() })
+        .object({ k1: z.number(), k2: z.number().optional(), cx: z.number(), cy: z.number(), norm: z.number(), lines: z.number().int(), rmsBefore: z.number(), rmsAfter: z.number() })
         .nullable()
         .optional(),
       extent: z.array(z.number()).length(4).optional(),

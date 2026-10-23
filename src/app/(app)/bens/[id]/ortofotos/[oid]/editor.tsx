@@ -31,7 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import { SimpleSelect } from "@/components/form";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fmtArea, fmtLength, fmtMmPerPixel, measure, minPoints, polygonAreaPx, scaleFromCalibration, type Pt } from "@/lib/geometry";
+import { fmtArea, fmtLength, fmtMmPerPixel, fmtPlusMinus, measure, measureUncertainty, minPoints, polygonAreaPx, scaleFromCalibration, selfIntersects, type Pt } from "@/lib/geometry";
 import { geometryKinds, severities } from "@/lib/labels";
 import { TREND_LABELS, URGENCY_LABELS, budget, damageCostCents, fmtBRL, gut, priority, unitLabels, type Price } from "@/lib/pricing";
 import type { schema } from "@/lib/db";
@@ -398,6 +398,10 @@ export function DamageMapEditor({
       const clean = points.filter((p, i) => i === 0 || Math.hypot(p[0] - points[i - 1]![0], p[1] - points[i - 1]![1]) > tol);
       if (clean.length < minPoints(activeType.geometry)) {
         toast.error(activeType.geometry === "area" ? "Uma área precisa de pelo menos 3 pontos." : "Uma linha precisa de pelo menos 2 pontos.");
+        return;
+      }
+      if (!exact && activeType.geometry === "area" && selfIntersects(clean)) {
+        toast.error("O contorno se cruza sozinho e a área sairia errada. Desfaça o último ponto (Backspace) e refaça.");
         return;
       }
       setDraft([]);
@@ -1156,6 +1160,8 @@ export function DamageMapEditor({
               types={types}
               price={prices[selDamage.typeId]}
               type={typeById.get(selDamage.typeId)!}
+              mmPerPixel={mm}
+              precisionMm={ortho.rectification?.precisionMm ?? null}
               canEdit={canEdit && !selDamage.id.startsWith("tmp-")}
               onClose={() => setSelected(null)}
               onPatch={(patch) => patchDamage(selDamage.id, patch)}
@@ -1333,6 +1339,8 @@ function DamagePanel({
   type,
   types,
   price,
+  mmPerPixel,
+  precisionMm,
   canEdit,
   onClose,
   onPatch,
@@ -1342,6 +1350,9 @@ function DamagePanel({
   type: DamageType;
   types: DamageType[];
   price?: Price;
+  mmPerPixel: number | null;
+  /** Precisão (95%) da retificação da vista, em mm; nula em vistas sem retificação. */
+  precisionMm: number | null;
   canEdit: boolean;
   onClose: () => void;
   onPatch: (p: Parameters<typeof updateDamage>[3]) => void;
@@ -1351,6 +1362,8 @@ function DamagePanel({
   const score = gut(damage);
   const prio = priority(score);
   const cost = price ? damageCostCents(damage, { [damage.typeId]: price }) : null;
+  const unc = measureUncertainty(type.geometry, pts(damage), mmPerPixel, precisionMm);
+  const crosses = type.geometry === "area" && selfIntersects(pts(damage));
   const saveText = (field: "cause" | "recommendation" | "notes") => (e: React.FocusEvent<HTMLTextAreaElement>) => {
     const v = e.target.value.trim();
     if (v !== (damage[field] ?? "")) onPatch({ [field]: v || null });
@@ -1378,6 +1391,16 @@ function DamagePanel({
         {type.geometry === "area" && <Badge variant="secondary">{fmtArea(damage.areaM2)}</Badge>}
         {type.geometry !== "ponto" && <Badge variant="secondary">{type.geometry === "area" ? "perímetro " : ""}{fmtLength(damage.lengthM)}</Badge>}
       </div>
+      {(unc.areaM2 != null || unc.lengthM != null) && (
+        <p className="-mt-2 text-[11.5px] leading-snug text-muted-foreground">
+          Margem de erro (95%): {[unc.areaM2 != null && `área ${fmtPlusMinus(unc.areaM2, "m²")}`, unc.lengthM != null && `${type.geometry === "area" ? "perímetro" : "comprimento"} ${fmtPlusMinus(unc.lengthM, "m")}`].filter(Boolean).join(" · ")}. Vem da precisão da retificação da vista.
+        </p>
+      )}
+      {crosses && (
+        <p className="rounded-lg bg-destructive/10 px-3 py-2 text-[12.5px] leading-snug text-destructive">
+          O contorno se cruza sozinho: a área calculada não é confiável. Arraste os vértices para desfazer o cruzamento.
+        </p>
+      )}
 
       <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
         Tipo de dano

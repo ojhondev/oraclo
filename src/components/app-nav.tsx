@@ -6,6 +6,7 @@ import { useState } from "react";
 import {
   ChevronDown,
   ChevronsUpDown,
+  Box,
   Building2,
   Layers,
   LogOut,
@@ -22,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { BrandLogo, BrandMark } from "@/components/brand";
 import { ThemeSwitcher } from "@/components/theme";
+import { BetaBadge } from "@/components/beta-badge";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -32,9 +34,10 @@ import { logout } from "@/app/login/actions";
 import type { SessionUser } from "@/lib/auth";
 import type { Recent } from "@/lib/recent";
 
-const ITEMS = [
-  { href: "/", label: "Projetos", icon: Building2, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/ortofotos/")) },
+const ITEMS: { href: string; label: string; icon: React.ElementType; match: (p: string) => boolean; beta?: boolean }[] = [
+  { href: "/", label: "Projetos", icon: Building2, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/ortofotos/") && !p.includes("/modelos/")) },
   { href: "/mapas", label: "Mapas de danos", icon: ImageIcon, match: (p: string) => p.startsWith("/mapas") || p.includes("/ortofotos/") },
+  { href: "/modelos", label: "Modelo 3D", icon: Box, beta: true, match: (p: string) => p.startsWith("/modelos") || p.includes("/modelos/") },
   { href: "/biblioteca", label: "Danos e preços", icon: Layers, match: (p: string) => p.startsWith("/biblioteca") },
   { href: "/equipe", label: "Equipe", icon: Users, match: (p: string) => p.startsWith("/equipe") },
   { href: "/index", label: "Novidades", icon: Sparkles, match: (p: string) => p.startsWith("/index") },
@@ -209,9 +212,9 @@ function NavContent({
           ...ITEMS,
           // pedidos de diagnóstico do site: só para a equipe do ArchRay
           ...(user.platformRole === "operador"
-            ? [{ href: "/solicitacoes", label: "Solicitações", icon: Inbox, match: (p: string) => p.startsWith("/solicitacoes") }]
+            ? [{ href: "/solicitacoes", label: "Solicitações", icon: Inbox, match: (p: string) => p.startsWith("/solicitacoes"), beta: false }]
             : []),
-        ].map(({ href, label, icon: Icon, match }) => {
+        ].map(({ href, label, icon: Icon, match, beta }) => {
           const active = match(pathname);
           return (
             <Link
@@ -227,7 +230,12 @@ function NavContent({
               )}
             >
               <Icon className={cn("size-[18px]", active ? "text-brand" : "text-sidebar-foreground/80")} />
-              {!collapsed && label}
+              {!collapsed && (
+                <>
+                  <span className="flex-1">{label}</span>
+                  {beta && <BetaBadge />}
+                </>
+              )}
             </Link>
           );
         })}

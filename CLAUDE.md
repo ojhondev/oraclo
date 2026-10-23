@@ -30,7 +30,11 @@ As rotas continuam em `/bens/...` e `/ortofotos/...` (nomes internos antigos).
 - Neon Postgres + Drizzle (`src/lib/db/schema.ts`). `npm run db:push` aplica o schema.
 - Dev: `npm run dev` → porta **3022** (entrada `oraclo` em `A:\Claude Code\Velo\.claude\launch.json`).
 
+- **Testes**: `npm test` (Vitest, pasta `tests/`) cobre as funções puras — geometria 2D/3D, preços/GUT, próximo passo e o motor de retificação (dados sintéticos de resposta conhecida). Rodar `npm run lint && npm test && npm run build` antes de cada commit. Função pura nova = teste novo.
+
 ## Regras do projeto
+- **Tela de Projeto** (`/bens/[id]`): barra de funcionalidades em abas por URL (`?aba=resumo|vistas|danos|vistorias|areas|modelo3d|ficha`, mais `?vistoria=`), componentes em `project-ui.tsx`. Resumo = próximo passo (`src/lib/next-step.ts`) + indicadores + prioridades; o detalhe fica em Danos. Todo bloco de grade usa `min-w-0` (sem isso o texto das barras invade o card vizinho). As ações do cabeçalho (`data-tour`: nova-vista, gerar-laudo) ficam sempre visíveis por causa do tour.
+- **Modelo 3D é módulo BETA** (fora do núcleo 2D): item "Modelo 3D" com etiqueta BETA na barra lateral (`/modelos`), aba "Modelo 3D" no Projeto (importação em `import-model.tsx`), `BetaBadge` em `src/components/beta-badge.tsx`. A escala do modelo é calibrada com uma medida real e fica em `outputs.meta.scale` (`geometry3d.ts` + ações em `modelos/[oid]/actions.ts`). Marcar danos direto no modelo ainda não existe.
 - **Multi-organização**: todo dado pertence a uma `organization`. Toda consulta/ação
   filtra por `user.orgId` — use `getSite(orgId, id)` (`src/lib/sites.ts`) antes de
   tocar em qualquer coisa de um bem; ele dá 404 se o bem não for da organização.

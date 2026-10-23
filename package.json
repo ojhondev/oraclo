@@ -9,6 +9,8 @@
     "prebuild": "node scripts/copy-ort.mjs",
     "start": "next start",
     "lint": "eslint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push --force",
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio"
   },
@@ -48,6 +50,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^3.2.7"
   }
 }

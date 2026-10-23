@@ -4,6 +4,26 @@ import { db, schema } from "@/lib/db";
 
 const { sites, elements, orthophotos, damages } = schema;
 
+/** Modelos 3D visualizáveis de todos os projetos da organização (módulo 3D). */
+export async function listAllModels(orgId: string) {
+  const rows = await db
+    .select({
+      id: schema.outputs.id,
+      siteId: sites.id,
+      siteName: sites.name,
+      name: schema.outputs.name,
+      format: schema.outputs.format,
+      bytes: schema.outputs.bytes,
+      meta: schema.outputs.meta,
+      createdAt: schema.outputs.createdAt,
+    })
+    .from(schema.outputs)
+    .innerJoin(sites, eq(sites.id, schema.outputs.siteId))
+    .where(eq(sites.orgId, orgId))
+    .orderBy(desc(schema.outputs.createdAt));
+  return rows.filter((r) => (r.meta as { viewable?: boolean } | null)?.viewable);
+}
+
 /** Vistas de todos os projetos da organização, com o nº de danos de cada uma. */
 export async function listAllMaps(orgId: string) {
   return db

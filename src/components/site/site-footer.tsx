@@ -110,12 +110,38 @@ export function SiteFooter({ lang }: { lang: Lang }) {
           </div>
         ))}
       </div>
-      <div className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-[12.5px] text-muted-foreground">
-        <span>© {new Date().getFullYear()} ArchRay</span>
+
+      {/* produto exclusivo do Estúdio Restaura */}
+      <a
+        href="https://estudiorestaura.com.br"
+        target="_blank"
+        rel="noreferrer"
+        className="group mt-14 flex flex-col gap-4 rounded-2xl border bg-[var(--site-elev)] p-6 transition-colors hover:border-foreground/25 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+      >
+        <div>
+          <p className="text-[12.5px] font-medium tracking-wide text-muted-foreground uppercase">{en ? "An exclusive product of" : "Um produto exclusivo do"}</p>
+          {/* versão branca no tema escuro, colorida no claro */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/estudio-restaura-branco.png" alt="Estúdio Restaura" width={600} height={152} className="mt-3 block h-10 w-auto sm:h-12 [.site-light_&]:hidden" />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/brand/estudio-restaura.png" alt="Estúdio Restaura" width={600} height={152} className="mt-3 hidden h-10 w-auto sm:h-12 [.site-light_&]:block" />
+        </div>
+        <p className="max-w-md text-[14px] leading-6 text-muted-foreground sm:text-right">
+          {en
+            ? "Architecture, conservation and restoration. ArchRay was developed and is maintained by Estúdio Restaura."
+            : "Arquitetura, conservação e restauro. O ArchRay foi desenvolvido e é mantido pelo Estúdio Restaura."}
+          <span className="mt-1 block font-medium text-foreground group-hover:underline group-hover:underline-offset-4">estudiorestaura.com.br ↗</span>
+        </p>
+      </a>
+
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t pt-6 text-[12.5px] text-muted-foreground">
+        <span>
+          © {new Date().getFullYear()} ArchRay · {en ? "a product of Estúdio Restaura" : "um produto Estúdio Restaura"}
+        </span>
         <span>
           {en
-            ? "Carmo da Horta case photos: Wikimedia Commons (public domain and CC BY-SA), credits in Stories."
-            : "Fotos do case Carmo da Horta: Wikimedia Commons (domínio público e CC BY-SA), créditos em Histórias."}
+            ? "Carmo da Horta case photos: Wikimedia Commons (public domain and CC BY-SA), credits in Cases."
+            : "Fotos do caso Carmo da Horta: Wikimedia Commons (domínio público e CC BY-SA), créditos em Casos."}
         </span>
       </div>
     </footer>

@@ -334,6 +334,26 @@ export const damages = pgTable("damages", {
   createdAt: createdAt(),
 }, (t) => [index("damages_site_idx").on(t.siteId)]);
 
+/**
+ * Alinhamento entre duas vistas do mesmo trecho (ex.: a fachada em 2010 e em 2021), para comparar
+ * vistorias. Pares de pontos homólogos marcados pelo usuário → transformação "depois → antes"
+ * (homografia 3×3 em linha, pixels da vista B → pixels da vista A).
+ */
+export const vistaAlignments = pgTable("vista_alignments", {
+  id: id(),
+  siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
+  /** Vista de referência (antes). */
+  aId: uuid("a_id").notNull().references(() => orthophotos.id, { onDelete: "cascade" }),
+  /** Vista comparada (depois). */
+  bId: uuid("b_id").notNull().references(() => orthophotos.id, { onDelete: "cascade" }),
+  pairs: jsonb("pairs").$type<{ a: [number, number]; b: [number, number] }[]>().notNull(),
+  matrix: jsonb("matrix").$type<number[]>().notNull(),
+  /** Erro médio dos pares depois do ajuste, em pixels da vista A. */
+  rmsPx: real("rms_px"),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex("vista_alignments_pair_idx").on(t.aId, t.bId)]);
+
 export const suggestionStatusEnum = pgEnum("suggestion_status", ["pendente", "aceita", "rejeitada"]);
 
 /**

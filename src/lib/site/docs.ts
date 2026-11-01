@@ -165,6 +165,23 @@ export const DOC_STEPS: DocStep[] = [
     tips: ["Cadastre seu registro CAU ou CREA em Meu perfil para ele sair no laudo e no carimbo das pranchas."],
   },
   {
+    id: "comparar",
+    title: "Compare duas vistorias",
+    lead: "Volte ao mesmo imóvel meses ou anos depois e veja o que surgiu, o que cresceu e o que não aparece mais.",
+    steps: [
+      "Faça uma vistoria nova e envie a vista do mesmo trecho (por exemplo, a mesma fachada). Marque os danos como de costume.",
+      "No projeto, abra a aba Vistorias e clique em Comparar. Escolha a vista Antes e a vista Depois no alto da tela.",
+      "Na primeira vez, alinhe as duas vistas: clique num ponto da vista antes (cantos de janelas, portas, cornijas) e no mesmo ponto da vista depois. Repita com pelo menos 4 pares espalhados e salve.",
+      "Use a Cortina (arraste o divisor) ou Lado a lado. O painel à direita conta os danos novos, os que cresceram, diminuíram ou não aparecem mais, e mostra os quantitativos das duas datas.",
+    ],
+    shot: { src: "/docs/13-comparar.jpg", alt: "Comparação lado a lado da fachada do Carmo em 2010 e 2021, com o resumo das mudanças", caption: "Carmo, 2010 × 2021: a foto noturna de 2021 alinhada sobre a fachada de 2010 e as mudanças contadas no painel." },
+    tips: [
+      "O alinhamento corrige perspectiva: a foto depois pode ser de outro ângulo ou distância. Com 5 ou mais pares o erro médio mostra se algum ponto foi marcado errado (o par fica laranja).",
+      "Só conta o que aparece nas duas vistas. Se a foto nova mostra só parte da fachada, o resto fica de fora.",
+      "Fissura que virou trinca conta como agravamento. Mesmo assim, confira na imagem: sombra e ângulo podem esconder um dano.",
+    ],
+  },
+  {
     id: "campo",
     title: "Tire as fotos de campo pelo celular",
     lead: "Na visita, a equipe registra as fotos de detalhe pelo celular, dentro da vistoria. Funciona até sem sinal.",

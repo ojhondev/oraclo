@@ -31,6 +31,70 @@ export type Post = {
 
 export const POSTS: Post[] = [
   {
+    slug: "comparar-vistorias",
+    title: "Comparar vistorias: o mesmo imóvel, duas datas",
+    summary:
+      "Coloque a mesma fachada em duas vistorias lado a lado, alinhadas mesmo com fotos de ângulos diferentes, e veja o que surgiu, cresceu ou não aparece mais.",
+    date: "2026-11-01",
+    category: "Produto",
+    banner: "Novo: compare duas vistorias do mesmo imóvel e veja o que mudou.",
+    intro: [
+      "Um mapa de danos conta como o imóvel está hoje. Para saber se ele está piorando, se a intervenção funcionou ou o que priorizar na próxima obra, é preciso comparar com a vistoria anterior. Até agora isso era feito no olho, com duas fotos abertas lado a lado.",
+      "A nova tela Comparar vistorias coloca as duas datas no mesmo referencial e faz a conta: quais danos são novos, quais cresceram, quais diminuíram e quais não aparecem mais.",
+    ],
+    sections: [
+      {
+        id: "alinhar",
+        title: "Alinhar fotos tiradas de jeitos diferentes",
+        blocks: [
+          { p: "Duas vistorias raramente têm a foto do mesmo ponto, com a mesma lente e a mesma luz. Por isso a comparação começa pelo alinhamento: você marca o mesmo ponto nas duas imagens (o canto de uma janela, de uma porta, de uma cornija), pelo menos quatro vezes, e o ArchRay calcula a correção de perspectiva que leva a vista nova para cima da antiga." },
+          { p: "Com cinco pares ou mais, cada ponto mostra o próprio erro. Um par marcado no lugar errado fica destacado e pode ser removido. O alinhamento fica salvo para as próximas consultas." },
+          { callout: "Tudo roda no navegador. A deformação da imagem é feita pela própria tela, sem processamento em servidor e sem custo." },
+        ],
+      },
+      {
+        id: "ver",
+        title: "Cortina e lado a lado",
+        blocks: [
+          {
+            list: [
+              "Cortina: as duas datas sobrepostas, com um divisor que você arrasta para revelar uma ou outra.",
+              "Lado a lado: as duas vistas com o mesmo zoom e a mesma posição; mover uma move a outra.",
+              "Os danos aparecem coloridos pelo que aconteceu com eles entre uma vistoria e outra.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "o-que-mudou",
+        title: "O que mudou, em números",
+        blocks: [
+          {
+            table: {
+              head: ["Situação", "Quando"],
+              rows: [
+                ["Novo", "O dano só aparece na vistoria depois"],
+                ["Cresceu", "Ficou mais de 20% maior, ou agravou (uma fissura que virou trinca)"],
+                ["Estável", "Está nas duas vistorias com tamanho parecido"],
+                ["Diminuiu", "Ficou mais de 20% menor"],
+                ["Não aparece", "Só está na vistoria antes: foi tratado, ou ficou escondido por sombra ou ângulo"],
+              ],
+            },
+          },
+          { p: "Os danos são casados pela posição e pela categoria, então umidade casa com umidade e fissura casa com trinca. O painel também mostra os quantitativos de cada tipo nas duas datas, só na área que aparece nas duas vistas." },
+        ],
+      },
+      {
+        id: "cuidados",
+        title: "Cuidados",
+        blocks: [
+          { p: "A comparação mostra o que mudou no mapa de danos, e o mapa depende do que cada foto mostra. Luz, sombra, resolução e ângulo mudam o que é visível. Antes de afirmar que um dano foi tratado ou cresceu, confira na imagem." },
+        ],
+      },
+    ],
+    author: "Equipe ArchRay",
+  },
+  {
     slug: "deteccao-automatica-de-danos",
     title: "Detecção automática de danos: a IA sugere, você decide",
     summary:

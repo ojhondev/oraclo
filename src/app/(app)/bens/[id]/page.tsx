@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Box, Camera, FileText, ImagePlus, MapPin, Pencil, ShieldCheck } from "lucide-react";
+import { ArrowRight, Box, Camera, FileText, GitCompareArrows, ImagePlus, MapPin, Pencil, ShieldCheck } from "lucide-react";
 import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite, getSiteDetail } from "@/lib/sites";
 import { loadDiagnosis } from "@/lib/diagnosis";
@@ -402,6 +402,21 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
 
         {/* ───────── Vistorias ───────── */}
         {tab === "vistorias" && (
+          <div className="grid gap-5">
+          <section className="flex flex-wrap items-center gap-4 rounded-2xl border bg-card p-5" data-tour="comparar-vistorias">
+            <GitCompareArrows className="size-5 shrink-0 text-muted-foreground" />
+            <div className="min-w-0 flex-1">
+              <h2 className="text-[15px] font-medium">Comparar vistorias</h2>
+              <p className="mt-0.5 text-[13px] text-muted-foreground">
+                Coloque a mesma fachada em duas datas lado a lado e veja o que surgiu, cresceu ou não aparece mais.
+              </p>
+            </div>
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/bens/${site.id}/comparar`}>
+                Comparar <ArrowRight />
+              </Link>
+            </Button>
+          </section>
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
             <Section
               title="Nova vistoria"
@@ -461,6 +476,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
                 ))
               )}
             </div>
+          </div>
           </div>
         )}
 

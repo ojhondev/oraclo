@@ -153,6 +153,23 @@ export const DOC_STEPS_EN: DocStep[] = [
     tips: ["Add your professional registration (CAU or CREA in Brazil) in Meu perfil (My profile) so it appears in the report and on the drawings' title block."],
   },
   {
+    id: "comparar",
+    title: "Compare two surveys",
+    lead: "Come back to the same building months or years later and see what appeared, what grew and what is no longer there.",
+    steps: [
+      "Run a new survey and upload the view of the same stretch (for example, the same facade). Mark the damage as usual.",
+      "In the project, open the Vistorias tab and click Comparar. Pick the Before and After views at the top of the screen.",
+      "The first time, align the two views: click a point on the before view (corners of windows, doors, cornices) and the same point on the after view. Repeat with at least 4 well-spread pairs and save.",
+      "Use the Curtain (drag the divider) or Side by side. The right panel counts new damage, damage that grew, shrank or is no longer visible, and shows the quantities on both dates.",
+    ],
+    shot: { src: "/docs/13-comparar.jpg", alt: "Side-by-side comparison of the Carmo facade in 2010 and 2021, with the summary of changes", caption: "Carmo, 2010 × 2021: the 2021 night photo aligned over the 2010 facade, with the changes counted in the panel." },
+    tips: [
+      "Alignment corrects perspective: the after photo can be taken from another angle or distance. With 5 or more pairs, the mean error shows whether a point was marked wrong (the pair turns orange).",
+      "Only what appears in both views counts. If the new photo shows only part of the facade, the rest is left out.",
+      "A crack that became a wider crack counts as worsening. Still, check the image: shadows and angles can hide damage.",
+    ],
+  },
+  {
     id: "campo",
     title: "Take field photos with your phone",
     lead: "During the visit, the team records detail photos with a phone, inside the survey. It works even without signal.",

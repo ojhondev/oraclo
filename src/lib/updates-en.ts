@@ -3,6 +3,70 @@ import type { Post } from "./updates";
 /** Index em inglês: as mesmas publicações (mesmo slug e data), traduzidas. */
 export const POSTS_EN: Post[] = [
   {
+    slug: "comparar-vistorias",
+    title: "Compare surveys: the same building, two dates",
+    summary:
+      "Put the same facade from two surveys side by side, aligned even when the photos were taken from different angles, and see what appeared, grew or is no longer there.",
+    date: "2026-11-01",
+    category: "Product",
+    banner: "New: compare two surveys of the same building and see what changed.",
+    intro: [
+      "A damage map tells you how the building is today. To know whether it is getting worse, whether an intervention worked or what to prioritise next, you need to compare it with the previous survey. Until now that meant eyeballing two photos side by side.",
+      "The new Compare surveys screen puts both dates in the same frame and does the counting: which damage is new, which grew, which shrank and which is no longer visible.",
+    ],
+    sections: [
+      {
+        id: "alinhar",
+        title: "Aligning photos taken differently",
+        blocks: [
+          { p: "Two surveys rarely have the photo from the same spot, with the same lens and the same light. So the comparison starts with alignment: you mark the same point on both images (the corner of a window, a door, a cornice) at least four times, and ArchRay computes the perspective correction that brings the new view on top of the old one." },
+          { p: "With five pairs or more, each point shows its own error. A pair marked in the wrong place is highlighted and can be removed. The alignment is saved for next time." },
+          { callout: "Everything runs in the browser. The image is warped by the screen itself, with no server processing and no cost." },
+        ],
+      },
+      {
+        id: "ver",
+        title: "Curtain and side by side",
+        blocks: [
+          {
+            list: [
+              "Curtain: both dates overlaid, with a divider you drag to reveal one or the other.",
+              "Side by side: both views with the same zoom and position; moving one moves the other.",
+              "Damage is coloured by what happened to it between the two surveys.",
+            ],
+          },
+        ],
+      },
+      {
+        id: "o-que-mudou",
+        title: "What changed, in numbers",
+        blocks: [
+          {
+            table: {
+              head: ["Status", "When"],
+              rows: [
+                ["New", "The damage only appears in the after survey"],
+                ["Grew", "It became more than 20% larger, or worsened (a fine crack that became a wider one)"],
+                ["Stable", "It is in both surveys with a similar size"],
+                ["Shrank", "It became more than 20% smaller"],
+                ["Not visible", "It is only in the before survey: treated, or hidden by shadow or angle"],
+              ],
+            },
+          },
+          { p: "Damage is matched by position and category, so moisture matches moisture and a fine crack matches a wider crack. The panel also shows each type's quantities on both dates, only within the area visible in both views." },
+        ],
+      },
+      {
+        id: "cuidados",
+        title: "Caveats",
+        blocks: [
+          { p: "The comparison shows what changed in the damage map, and the map depends on what each photo shows. Light, shadow, resolution and angle change what is visible. Before stating that damage was treated or grew, check the image." },
+        ],
+      },
+    ],
+    author: "The ArchRay team",
+  },
+  {
     slug: "deteccao-automatica-de-danos",
     title: "Automatic damage detection: the AI suggests, you decide",
     summary:

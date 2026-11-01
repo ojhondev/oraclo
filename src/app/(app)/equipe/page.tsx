@@ -6,14 +6,15 @@ import { emailEnabled } from "@/lib/email";
 import { daysUntil } from "@/lib/format";
 import { PageBody, PageHeader } from "@/components/page-header";
 import { InviteForm, InviteRow, MemberRow } from "./team";
+import { TrainingConsent } from "./training-consent";
 
 export const metadata: Metadata = { title: "Equipe" };
 
 export default async function TeamPage() {
   const me = await requireUser();
   const isAdmin = me.role === "admin";
-  const { users, invitations } = schema;
-  const [members, invites] = await Promise.all([
+  const { users, invitations, organizations } = schema;
+  const [members, invites, [org]] = await Promise.all([
     db
       .select({ id: users.id, name: users.name, email: users.email, role: users.role, active: users.active, professionalId: users.professionalId })
       .from(users)
@@ -26,6 +27,10 @@ export default async function TeamPage() {
           .where(and(eq(invitations.orgId, me.orgId), isNull(invitations.acceptedAt), isNull(invitations.revokedAt), gt(invitations.expiresAt, new Date())))
           .orderBy(desc(invitations.createdAt))
       : Promise.resolve([]),
+    db
+      .select({ consent: organizations.trainingConsent, at: organizations.trainingConsentAt })
+      .from(organizations)
+      .where(eq(organizations.id, me.orgId)),
   ]);
 
   return (
@@ -59,6 +64,12 @@ export default async function TeamPage() {
             ))}
           </ul>
         </section>
+
+        <TrainingConsent
+          consent={org?.consent ?? false}
+          since={org?.at ? org.at.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" }) : null}
+          canManage={isAdmin}
+        />
 
         {isAdmin && invites.length > 0 && (
           <section className="rounded-2xl border bg-card">

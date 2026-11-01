@@ -112,6 +112,23 @@ export const DOC_STEPS: DocStep[] = [
     tips: ["Aproxime o zoom antes de clicar: a IA analisa a parte visível da imagem, então mais zoom = mais detalhe.", "Na primeira vez, o modo Elemento baixa o modelo de IA (alguns MB). Depois fica guardado no navegador."],
   },
   {
+    id: "deteccao",
+    title: "Deixe a IA procurar os danos",
+    lead: "A detecção automática percorre a vista inteira e sugere danos. Você revisa cada sugestão: nada entra no orçamento nem no laudo sem o seu aceite.",
+    steps: [
+      "No editor, clique em Detectar danos (a lupa com moldura, na barra sobre a imagem). A análise roda no seu navegador e leva alguns segundos.",
+      "As sugestões aparecem tracejadas na imagem e listadas no painel à direita, da mais confiável para a menos confiável.",
+      "Clique numa sugestão para aproximar. Se a classe estiver errada, troque em Classe do dano.",
+      "Enter (ou Aceitar como dano) transforma a sugestão em dano; Delete (ou Não é dano) descarta. A próxima abre sozinha.",
+    ],
+    shot: { src: "/docs/12-deteccao.jpg", alt: "Editor com sugestões tracejadas da detecção automática e a lista no painel direito", caption: "Quatro sugestões tracejadas na fachada do Carmo, com a confiança de cada uma no painel à direita." },
+    tips: [
+      "Use a Confiança mínima para esconder as sugestões duvidosas.",
+      "Funciona melhor em fachadas retificadas de reboco claro. Em pedra escura, texturas fortes e sombras, confira com mais cuidado.",
+      "O painel de cada dano mostra a origem (manual, contorno IA ou detecção automática) e quem validou.",
+    ],
+  },
+  {
     id: "gut",
     title: "Defina a prioridade (matriz GUT)",
     lead: "Nem tudo precisa ser tratado agora. A matriz GUT multiplica Gravidade × Urgência × Tendência e diz o que vem primeiro.",

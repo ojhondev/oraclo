@@ -190,6 +190,20 @@ export async function buildLaudo({ site, dx, author, orgName, images, text: t }:
   /* ───────────── Metodologia ───────────── */
   heading(nextSec(), "Metodologia");
   for (const p of paragraphs(t.methodology)) para(p);
+  // rastreabilidade da IA (automático, não editável): quanto veio dela e que tudo foi validado
+  {
+    const bySource = { manual: 0, ia_contorno: 0, ia_deteccao: 0 };
+    for (const d of dx.damages) bySource[d.source ?? "manual"]++;
+    if (bySource.ia_contorno + bySource.ia_deteccao > 0) {
+      const parts = [
+        bySource.ia_deteccao > 0 && `${bySource.ia_deteccao} ${bySource.ia_deteccao === 1 ? "foi sugerido" : "foram sugeridos"} pela detecção automática`,
+        bySource.ia_contorno > 0 && `${bySource.ia_contorno} ${bySource.ia_contorno === 1 ? "foi contornado" : "foram contornados"} com apoio da IA`,
+      ].filter(Boolean);
+      para(
+        `Uso de inteligência artificial: dos ${dx.damages.length} danos deste laudo, ${parts.join(" e ")}. Todos foram revisados e validados pelo profissional responsável. A IA mapeia apenas o que é visível na imagem e não substitui ensaios, prospecções nem análise estrutural.`,
+      );
+    }
+  }
   y -= 10;
 
   /* ───────────── 3. Resumo ───────────── */

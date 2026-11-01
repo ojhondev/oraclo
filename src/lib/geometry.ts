@@ -27,6 +27,28 @@ export function polylineLengthPx(points: Pt[], closed = false) {
   return s;
 }
 
+/** Ponto dentro do polígono (regra par-ímpar). */
+export function pointInPolygon([x, y]: Pt, poly: Pt[]) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i]!;
+    const [xj, yj] = poly[j]!;
+    if (yi > y !== yj > y && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+/** Centro médio dos pontos. */
+export function centroid(points: Pt[]): Pt {
+  let x = 0;
+  let y = 0;
+  for (const p of points) {
+    x += p[0];
+    y += p[1];
+  }
+  return [x / (points.length || 1), y / (points.length || 1)];
+}
+
 /** Área (m²) e comprimento (m) de um dano; nulos se a ortofoto não tiver escala. */
 export function measure(kind: GeometryKind, points: Pt[], mmPerPixel: number | null) {
   if (!mmPerPixel) return { areaM2: null, lengthM: null };

@@ -46,6 +46,16 @@ export async function listDamages(orthophotoId: string) {
   return db.select().from(damages).where(eq(damages.orthophotoId, orthophotoId)).orderBy(asc(damages.createdAt));
 }
 
+/** Sugestões da detecção automática ainda sem revisão. */
+export async function listPendingSuggestions(orthophotoId: string) {
+  const { damageSuggestions: s } = schema;
+  return db
+    .select()
+    .from(s)
+    .where(and(eq(s.orthophotoId, orthophotoId), eq(s.status, "pendente")))
+    .orderBy(desc(s.confidence));
+}
+
 /** Biblioteca visível para a organização (padrão + personalizados). */
 export async function loadDamageTypes(orgId: string) {
   const q = () =>

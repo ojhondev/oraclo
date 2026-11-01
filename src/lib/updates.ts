@@ -31,6 +31,84 @@ export type Post = {
 
 export const POSTS: Post[] = [
   {
+    slug: "deteccao-automatica-de-danos",
+    title: "Detecção automática de danos: a IA sugere, você decide",
+    summary:
+      "Um clique e a IA percorre a fachada procurando fissuras, manchas, biodeterioração, perda de reboco e eflorescência. Cada sugestão é revisada por você, e cada dano passa a registrar de onde veio e quem validou.",
+    date: "2026-11-01",
+    category: "Produto",
+    banner: "Novo: detecção automática de danos — a IA sugere, você aceita ou rejeita.",
+    intro: [
+      "Até aqui, a IA do ArchRay trabalhava a pedido: você clicava numa mancha e ela contornava. Agora ela também faz a primeira passada sozinha. Com um clique, percorre a vista inteira e devolve sugestões tracejadas sobre a imagem.",
+      "O princípio não muda: a IA propõe, o profissional decide. Nenhuma sugestão entra no orçamento, nos quantitativos ou no laudo sem ser aceita por alguém da equipe.",
+    ],
+    sections: [
+      {
+        id: "como-usar",
+        title: "Como usar",
+        blocks: [
+          { p: "No editor do mapa de danos, use o novo botão Detectar danos na barra de ferramentas sobre a imagem. A análise roda no seu navegador e leva alguns segundos. Ao terminar, as sugestões aparecem tracejadas e listadas no painel à direita, da mais confiável para a menos confiável." },
+          {
+            list: [
+              "Clique numa sugestão para aproximar a imagem e ver o que o detector encontrou.",
+              "Enter aceita como dano, Delete rejeita, e a próxima sugestão abre sozinha.",
+              "Se a classe estiver errada (umidade em vez de sujidade, por exemplo), troque antes de aceitar.",
+              "O controle de confiança mínima esconde as sugestões mais duvidosas.",
+            ],
+          },
+          { callout: "Sugestão não é dano. Ela só vira dano depois que você aceita, e daí em diante funciona como qualquer outro: vértices editáveis, GUT, custo e laudo." },
+        ],
+      },
+      {
+        id: "o-que-detecta",
+        title: "O que ela procura",
+        blocks: [
+          {
+            table: {
+              head: ["Dano", "O que o detector observa"],
+              rows: [
+                ["Fissura", "Linha fina mais escura que a parede dos dois lados; descarta juntas, frisos e fios retos"],
+                ["Umidade e sujidade", "Mancha mosqueada mais escura que o reboco limpo; a posição e a cor indicam a classe"],
+                ["Biodeterioração e vegetação", "Regiões esverdeadas destoando da parede; descarta portas e janelas pintadas"],
+                ["Perda de reboco", "Alvenaria aparente, avermelhada em relação ao reboco"],
+                ["Eflorescência", "Manchas claras e sem cor sobre a parede"],
+              ],
+              caption: "Vãos (janelas e portas) são reconhecidos e ficam de fora da análise.",
+            },
+          },
+          { p: "Esta primeira versão usa visão computacional clássica e não um modelo treinado. Ela funciona melhor em fachadas retificadas de reboco claro e erra mais em materiais muito escuros, texturas fortes e sombras. Por isso cada sugestão mostra uma confiança, que é uma estimativa do detector e não uma precisão medida." },
+        ],
+      },
+      {
+        id: "rastreabilidade",
+        title: "Cada dano sabe de onde veio",
+        blocks: [
+          { p: "Todo dano agora registra a origem (desenho manual, contorno IA ou detecção automática), a confiança da IA quando houver, quem validou e quando. Essa informação aparece no painel do dano e, no laudo, uma declaração automática informa quantos danos tiveram apoio da IA e que todos foram revisados pelo profissional responsável." },
+          { p: "A autoria e a responsabilidade técnica continuam com quem assina o laudo. A IA mapeia o que é visível na imagem e não substitui ensaios, prospecções nem análise estrutural." },
+        ],
+      },
+      {
+        id: "custo-zero",
+        title: "Sem custo e sem enviar imagens",
+        blocks: [
+          { p: "A detecção roda inteira no navegador, como a retificação e o contorno IA. As imagens não vão para nenhum serviço externo de IA, e não há cobrança por fachada processada." },
+        ],
+      },
+      {
+        id: "treinar",
+        title: "Uma IA que aprende com o restauro",
+        blocks: [
+          { p: "Cada sugestão aceita, corrigida ou rejeitada é um exemplo do que é, e do que não é, dano em patrimônio brasileiro. Em Equipe há uma nova opção para autorizar o uso desses exemplos no treino da próxima versão da IA. Ela vem desligada e só vale com o sim de um administrador. O objetivo é treinar um modelo próprio de segmentação, afinado para materiais e argamassas locais, que continue rodando no navegador." },
+        ],
+      },
+    ],
+    author: "Equipe ArchRay",
+    notes: [
+      "A detecção automática é uma ferramenta de apoio. Revise cada sugestão antes de aceitar; o que for aceito entra no orçamento e no laudo.",
+      "A autorização de treino pode ser revogada a qualquer momento em Equipe, e a partir daí os dados da organização deixam de entrar na base.",
+    ],
+  },
+  {
     slug: "archray-mapa-de-danos-com-ia",
     title: "ArchRay: do dano apontado ao laudo pronto",
     summary:

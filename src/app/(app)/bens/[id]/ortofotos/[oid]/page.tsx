@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
+import { eq } from "drizzle-orm";
 import { editors, requireUser } from "@/lib/auth";
+import { db, schema } from "@/lib/db";
 import { getSite } from "@/lib/sites";
-import { getOrthophoto, listDamages, loadDamageTypes } from "@/lib/orthophotos";
+import { getOrthophoto, listDamages, listPendingSuggestions, loadDamageTypes } from "@/lib/orthophotos";
 import { loadPrices } from "@/lib/prices";
 import { DamageMapEditor } from "./editor";
 
@@ -19,7 +21,12 @@ export default async function OrthophotoEditorPage({ params, searchParams }: Pag
   const user = await requireUser();
   const site = await getSite(user.orgId, id);
   const ortho = await getOrthophoto(id, oid);
-  const [types, damages] = await Promise.all([loadDamageTypes(user.orgId), listDamages(oid)]);
+  const [types, damages, suggestions, people] = await Promise.all([
+    loadDamageTypes(user.orgId),
+    listDamages(oid),
+    listPendingSuggestions(oid),
+    db.select({ id: schema.users.id, name: schema.users.name }).from(schema.users).where(eq(schema.users.orgId, user.orgId)),
+  ]);
   const prices = await loadPrices(user.orgId, types);
   return (
     <DamageMapEditor
@@ -28,6 +35,8 @@ export default async function OrthophotoEditorPage({ params, searchParams }: Pag
       ortho={ortho}
       types={types}
       initialDamages={damages}
+      initialSuggestions={suggestions}
+      people={Object.fromEntries(people.map((p) => [p.id, p.name]))}
       canEdit={editors.includes(user.role)}
       prices={prices}
       initialSelected={typeof dano === "string" && damages.some((d) => d.id === dano) ? dano : null}

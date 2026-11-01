@@ -100,6 +100,23 @@ export const DOC_STEPS_EN: DocStep[] = [
     tips: ["Zoom in before clicking: the AI analyses the visible part of the image, so more zoom means more detail.", "The first time, Element mode downloads the AI model (a few MB). After that it stays cached in the browser."],
   },
   {
+    id: "deteccao",
+    title: "Let the AI look for the damage",
+    lead: "Automatic detection scans the whole view and suggests damage. You review each suggestion: nothing reaches the budget or the report until you accept it.",
+    steps: [
+      "In the editor, click Detect damage (the framed magnifier on the toolbar over the image). The analysis runs in your browser and takes a few seconds.",
+      "Suggestions appear dashed on the image and listed in the right panel, most confident first.",
+      "Click a suggestion to zoom in. If the class is wrong, change it under Classe do dano.",
+      "Enter (or Aceitar como dano) turns the suggestion into a damage; Delete (or Não é dano) discards it. The next one opens by itself.",
+    ],
+    shot: { src: "/docs/12-deteccao.jpg", alt: "Editor with dashed suggestions from automatic detection and the list in the right panel", caption: "Four dashed suggestions on the Carmo facade, each with its confidence in the right panel." },
+    tips: [
+      "Use the minimum confidence (Confiança mínima) to hide doubtful suggestions.",
+      "It works best on rectified facades with light render. On dark stone, strong textures and shadows, check more carefully.",
+      "Each damage's panel shows its origin (manual, AI outline or automatic detection) and who validated it.",
+    ],
+  },
+  {
     id: "gut",
     title: "Set the priority (GUT matrix)",
     lead: "Not everything needs treating now. The GUT matrix multiplies Severity × Urgency × Trend and tells you what comes first.",

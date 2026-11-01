@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import {
   ArrowLeft,
+  Check,
   Eye,
   EyeOff,
   FileDown,
@@ -12,6 +13,7 @@ import {
   Loader2,
   Maximize,
   Ruler,
+  ScanSearch,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
@@ -20,6 +22,7 @@ import {
   Trash2,
   Undo2,
   WandSparkles,
+  X,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
@@ -31,19 +34,21 @@ import { Badge } from "@/components/ui/badge";
 import { SimpleSelect } from "@/components/form";
 import { ConfirmButton } from "@/components/confirm-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { fmtArea, fmtLength, fmtMmPerPixel, fmtPlusMinus, measure, measureUncertainty, minPoints, polygonAreaPx, scaleFromCalibration, selfIntersects, type Pt } from "@/lib/geometry";
+import { centroid, fmtArea, fmtLength, fmtMmPerPixel, fmtPlusMinus, measure, measureUncertainty, minPoints, pointInPolygon, polygonAreaPx, scaleFromCalibration, selfIntersects, type Pt } from "@/lib/geometry";
 import { geometryKinds, severities } from "@/lib/labels";
 import { TREND_LABELS, URGENCY_LABELS, budget, damageCostCents, fmtBRL, gut, priority, unitLabels, type Price } from "@/lib/pricing";
 import type { schema } from "@/lib/db";
-import { calibrate, createDamage, deleteDamage, deleteOrthophoto, setScale, updateDamage } from "../actions";
+import { acceptSuggestions, calibrate, createDamage, deleteDamage, deleteOrthophoto, rejectSuggestions, saveSuggestions, setScale, updateDamage } from "../actions";
 import { DamagePattern, lineStyle } from "./patterns";
 import { fmtPrecision } from "@/lib/rectify";
 import { getSam, type SamProgress } from "@/lib/sam/client";
 import type { SamMask, SamRegion } from "@/lib/sam/protocol";
+import { runDetection } from "@/lib/detect/client";
 
 type Orthophoto = typeof schema.orthophotos.$inferSelect;
 type Damage = typeof schema.damages.$inferSelect;
 type DamageType = typeof schema.damageTypes.$inferSelect;
+type Suggestion = typeof schema.damageSuggestions.$inferSelect;
 type View = { x: number; y: number; w: number; h: number };
 type Tool = "mover" | "desenhar" | "calibrar" | "contorno";
 type AiPoint = { p: Pt; label: 0 | 1 };
@@ -65,6 +70,8 @@ export function DamageMapEditor({
   ortho,
   types,
   initialDamages,
+  initialSuggestions,
+  people,
   canEdit,
   prices,
   initialSelected,
@@ -74,6 +81,10 @@ export function DamageMapEditor({
   ortho: Orthophoto;
   types: DamageType[];
   initialDamages: Damage[];
+  /** Sugestões pendentes da detecção automática. */
+  initialSuggestions: Suggestion[];
+  /** Nomes da equipe (id → nome), para mostrar quem validou cada dano. */
+  people: Record<string, string>;
   canEdit: boolean;
   prices: Record<string, Price>;
   initialSelected?: string | null;
@@ -134,16 +145,28 @@ export function DamageMapEditor({
   const [boxDrag, setBoxDrag] = useState<[Pt, Pt] | null>(null);
   const aiRegionRef = useRef<SamRegion | null>(null);
   const aiSeq = useRef(0);
+  // detecção automática: sugestões tracejadas, revisadas uma a uma (nada entra sem aceitar)
+  const [suggestions, setSuggestions] = useState(initialSuggestions);
+  const [selSug, setSelSug] = useState<string | null>(null);
+  const [sugType, setSugType] = useState<Record<string, string>>({});
+  const [detecting, setDetecting] = useState<string | null>(null);
+  const [minConf, setMinConf] = useState(0.4);
 
   const svgRef = useRef<SVGSVGElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef(view);
-  viewRef.current = view;
+  useLayoutEffect(() => {
+    viewRef.current = view;
+  }, [view]);
+  const [grabbing, setGrabbing] = useState(false);
   const panRef = useRef<{ sx: number; sy: number; vx: number; vy: number; moved: boolean; button: number } | null>(null);
   const spaceRef = useRef(false);
 
   const activeType = typeId ? typeById.get(typeId) ?? null : null;
   const selDamage = damages.find((d) => d.id === selected) ?? null;
+  const sugTypeOf = (s: Suggestion) => typeById.get(sugType[s.id] ?? s.typeId) ?? typeById.get(s.typeId);
+  const visibleSugs = suggestions.filter((s) => s.confidence >= minConf - 1e-9 && !hidden.has(s.typeId));
+  const selSuggestion = visibleSugs.find((s) => s.id === selSug) ?? null;
 
   /* ── viewport ── */
   useEffect(() => {
@@ -381,6 +404,111 @@ export function DamageMapEditor({
     if (m === "elemento") ensureEncoded([]).then(() => setAiStatus((s) => (s === "encoding" ? "idle" : s))).catch(failAi);
   }, [activeType, types, clearAi, ensureEncoded, failAi]);
 
+  /** Centraliza a vista num conjunto de pontos (com folga), mantendo a proporção da tela. */
+  const focusOn = (points: Pt[]) => {
+    if (!points.length) return;
+    const xs = points.map((p) => p[0]);
+    const ys = points.map((p) => p[1]);
+    const [x0, x1, y0, y1] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)];
+    setView((v) => {
+      const aspect = v.h / v.w;
+      const w = Math.min(W * 1.1, Math.max(W / 14, (x1 - x0) * 2.6, ((y1 - y0) * 2.6) / aspect));
+      return { x: (x0 + x1) / 2 - w / 2, y: (y0 + y1) / 2 - (w * aspect) / 2, w, h: w * aspect };
+    });
+  };
+
+  const typeByCode = useMemo(() => {
+    const m = new Map<string, DamageType>();
+    // o tipo personalizado do escritório vale mais que o padrão de mesmo código
+    for (const t of types) if (!m.has(t.code) || t.orgId) m.set(t.code, t);
+    return m;
+  }, [types]);
+
+  async function detect() {
+    if (detecting) return;
+    setSelected(null);
+    setSelSug(null);
+    setTool("mover");
+    setDraft([]);
+    clearAi();
+    setDetecting("Preparando a análise");
+    try {
+      const { detections, ms } = await runDetection(ortho.url, setDetecting);
+      // o que já está marcado não volta como sugestão
+      const covered = (p: Pt) => damages.some((d) => typeById.get(d.typeId)?.geometry === "area" && pointInPolygon(p, pts(d)));
+      const list = detections.flatMap((d) => {
+        const t = typeByCode.get(d.code);
+        const points = d.points as Pt[];
+        if (!t || covered(centroid(points))) return [];
+        return [{ typeId: t.id, points, confidence: Math.round(d.confidence * 100) / 100, detector: d.detector }];
+      });
+      setDetecting("Salvando as sugestões");
+      const saved = await saveSuggestions(siteId, ortho.id, list);
+      setSuggestions(saved);
+      setMinConf((m) => Math.min(m, 0.4));
+      if (saved.length)
+        toast.success(`${saved.length} ${saved.length === 1 ? "sugestão" : "sugestões"} da IA em ${(ms / 1000).toFixed(1)} s`, {
+          description: "Confira uma a uma: aceite o que é dano e rejeite o que não é. Nada entra no orçamento sem você aceitar.",
+        });
+      else
+        toast.info("A detecção não encontrou danos novos nesta vista.", {
+          description: "Ela procura fissuras, manchas de umidade e sujidade, biodeterioração, perda de reboco e eflorescência.",
+        });
+      window.dispatchEvent(new Event("archray:deteccao-ia"));
+    } catch (e) {
+      toast.error("Não foi possível rodar a detecção neste navegador.", { description: (e as Error).message });
+    } finally {
+      setDetecting(null);
+    }
+  }
+
+  /** Próxima sugestão para revisar depois de decidir sobre `ids` (segue a ordem de confiança). */
+  const nextAfter = (ids: string[]) => {
+    const rest = visibleSugs.filter((s) => !ids.includes(s.id));
+    if (!rest.length) return null;
+    const i = visibleSugs.findIndex((s) => s.id === ids[0]);
+    return rest.find((s) => visibleSugs.indexOf(s) > i) ?? rest[0]!;
+  };
+  const reviewNext = (ids: string[]) => {
+    const next = ids.length === 1 && selSug === ids[0] ? nextAfter(ids) : null;
+    setSelSug(next?.id ?? null);
+    if (next) focusOn(next.geometry.points as Pt[]);
+  };
+
+  function acceptSugs(ids: string[]) {
+    if (!ids.length || !canEdit) return;
+    const prev = suggestions;
+    const over = Object.fromEntries(ids.filter((id) => sugType[id]).map((id) => [id, sugType[id]!]));
+    setSuggestions((list) => list.filter((s) => !ids.includes(s.id)));
+    reviewNext(ids);
+    startBusy(async () => {
+      try {
+        const created = await acceptSuggestions(siteId, ortho.id, ids, over);
+        setDamages((list) => [...list, ...created]);
+        if (ids.length > 1) toast.success(`${created.length} ${created.length === 1 ? "dano aceito" : "danos aceitos"}.`);
+        window.dispatchEvent(new Event("archray:sugestao-aceita"));
+      } catch (e) {
+        setSuggestions(prev);
+        toast.error((e as Error).message);
+      }
+    });
+  }
+
+  function rejectSugs(ids: string[]) {
+    if (!ids.length || !canEdit) return;
+    const prev = suggestions;
+    setSuggestions((list) => list.filter((s) => !ids.includes(s.id)));
+    reviewNext(ids);
+    startBusy(async () => {
+      try {
+        await rejectSuggestions(siteId, ortho.id, ids);
+      } catch (e) {
+        setSuggestions(prev);
+        toast.error((e as Error).message);
+      }
+    });
+  }
+
   /* ── desenho ── */
   const cancelDraft = useCallback(() => {
     setDraft([]);
@@ -389,7 +517,7 @@ export function DamageMapEditor({
   }, [tool, clearAi]);
 
   const finishDraft = useCallback(
-    (points: Pt[], exact = false) => {
+    (points: Pt[], exact = false, meta: { source: "manual" | "ia_contorno"; confidence: number | null } = { source: "manual", confidence: null }) => {
       if (!activeType) return;
       // remove pontos repetidos (duplo clique): menos de 2 px de tela de distância
       const ctm = svgRef.current?.getScreenCTM();
@@ -414,11 +542,13 @@ export function DamageMapEditor({
         urgency: 3,
         trend: 3,
         ...measure(activeType.geometry, clean, mm),
+        source: meta.source,
+        aiConfidence: meta.confidence,
       } as Damage;
       setDamages((list) => [...list, temp]);
       startBusy(async () => {
         try {
-          const saved = await createDamage(siteId, ortho.id, { typeId: activeType.id, points: clean });
+          const saved = await createDamage(siteId, ortho.id, { typeId: activeType.id, points: clean, ...meta });
           setDamages((list) => list.map((d) => (d.id === tempId ? saved : d)));
           setSelected(saved.id);
         } catch (e) {
@@ -433,11 +563,13 @@ export function DamageMapEditor({
   const aiPolygon = aiMasks[aiIndex]?.points ?? null;
   const saveAi = useCallback(() => {
     if (!aiPolygon || aiStatus !== "idle") return;
-    finishDraft(aiPolygon as Pt[], true);
+    // no modo Elemento a nota do SAM (IoU previsto) é a confiança; a Mancha (por cor) não tem nota
+    const score = aiMode === "elemento" ? aiMasks[aiIndex]?.score : undefined;
+    finishDraft(aiPolygon as Pt[], true, { source: "ia_contorno", confidence: score == null ? null : Math.max(0, Math.min(1, score)) });
     clearAi();
     // avisa a demonstração guiada de que um dano foi salvo pelo Contorno IA
     window.dispatchEvent(new Event("archray:contorno-ia"));
-  }, [aiPolygon, aiStatus, finishDraft, clearAi]);
+  }, [aiPolygon, aiStatus, aiMode, aiMasks, aiIndex, finishDraft, clearAi]);
   const cycleAi = () => aiMasks.length > 1 && setAiIndex((i) => (i + 1) % aiMasks.length);
   const undoAi = () => {
     const next = aiPoints.slice(0, -1);
@@ -445,6 +577,31 @@ export function DamageMapEditor({
     if (next.length) runAi(next);
     else clearAi();
   };
+
+  function removeDamage(id: string) {
+    const prev = damages;
+    setDamages((list) => list.filter((d) => d.id !== id));
+    setSelected(null);
+    startBusy(async () => {
+      try {
+        await deleteDamage(siteId, ortho.id, id);
+      } catch (e) {
+        setDamages(prev);
+        toast.error((e as Error).message);
+      }
+    });
+  }
+
+  function patchDamage(id: string, patch: Parameters<typeof updateDamage>[3]) {
+    startBusy(async () => {
+      try {
+        const saved = await updateDamage(siteId, ortho.id, id, patch);
+        setDamages((list) => list.map((d) => (d.id === id ? saved : d)));
+      } catch (e) {
+        toast.error((e as Error).message);
+      }
+    });
+  }
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -454,6 +611,12 @@ export function DamageMapEditor({
       if (e.key === "Escape") {
         cancelDraft();
         setSelected(null);
+        setSelSug(null);
+      }
+      if (selSug && canEdit && tool === "mover") {
+        if (e.key === "Enter") acceptSugs([selSug]);
+        if (e.key === "Delete" || e.key === "Backspace") rejectSugs([selSug]);
+        return;
       }
       if (tool === "contorno" && aiMode === "mancha" && (e.key === "-" || e.key === "=" || e.key === "+")) {
         changeTol(tol + (e.key === "-" ? -2 : 2));
@@ -485,31 +648,6 @@ export function DamageMapEditor({
     };
   });
 
-  function removeDamage(id: string) {
-    const prev = damages;
-    setDamages((list) => list.filter((d) => d.id !== id));
-    setSelected(null);
-    startBusy(async () => {
-      try {
-        await deleteDamage(siteId, ortho.id, id);
-      } catch (e) {
-        setDamages(prev);
-        toast.error((e as Error).message);
-      }
-    });
-  }
-
-  function patchDamage(id: string, patch: Parameters<typeof updateDamage>[3]) {
-    startBusy(async () => {
-      try {
-        const saved = await updateDamage(siteId, ortho.id, id, patch);
-        setDamages((list) => list.map((d) => (d.id === id ? saved : d)));
-      } catch (e) {
-        toast.error((e as Error).message);
-      }
-    });
-  }
-
   /* ── ponteiro ── */
   function onPointerDown(e: React.PointerEvent) {
     try {
@@ -535,7 +673,10 @@ export function DamageMapEditor({
     const dy = e.clientY - pan.sy;
     if (Math.hypot(dx, dy) > 4) pan.moved = true;
     const canPan = tool === "mover" || spaceRef.current || pan.button === 1;
-    if (pan.moved && canPan) setView((v) => ({ ...v, x: pan.vx - dx / scale, y: pan.vy - dy / scale }));
+    if (pan.moved && canPan) {
+      if (!grabbing) setGrabbing(true);
+      setView((v) => ({ ...v, x: pan.vx - dx / scale, y: pan.vy - dy / scale }));
+    }
     // Contorno IA: arrastar desenha a caixa em volta do dano
     else if (pan.moved && tool === "contorno" && pan.button === 0 && canEdit) setBoxDrag([toImage(pan.sx, pan.sy), p]);
   }
@@ -543,6 +684,7 @@ export function DamageMapEditor({
   function onPointerUp(e: React.PointerEvent) {
     const pan = panRef.current;
     panRef.current = null;
+    setGrabbing(false);
     if (drag) {
       const id = selected!;
       const points = drag.points;
@@ -593,6 +735,7 @@ export function DamageMapEditor({
       return;
     }
     if ((e.target as Element).getAttribute("data-damage") === null) setSelected(null);
+    if ((e.target as Element).getAttribute("data-sug") === null) setSelSug(null);
   }
 
   function onDoubleClick() {
@@ -684,7 +827,7 @@ export function DamageMapEditor({
     return { area, length, urgent };
   }, [damages, typeById]);
 
-  const cursor = tool === "desenhar" || tool === "calibrar" || tool === "contorno" ? (aiStatus !== "idle" && tool === "contorno" ? "progress" : "crosshair") : panRef.current?.moved ? "grabbing" : "grab";
+  const cursor = tool === "desenhar" || tool === "calibrar" || tool === "contorno" ? (aiStatus !== "idle" && tool === "contorno" ? "progress" : "crosshair") : grabbing ? "grabbing" : "grab";
 
   /* ── render ── */
   function renderDamage(d: Damage) {
@@ -693,7 +836,9 @@ export function DamageMapEditor({
     const isSel = d.id === selected;
     const points = isSel && drag ? drag.points : pts(d);
     const select = () => {
-      if (tool === "mover") setSelected(d.id);
+      if (tool !== "mover") return;
+      setSelected(d.id);
+      setSelSug(null);
     };
     const common = { "data-damage": d.id, onPointerDown: select, style: { cursor: tool === "mover" ? "pointer" : undefined } };
     if (t.geometry === "area") {
@@ -737,6 +882,49 @@ export function DamageMapEditor({
         <text x={x} y={y + 3.5 * unit} fontSize={9 * unit} textAnchor="middle" fill="#fff" fontWeight={600} pointerEvents="none">
           {t.code}
         </text>
+      </g>
+    );
+  }
+
+  function renderSuggestion(s: Suggestion) {
+    const t = sugTypeOf(s);
+    if (!t) return null;
+    const isSel = s.id === selSug;
+    const p = s.geometry.points as Pt[];
+    const common = {
+      "data-sug": s.id,
+      onPointerDown: () => {
+        if (tool !== "mover") return;
+        setSelSug(s.id);
+        setSelected(null);
+      },
+      style: { cursor: tool === "mover" ? "pointer" : undefined },
+    };
+    if (t.geometry === "ponto") {
+      const [x, y] = p[0] ?? [0, 0];
+      return (
+        <g key={s.id} {...common}>
+          <circle cx={x} cy={y} r={(isSel ? 10 : 8) * unit} fill={t.color} fillOpacity={0.35} stroke="#fff" strokeWidth={2 * unit} strokeDasharray={`${3 * unit} ${2 * unit}`} data-sug={s.id} />
+          <text x={x} y={y + 3.5 * unit} fontSize={9 * unit} textAnchor="middle" fill="#fff" fontWeight={700} pointerEvents="none">?</text>
+        </g>
+      );
+    }
+    const Shape = t.geometry === "area" ? "polygon" : "polyline";
+    return (
+      <g key={s.id}>
+        <Shape points={toPath(p)} fill="none" stroke="#000" strokeOpacity={0.55} strokeWidth={isSel ? 5 : 3.5} vectorEffect="non-scaling-stroke" strokeLinejoin="round" pointerEvents="none" />
+        <Shape
+          {...common}
+          points={toPath(p)}
+          fill={t.geometry === "area" ? t.color : "none"}
+          fillOpacity={isSel ? 0.32 : 0.16}
+          stroke={isSel ? "#fff" : t.color}
+          strokeWidth={isSel ? 2.5 : 1.8}
+          strokeDasharray="6 4"
+          vectorEffect="non-scaling-stroke"
+          strokeLinejoin="round"
+        />
+        {t.geometry === "linha" && <Shape {...common} points={toPath(p)} fill="none" stroke="transparent" strokeWidth={12} vectorEffect="non-scaling-stroke" />}
       </g>
     );
   }
@@ -925,6 +1113,7 @@ export function DamageMapEditor({
               <rect x={0} y={0} width={W} height={H} fill="none" stroke="#fff" strokeOpacity={0.25} vectorEffect="non-scaling-stroke" />
 
               {damages.map(renderDamage)}
+              {visibleSugs.map(renderSuggestion)}
 
               {/* vértices do dano selecionado (arrastáveis) */}
               {canEdit && selDamage && tool === "mover" && typeById.get(selDamage.typeId)?.geometry !== "ponto" &&
@@ -1028,6 +1217,15 @@ export function DamageMapEditor({
                 <WandSparkles className="size-4" />
               </ToolBtn>
             )}
+            {canEdit && (
+              <ToolBtn
+                onClick={detect}
+                label="Detectar danos automaticamente: a IA roda no seu navegador e sugere; você aceita ou rejeita cada um"
+                dataTour="detectar-danos"
+              >
+                {detecting ? <Loader2 className="size-4 animate-spin" /> : <ScanSearch className="size-4" />}
+              </ToolBtn>
+            )}
             {draft.length > 0 && (
               <ToolBtn onClick={() => setDraft((d) => d.slice(0, -1))} label="Desfazer último ponto (Backspace)"><Undo2 className="size-4" /></ToolBtn>
             )}
@@ -1106,7 +1304,9 @@ export function DamageMapEditor({
 
             {/* dica de uso */}
             <p className="max-w-full rounded-2xl bg-black/65 px-3 py-1.5 text-center text-[12px] text-balance text-white/90 backdrop-blur">
-              {tool === "calibrar"
+              {detecting
+                ? `Detecção automática: ${detecting.toLowerCase()}… (roda no seu navegador)`
+                : tool === "calibrar"
                 ? draft.length
                   ? "Clique no segundo extremo da medida."
                   : "Clique no primeiro extremo de uma medida conhecida."
@@ -1132,6 +1332,10 @@ export function DamageMapEditor({
                   ? activeType.geometry === "ponto"
                     ? `${activeType.name}: clique para marcar. Esc para sair.`
                     : `${activeType.name}: clique para adicionar pontos · duplo clique ou Enter para concluir · Backspace desfaz · Esc cancela`
+                  : canEdit && selSuggestion
+                    ? "Sugestão da IA: Enter aceita como dano · Delete rejeita · Esc fecha"
+                  : canEdit && visibleSugs.length
+                    ? `${visibleSugs.length} ${visibleSugs.length === 1 ? "sugestão tracejada" : "sugestões tracejadas"} da IA: clique para revisar · roda do mouse = zoom`
                   : canEdit
                     ? "Escolha um dano na biblioteca para desenhar · roda do mouse = zoom · arraste para mover"
                     : "Roda do mouse = zoom · arraste para mover"}
@@ -1141,7 +1345,7 @@ export function DamageMapEditor({
         </div>
 
         {/* painel direito */}
-        {!panels.side && !selDamage && (
+        {!panels.side && !selDamage && !selSuggestion && (
           <button
             onClick={() => togglePanel("side")}
             aria-label="Mostrar painel de orçamento"
@@ -1152,7 +1356,7 @@ export function DamageMapEditor({
           </button>
         )}
         {/* com um dano selecionado o painel abre mesmo recolhido, para editar; ao fechar o dano ele recolhe de novo */}
-        <aside data-tour="painel-orcamento" className={cn("thin-scroll hidden w-72 shrink-0 overflow-y-auto border-l bg-background 2xl:w-80", (panels.side || selDamage) && "lg:block")}>
+        <aside data-tour="painel-orcamento" className={cn("thin-scroll hidden w-72 shrink-0 overflow-y-auto border-l bg-background 2xl:w-80", (panels.side || selDamage || selSuggestion) && "lg:block")}>
           {selDamage ? (
             <DamagePanel
               key={selDamage.id}
@@ -1163,12 +1367,45 @@ export function DamageMapEditor({
               mmPerPixel={mm}
               precisionMm={ortho.rectification?.precisionMm ?? null}
               canEdit={canEdit && !selDamage.id.startsWith("tmp-")}
+              people={people}
               onClose={() => setSelected(null)}
               onPatch={(patch) => patchDamage(selDamage.id, patch)}
               onDelete={() => removeDamage(selDamage.id)}
             />
+          ) : selSuggestion ? (
+            <SuggestionPanel
+              key={selSuggestion.id}
+              suggestion={selSuggestion}
+              type={sugTypeOf(selSuggestion)!}
+              types={types}
+              mmPerPixel={mm}
+              canEdit={canEdit}
+              position={visibleSugs.indexOf(selSuggestion) + 1}
+              total={visibleSugs.length}
+              onType={(v) => setSugType((m) => ({ ...m, [selSuggestion.id]: v }))}
+              onAccept={() => acceptSugs([selSuggestion.id])}
+              onReject={() => rejectSugs([selSuggestion.id])}
+              onClose={() => setSelSug(null)}
+            />
           ) : (
             <div className="flex min-w-0 flex-col gap-6 p-4 pb-20">
+              {suggestions.length > 0 && (
+                <SuggestionsCard
+                  all={suggestions.length}
+                  visible={visibleSugs}
+                  typeOf={sugTypeOf}
+                  minConf={minConf}
+                  onMinConf={setMinConf}
+                  canEdit={canEdit}
+                  onOpen={(s) => {
+                    setTool("mover");
+                    setSelSug(s.id);
+                    focusOn(s.geometry.points as Pt[]);
+                  }}
+                  onAccept={acceptSugs}
+                  onReject={rejectSugs}
+                />
+              )}
               {/* orçamento da vista */}
               <div className="rounded-xl border bg-card p-3.5">
                 <div className="flex items-baseline justify-between gap-2">
@@ -1267,6 +1504,7 @@ export function DamageMapEditor({
                             onClick={() => {
                               setTool("mover");
                               setSelected(d.id);
+                              setSelSug(null);
                             }}
                             className="flex w-full min-w-0 items-start gap-2.5 rounded-md px-1.5 py-1.5 text-left hover:bg-muted"
                           >
@@ -1320,10 +1558,11 @@ function Swatch({ type }: { type: DamageType }) {
   );
 }
 
-function ToolBtn({ active, onClick, label, children }: { active?: boolean; onClick: () => void; label: string; children: React.ReactNode }) {
+function ToolBtn({ active, onClick, label, children, dataTour }: { active?: boolean; onClick: () => void; label: string; children: React.ReactNode; dataTour?: string }) {
   return (
     <button
       type="button"
+      data-tour={dataTour}
       title={label}
       aria-label={label}
       onClick={onClick}
@@ -1342,6 +1581,7 @@ function DamagePanel({
   mmPerPixel,
   precisionMm,
   canEdit,
+  people,
   onClose,
   onPatch,
   onDelete,
@@ -1354,6 +1594,7 @@ function DamagePanel({
   /** Precisão (95%) da retificação da vista, em mm; nula em vistas sem retificação. */
   precisionMm: number | null;
   canEdit: boolean;
+  people: Record<string, string>;
   onClose: () => void;
   onPatch: (p: Parameters<typeof updateDamage>[3]) => void;
   onDelete: () => void;
@@ -1391,6 +1632,12 @@ function DamagePanel({
         {type.geometry === "area" && <Badge variant="secondary">{fmtArea(damage.areaM2)}</Badge>}
         {type.geometry !== "ponto" && <Badge variant="secondary">{type.geometry === "area" ? "perímetro " : ""}{fmtLength(damage.lengthM)}</Badge>}
       </div>
+      <p className="-mt-2 text-[11.5px] leading-snug text-muted-foreground">
+        {SOURCE_LABELS[damage.source ?? "manual"]}
+        {damage.aiConfidence != null && ` · confiança ${Math.round(damage.aiConfidence * 100)}%`}
+        {damage.reviewedBy &&
+          ` · validado por ${people[damage.reviewedBy] ?? "membro da equipe"}${damage.reviewedAt ? ` em ${new Date(damage.reviewedAt).toLocaleDateString("pt-BR")}` : ""}`}
+      </p>
       {(unc.areaM2 != null || unc.lengthM != null) && (
         <p className="-mt-2 text-[11.5px] leading-snug text-muted-foreground">
           Margem de erro (95%): {[unc.areaM2 != null && `área ${fmtPlusMinus(unc.areaM2, "m²")}`, unc.lengthM != null && `${type.geometry === "area" ? "perímetro" : "comprimento"} ${fmtPlusMinus(unc.lengthM, "m")}`].filter(Boolean).join(" · ")}. Vem da precisão da retificação da vista.
@@ -1468,6 +1715,195 @@ function DamagePanel({
       {canEdit && type.geometry !== "ponto" && (
         <p className="text-[12px] text-muted-foreground">Arraste os vértices brancos na imagem para ajustar o desenho.</p>
       )}
+    </div>
+  );
+}
+
+const SOURCE_LABELS: Record<NonNullable<Damage["source"]>, string> = {
+  manual: "Desenho manual",
+  ia_contorno: "Contorno IA",
+  ia_deteccao: "Detecção automática",
+};
+
+/** O que cada detector viu (mostrado ao revisar a sugestão). */
+const DETECTOR_HINTS: Record<string, string> = {
+  fissura: "Linha fina mais escura que a parede dos dois lados.",
+  verde: "Região esverdeada destoando da parede: fungos, musgos, liquens ou plantas.",
+  reboco: "Região avermelhada destoando do reboco: alvenaria aparente.",
+  mancha: "Mancha mais escura e mosqueada sobre o reboco claro.",
+  clara: "Mancha clara e sem cor sobre a parede: sais na superfície.",
+};
+
+function SuggestionsCard({
+  all,
+  visible,
+  typeOf,
+  minConf,
+  onMinConf,
+  canEdit,
+  onOpen,
+  onAccept,
+  onReject,
+}: {
+  all: number;
+  visible: Suggestion[];
+  typeOf: (s: Suggestion) => DamageType | undefined;
+  minConf: number;
+  onMinConf: (v: number) => void;
+  canEdit: boolean;
+  onOpen: (s: Suggestion) => void;
+  onAccept: (ids: string[]) => void;
+  onReject: (ids: string[]) => void;
+}) {
+  return (
+    <div className="rounded-xl border border-dashed bg-card p-3.5" data-tour="sugestoes-ia">
+      <div className="flex items-baseline justify-between gap-2">
+        <p className="label">Sugestões da IA</p>
+        <span className="text-[11.5px] text-muted-foreground tabular-nums">
+          {visible.length} de {all}
+        </span>
+      </div>
+      <p className="mt-1 text-[11.5px] leading-snug text-muted-foreground">
+        Detecção automática feita no seu navegador. Nada entra no orçamento nem no laudo sem você aceitar.
+      </p>
+      <label className="mt-3 flex items-center gap-2 text-[12px]" title="Esconde as sugestões com confiança abaixo deste valor">
+        <span className="shrink-0 text-muted-foreground">Confiança mínima</span>
+        <input
+          type="range"
+          min={30}
+          max={80}
+          step={5}
+          value={Math.round(minConf * 100)}
+          onChange={(e) => onMinConf(Number(e.target.value) / 100)}
+          className="h-1 min-w-0 flex-1 cursor-pointer accent-foreground"
+        />
+        <span className="w-8 shrink-0 text-right tabular-nums">{Math.round(minConf * 100)}%</span>
+      </label>
+      {visible.length === 0 ? (
+        <p className="mt-2 text-[12.5px] text-muted-foreground">Nenhuma sugestão acima desta confiança.</p>
+      ) : (
+        <ul className="thin-scroll -mx-1.5 mt-2 grid max-h-64 grid-cols-1 overflow-y-auto">
+          {visible.map((s) => {
+            const t = typeOf(s);
+            if (!t) return null;
+            return (
+              <li key={s.id} className="flex min-w-0 items-center gap-1">
+                <button onClick={() => onOpen(s)} className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1.5 py-1.5 text-left hover:bg-muted">
+                  <Swatch type={t} />
+                  <span className="min-w-0 flex-1 truncate text-[13px]" title={t.name}>
+                    {t.name}
+                  </span>
+                  <span className="shrink-0 text-[11.5px] text-muted-foreground tabular-nums">{Math.round(s.confidence * 100)}%</span>
+                </button>
+                {canEdit && (
+                  <>
+                    <button onClick={() => onAccept([s.id])} aria-label={`Aceitar ${t.name}`} title="Aceitar como dano" className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <Check className="size-3.5" />
+                    </button>
+                    <button onClick={() => onReject([s.id])} aria-label={`Rejeitar ${t.name}`} title="Não é dano" className="grid size-6 shrink-0 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground">
+                      <X className="size-3.5" />
+                    </button>
+                  </>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {canEdit && visible.length > 1 && (
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <Button size="sm" variant="secondary" onClick={() => onAccept(visible.map((s) => s.id))}>
+            Aceitar as {visible.length}
+          </Button>
+          <Button size="sm" variant="ghost" onClick={() => onReject(visible.map((s) => s.id))}>
+            Rejeitar as {visible.length}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SuggestionPanel({
+  suggestion,
+  type,
+  types,
+  mmPerPixel,
+  canEdit,
+  position,
+  total,
+  onType,
+  onAccept,
+  onReject,
+  onClose,
+}: {
+  suggestion: Suggestion;
+  type: DamageType;
+  types: DamageType[];
+  mmPerPixel: number | null;
+  canEdit: boolean;
+  position: number;
+  total: number;
+  onType: (typeId: string) => void;
+  onAccept: () => void;
+  onReject: () => void;
+  onClose: () => void;
+}) {
+  const points = suggestion.geometry.points as Pt[];
+  const m = measure(type.geometry, points, mmPerPixel);
+  const hint = DETECTOR_HINTS[suggestion.detector.split(":")[1] ?? ""];
+  return (
+    <div className="grid min-w-0 grid-cols-1 gap-4 p-4 pb-20">
+      <div className="flex items-center gap-2">
+        <button onClick={onClose} className="text-[12.5px] text-muted-foreground hover:text-foreground">
+          ← Todos os danos
+        </button>
+        <span className="ml-auto text-[11.5px] text-muted-foreground tabular-nums">
+          {position} de {total}
+        </span>
+      </div>
+      <div>
+        <Badge variant="outline" className="border-dashed">
+          Sugestão da IA · confiança {Math.round(suggestion.confidence * 100)}%
+        </Badge>
+        <div className="mt-2.5 flex items-start gap-2">
+          <span className="mt-[3px] flex shrink-0">
+            <Swatch type={type} />
+          </span>
+          <span className="min-w-0 text-[16px] leading-tight font-medium break-words">{type.name}</span>
+        </div>
+        {hint && <p className="mt-1.5 text-[12.5px] leading-snug text-muted-foreground">{hint}</p>}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <Badge variant="outline">{geometryKinds[type.geometry]}</Badge>
+        {type.geometry === "area" && <Badge variant="secondary">{fmtArea(m.areaM2)}</Badge>}
+        {type.geometry === "linha" && <Badge variant="secondary">{fmtLength(m.lengthM)}</Badge>}
+      </div>
+      <label className="grid min-w-0 grid-cols-1 gap-1.5 text-[12.5px] font-medium text-foreground/80">
+        Classe do dano
+        <SimpleSelect
+          options={types.filter((t) => t.geometry === type.geometry).map((t) => ({ value: t.id, label: t.name }))}
+          value={type.id}
+          onValueChange={(v) => canEdit && onType(v)}
+        />
+      </label>
+      {canEdit && (
+        <div className="grid gap-2">
+          <Button onClick={onAccept}>
+            <Check /> Aceitar como dano
+          </Button>
+          <Button variant="outline" onClick={onReject}>
+            <X /> Não é dano
+          </Button>
+          <p className="text-[11.5px] leading-snug text-muted-foreground">
+            Enter aceita, Delete rejeita e a próxima sugestão abre sozinha. Depois de aceito, ajuste o contorno arrastando os vértices.
+          </p>
+        </div>
+      )}
+      <p className="rounded-lg bg-muted px-3 py-2 text-[11.5px] leading-snug text-muted-foreground">
+        A confiança é uma estimativa do detector, não uma precisão medida. Ao aceitar, o dano fica registrado como detectado pela IA e
+        validado por você. As rejeitadas ensinam a IA o que não é dano.
+      </p>
     </div>
   );
 }

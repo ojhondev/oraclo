@@ -31,6 +31,9 @@ export const organizations = pgTable("organizations", {
   id: id(),
   name: text("name").notNull(),
   plan: text("plan").notNull().default("ateliê"),
+  /** Autoriza o ArchRay a usar os danos revisados (imagens + contornos) para treinar a IA de detecção. */
+  trainingConsent: boolean("training_consent").notNull().default(false),
+  trainingConsentAt: timestamp("training_consent_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
 
@@ -300,6 +303,10 @@ export const damageTypes = pgTable("damage_types", {
 
 export const severityEnum = pgEnum("severity", ["baixa", "media", "alta", "critica"]);
 
+/** De onde veio o desenho do dano: à mão, contorno IA (clique do usuário) ou detecção automática aceita. */
+export const damageSourceEnum = pgEnum("damage_source", ["manual", "ia_contorno", "ia_deteccao"]);
+export type DamageSource = (typeof damageSourceEnum.enumValues)[number];
+
 export const damages = pgTable("damages", {
   id: id(),
   siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
@@ -317,9 +324,38 @@ export const damages = pgTable("damages", {
   cause: text("cause"),
   recommendation: text("recommendation"),
   notes: text("notes"),
+  source: damageSourceEnum("source").notNull().default("manual"),
+  /** Confiança da IA (0–1) quando o desenho veio dela; estimativa do detector, não precisão medida. */
+  aiConfidence: real("ai_confidence"),
+  /** Profissional que validou o dano (humano no circuito: nada da IA entra sem revisão). */
+  reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 }, (t) => [index("damages_site_idx").on(t.siteId)]);
+
+export const suggestionStatusEnum = pgEnum("suggestion_status", ["pendente", "aceita", "rejeitada"]);
+
+/**
+ * Sugestões da detecção automática. Não são danos: só viram dano quando o profissional aceita.
+ * As rejeitadas ficam guardadas como exemplo negativo para treinar a IA.
+ */
+export const damageSuggestions = pgTable("damage_suggestions", {
+  id: id(),
+  siteId: uuid("site_id").notNull().references(() => sites.id, { onDelete: "cascade" }),
+  orthophotoId: uuid("orthophoto_id").notNull().references(() => orthophotos.id, { onDelete: "cascade" }),
+  typeId: uuid("type_id").notNull().references(() => damageTypes.id, { onDelete: "cascade" }),
+  geometry: jsonb("geometry").$type<{ points: [number, number][] }>().notNull(),
+  confidence: real("confidence").notNull(),
+  /** Detector e versão (ex.: "cv-1:fissura"). */
+  detector: text("detector").notNull(),
+  status: suggestionStatusEnum("status").notNull().default("pendente"),
+  damageId: uuid("damage_id").references(() => damages.id, { onDelete: "set null" }),
+  reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: createdAt(),
+}, (t) => [index("damage_suggestions_ortho_idx").on(t.orthophotoId)]);
 
 /** Rascunho do laudo (texto editado pelo profissional) de um projeto, por vistoria ("all" = todas). */
 export const reportDrafts = pgTable("report_drafts", {

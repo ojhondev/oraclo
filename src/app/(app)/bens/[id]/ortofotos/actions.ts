@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { z } from "zod";
 import { db, schema } from "@/lib/db";
@@ -11,7 +11,7 @@ import { getSite } from "@/lib/sites";
 import { getOrthophoto, loadDamageTypes } from "@/lib/orthophotos";
 import { measure, minPoints, scaleFromCalibration, type Pt } from "@/lib/geometry";
 
-const { orthophotos, damages, sites } = schema;
+const { orthophotos, damages, damageSuggestions, sites } = schema;
 
 const pt = z.tuple([z.number().finite(), z.number().finite()]);
 
@@ -187,6 +187,9 @@ export async function setScale(siteId: string, oid: string, mmPerPixel: number) 
 const damageSchema = z.object({
   typeId: z.string().uuid(),
   points: z.array(pt).min(1).max(5000),
+  /** "ia_contorno" quando o desenho veio do Contorno IA (o usuário clicou e salvou). */
+  source: z.enum(["manual", "ia_contorno"]).optional(),
+  confidence: z.number().min(0).max(1).nullable().optional(),
 });
 
 export async function createDamage(siteId: string, oid: string, input: z.input<typeof damageSchema>) {
@@ -208,6 +211,11 @@ export async function createDamage(siteId: string, oid: string, input: z.input<t
       typeId: type.id,
       geometry: { points },
       ...measure(type.geometry, points, o.mmPerPixel),
+      source: data.source ?? "manual",
+      aiConfidence: data.source === "ia_contorno" ? data.confidence ?? null : null,
+      // quem desenhou (ou salvou o contorno da IA) é quem validou
+      reviewedBy: user.id,
+      reviewedAt: new Date(),
       createdBy: user.id,
     })
     .returning();
@@ -266,4 +274,97 @@ export async function deleteDamage(siteId: string, oid: string, damageId: string
   await getOrthophoto(siteId, oid);
   await db.delete(damages).where(and(eq(damages.id, damageId), eq(damages.orthophotoId, oid)));
   await touch(siteId, oid);
+}
+
+/* ───────────── Detecção automática (sugestões da IA) ───────────── */
+
+const suggestionSchema = z.object({
+  typeId: z.string().uuid(),
+  points: z.array(pt).min(1).max(2000),
+  confidence: z.number().min(0).max(1),
+  detector: z.string().max(60),
+});
+
+/** Troca as sugestões pendentes da vista pelas de uma nova detecção (aceitas e rejeitadas ficam). */
+export async function saveSuggestions(siteId: string, oid: string, input: z.input<typeof suggestionSchema>[]) {
+  const user = await requireUser(editors);
+  await getSite(user.orgId, siteId);
+  await getOrthophoto(siteId, oid);
+  const list = z.array(suggestionSchema).max(300).parse(input);
+  const types = new Map((await loadDamageTypes(user.orgId)).map((t) => [t.id, t]));
+  await db.delete(damageSuggestions).where(and(eq(damageSuggestions.orthophotoId, oid), eq(damageSuggestions.status, "pendente")));
+  const rows = list
+    .filter((s) => types.has(s.typeId) && s.points.length >= minPoints(types.get(s.typeId)!.geometry))
+    .map((s) => ({
+      siteId,
+      orthophotoId: oid,
+      typeId: s.typeId,
+      geometry: { points: s.points },
+      confidence: s.confidence,
+      detector: s.detector,
+      createdBy: user.id,
+    }));
+  if (!rows.length) return [];
+  return db.insert(damageSuggestions).values(rows).returning();
+}
+
+/**
+ * Aceita sugestões: cada uma vira um dano (origem "ia_deteccao", com a confiança e quem validou).
+ * `typeIds` troca a classe sugerida antes de aceitar.
+ */
+export async function acceptSuggestions(siteId: string, oid: string, ids: string[], typeIds: Record<string, string> = {}) {
+  const user = await requireUser(editors);
+  await getSite(user.orgId, siteId);
+  const o = await getOrthophoto(siteId, oid);
+  const want = z.array(z.string().uuid()).min(1).max(300).parse(ids);
+  const pending = await db
+    .select()
+    .from(damageSuggestions)
+    .where(and(eq(damageSuggestions.orthophotoId, oid), eq(damageSuggestions.status, "pendente"), inArray(damageSuggestions.id, want)));
+  const types = new Map((await loadDamageTypes(user.orgId)).map((t) => [t.id, t]));
+  const now = new Date();
+  const created: (typeof damages.$inferSelect)[] = [];
+  for (const s of pending) {
+    const override = typeIds[s.id];
+    let type = types.get(override ?? s.typeId) ?? types.get(s.typeId);
+    // troca de classe só entre tipos da mesma geometria (área, linha, ponto)
+    if (type && override && type.geometry !== types.get(s.typeId)?.geometry) type = types.get(s.typeId);
+    if (!type) continue;
+    const points = (type.geometry === "ponto" ? s.geometry.points.slice(0, 1) : s.geometry.points) as Pt[];
+    const [d] = await db
+      .insert(damages)
+      .values({
+        siteId,
+        orthophotoId: oid,
+        elementId: o.elementId,
+        typeId: type.id,
+        geometry: { points },
+        ...measure(type.geometry, points, o.mmPerPixel),
+        source: "ia_deteccao",
+        aiConfidence: s.confidence,
+        reviewedBy: user.id,
+        reviewedAt: now,
+        createdBy: user.id,
+      })
+      .returning();
+    await db
+      .update(damageSuggestions)
+      .set({ status: "aceita", damageId: d!.id, reviewedBy: user.id, reviewedAt: now })
+      .where(eq(damageSuggestions.id, s.id));
+    created.push(d!);
+  }
+  await touch(siteId, oid);
+  return created;
+}
+
+/** Rejeita sugestões (ficam guardadas como "não é dano" para o treino da IA). */
+export async function rejectSuggestions(siteId: string, oid: string, ids: string[]) {
+  const user = await requireUser(editors);
+  await getSite(user.orgId, siteId);
+  await getOrthophoto(siteId, oid);
+  const want = z.array(z.string().uuid()).min(1).max(300).parse(ids);
+  await db
+    .update(damageSuggestions)
+    .set({ status: "rejeitada", reviewedBy: user.id, reviewedAt: new Date() })
+    .where(and(eq(damageSuggestions.orthophotoId, oid), eq(damageSuggestions.status, "pendente"), inArray(damageSuggestions.id, want)));
 }

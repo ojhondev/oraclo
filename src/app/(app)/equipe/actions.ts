@@ -142,3 +142,13 @@ export async function issueResetLink(userId: string): Promise<Result> {
   const r = await createResetFor(u.id, u.email, u.name);
   return r.sent ? { ok: `Link de nova senha enviado para ${u.email}.` } : { ok: `Link de nova senha para ${u.name} (vale 1 hora):`, link: r.url };
 }
+
+/** Autoriza (ou revoga) o uso dos danos revisados da organização para treinar a IA de detecção. */
+export async function setTrainingConsent(consent: boolean) {
+  const me = await admin();
+  await db
+    .update(organizations)
+    .set({ trainingConsent: consent, trainingConsentAt: consent ? new Date() : null })
+    .where(eq(organizations.id, me.orgId));
+  revalidatePath("/equipe");
+}

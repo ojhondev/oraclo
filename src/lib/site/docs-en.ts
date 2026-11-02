@@ -10,11 +10,11 @@ export const DOC_FLOW_EN = ["Project", "Survey", "Scaled view", "Damage", "Prior
 export const DOC_STEPS_EN: DocStep[] = [
   {
     id: "conta",
-    title: "Create your account and log in",
-    lead: "Each firm has its own organisation in ArchRay. Whoever creates the account becomes the administrator and then invites the team.",
+    title: "Accept the invitation and log in",
+    lead: "For now ArchRay is for Estúdio Restaura's internal use: each person joins through an invitation from a team administrator.",
     steps: [
-      "Click Start free (or Sign up) at the top of the site.",
-      "Enter your name, your firm's name, your email and a password.",
+      "Open the invitation link you received by email or WhatsApp.",
+      "Create your password. Next time, log in through Client area at the top of the site.",
       "Done: you land on the home screen, with the project search and the shortcut to the guided demo.",
     ],
     shot: { src: "/docs/01-inicio.jpg", alt: "ArchRay home screen with the project search and the guided demo card", caption: "Home screen: search for a project, create a new one or start the guided demo." },

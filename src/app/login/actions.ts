@@ -20,8 +20,14 @@ export async function login(_: State, form: FormData): Promise<State> {
   redirect("/");
 }
 
-/** Cadastro aberto: cria a organização e o primeiro usuário (admin). */
+/**
+ * Cadastro aberto (cria a organização e o primeiro admin). Fechado enquanto o ArchRay é de uso
+ * interno do Estúdio Restaura: novas pessoas entram só por convite (/convite).
+ */
+const SIGNUP_OPEN = false;
+
 export async function signup(_: State, form: FormData): Promise<State> {
+  if (!SIGNUP_OPEN) return { error: "O cadastro está fechado: o ArchRay é de uso interno do Estúdio Restaura. Peça um convite à equipe." };
   const org = String(form.get("org") || "").trim();
   const name = String(form.get("name") || "").trim();
   const email = String(form.get("email") || "").trim().toLowerCase();

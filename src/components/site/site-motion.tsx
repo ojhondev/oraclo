@@ -10,6 +10,26 @@ import { usePathname } from "next/navigation";
 export function SiteMotion({ rootId }: { rootId: string }) {
   const pathname = usePathname();
 
+  // ao rolar, marca o site para o cabeçalho recolher a logo e ficar só com o polvo
+  useEffect(() => {
+    const root = document.getElementById(rootId);
+    if (!root) return;
+    let raf = 0;
+    const update = () => {
+      raf = 0;
+      root.toggleAttribute("data-scrolled", window.scrollY > 24);
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, [rootId, pathname]);
+
   useEffect(() => {
     const root = document.getElementById(rootId);
     if (!root) return;

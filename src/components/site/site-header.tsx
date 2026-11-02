@@ -56,7 +56,7 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
   // logado: o menu "Acessar" dá lugar ao botão "Abrir o ArchRay"
   const right = user ? t.right.slice(0, -1) : t.right;
   return (
-    <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl">
+    <header className="sticky top-0 z-40 bg-background">
       <div className="grid h-[68px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 lg:px-8">
         <nav className="hidden min-w-0 items-center gap-1.5 lg:flex" aria-label={lang === "en" ? "Main" : "Principal"}>
           {t.left.map((m) => (
@@ -64,8 +64,11 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
           ))}
         </nav>
         <Link href="/" aria-label={lang === "en" ? "ArchRay — home" : "ArchRay — início"} className="col-start-1 row-start-1 flex shrink-0 items-center gap-2 justify-self-start lg:col-start-2 lg:justify-self-center">
-          <BrandMark className="h-[24px]" />
-          <BrandLogo className="site-logo h-[15px]" />
+          <BrandMark className="site-mark h-[24px]" />
+          {/* ao rolar, o nome recolhe para trás do polvo (ver .site-wordmark em site.css) */}
+          <span className="site-wordmark">
+            <BrandLogo className="site-logo h-[15px]" />
+          </span>
         </Link>
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-1.5">
           <div className="hidden items-center gap-1.5 lg:flex">

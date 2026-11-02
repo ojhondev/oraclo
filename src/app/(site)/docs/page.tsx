@@ -15,7 +15,7 @@ const T = {
     lead: "Do cadastro do imóvel ao laudo pronto, com as telas reais de cada passo. Sem jargão: se é a sua primeira vez, comece pela etapa 1.",
     note: null as string | null,
     demo: "Fazer a demonstração guiada",
-    signup: "Criar conta e praticar",
+    signup: "Entrar e praticar",
     first: "Ir para a etapa 1",
     step: (i: number, n: number) => `Etapa ${i} de ${n}`,
     tip: "Dica: ",
@@ -25,7 +25,7 @@ const T = {
     readyTitle: "Pronto para praticar?",
     readyText: "A demonstração guiada repete todas estas etapas num caso real, em 13 missões — e pode ser refeita do zero quantas vezes você quiser.",
     readyCta: "Começar a demonstração",
-    readySignup: "Criar conta grátis",
+    readySignup: "Solicitar diagnóstico",
   },
   en: {
     title: "Docs",
@@ -34,7 +34,7 @@ const T = {
     lead: "From registering the building to a finished report, with the real screens for each step. No jargon: if this is your first time, start with step 1.",
     note: "The site and these docs are in English; the app itself is currently in Portuguese. Button names appear as they are on screen, with the English meaning in parentheses." as string | null,
     demo: "Try the guided demo",
-    signup: "Sign up and practise",
+    signup: "Log in and practise",
     first: "Go to step 1",
     step: (i: number, n: number) => `Step ${i} of ${n}`,
     tip: "Tip: ",
@@ -44,7 +44,7 @@ const T = {
     readyTitle: "Ready to practise?",
     readyText: "The guided demo repeats all of these steps on a real case, in 13 missions — and you can start over from scratch as many times as you like.",
     readyCta: "Start the demo",
-    readySignup: "Sign up free",
+    readySignup: "Request a diagnosis",
   },
 };
 
@@ -62,7 +62,8 @@ export default async function DocsPage() {
   const FLOW = en ? DOC_FLOW_EN : DOC_FLOW;
   const GLOSSARY = en ? DOC_GLOSSARY_EN : DOC_GLOSSARY;
   const FAQ = en ? DOC_FAQ_EN : DOC_FAQ;
-  const demoHref = user ? "/" : "/cadastro";
+  // cadastro fechado (uso interno): sem sessão, os botões levam a entrar ou a pedir um diagnóstico
+  const demoHref = user ? "/" : "/login";
   const toc = [
     ...STEPS.map((s, i) => ({ id: s.id, title: s.title, n: i + 1 })),
     { id: "glossario", title: t.glossary },
@@ -200,7 +201,7 @@ export default async function DocsPage() {
             <p className="mx-auto mt-3 max-w-[520px] text-[16px] leading-7 text-muted-foreground">
               {t.readyText}
             </p>
-            <Link href={demoHref} className="mt-7 a-btn">
+            <Link href={user ? demoHref : "/contato"} className="mt-7 a-btn">
               <Play className="size-4" /> {user ? t.readyCta : t.readySignup}
             </Link>
           </section>

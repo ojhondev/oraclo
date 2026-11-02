@@ -413,6 +413,38 @@ html:has(.site-theme.site-dark) {
   mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
 }
 
+/* ── logo do cabeçalho: ao rolar, o nome recolhe para trás do polvo e fica só o ícone ── */
+.site-wordmark {
+  display: inline-flex;
+  overflow: hidden;
+  max-width: 120px;
+  transition:
+    max-width 0.55s cubic-bezier(0.65, 0, 0.35, 1),
+    margin 0.55s cubic-bezier(0.65, 0, 0.35, 1);
+}
+.site-wordmark > * {
+  clip-path: inset(0 0 0 0);
+  transition:
+    clip-path 0.45s cubic-bezier(0.65, 0, 0.35, 1),
+    transform 0.55s cubic-bezier(0.65, 0, 0.35, 1),
+    opacity 0.35s ease;
+}
+.site-mark {
+  transition: transform 0.55s cubic-bezier(0.34, 1.4, 0.64, 1);
+}
+.site-theme[data-scrolled] .site-wordmark {
+  max-width: 0;
+  margin-left: -8px;
+}
+.site-theme[data-scrolled] .site-wordmark > * {
+  clip-path: inset(0 100% 0 0);
+  transform: translateX(-28px);
+  opacity: 0;
+}
+.site-theme[data-scrolled] .site-mark {
+  transform: scale(1.18) rotate(-10deg);
+}
+
 /* logotipo em PNG preto: inverte no tema escuro do site e nas faixas escuras */
 .site-theme .site-logo {
   filter: none;

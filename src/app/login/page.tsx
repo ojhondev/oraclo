@@ -16,9 +16,9 @@ export default async function LoginPage() {
       description="Seus projetos, capturas, nuvens de pontos e modelos."
       footer={
         <>
-          Ainda não tem conta?{" "}
-          <Link href="/cadastro" className="font-medium text-foreground underline underline-offset-4">
-            Criar conta
+          Acesso só por convite.{" "}
+          <Link href="/contato" className="font-medium text-foreground underline underline-offset-4">
+            Solicitar diagnóstico
           </Link>
         </>
       }

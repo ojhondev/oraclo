@@ -22,11 +22,11 @@ export const DOC_FLOW = ["Projeto", "Vistoria", "Vista em escala", "Danos", "Pri
 export const DOC_STEPS: DocStep[] = [
   {
     id: "conta",
-    title: "Crie a conta e entre",
-    lead: "Cada escritório tem a sua organização no ArchRay. Quem cria a conta vira administrador e depois convida a equipe.",
+    title: "Receba o convite e entre",
+    lead: "Por enquanto o ArchRay é de uso interno do Estúdio Restaura: cada pessoa entra por convite de um administrador da equipe.",
     steps: [
-      "Clique em Começar grátis (ou Criar conta) no topo do site.",
-      "Informe seu nome, o nome do escritório, o e-mail e uma senha.",
+      "Abra o link do convite que chegou por e-mail ou WhatsApp.",
+      "Crie a sua senha. Nas próximas vezes, entre por Área do cliente, no topo do site.",
       "Pronto: você cai na tela inicial, com a busca de projetos e o atalho para a demonstração guiada.",
     ],
     shot: { src: "/docs/01-inicio.jpg", alt: "Tela inicial do ArchRay com a busca de projetos e o cartão da demonstração guiada", caption: "Tela inicial: busque um projeto, crie um novo ou comece a demonstração guiada." },

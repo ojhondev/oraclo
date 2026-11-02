@@ -235,7 +235,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
           ))}
           <li>{t.wiki}</li>
         </ul>
-        <Link href="/contato" className="mt-10 inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+        <Link href="/contato" className="mt-10 a-btn">
           {t.cta}
         </Link>
       </footer>

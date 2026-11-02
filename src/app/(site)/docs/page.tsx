@@ -82,10 +82,10 @@ export default async function DocsPage() {
         </p>
         {t.note && <p className="site-fade-in mx-auto mt-4 max-w-[620px] rounded-xl border bg-card px-4 py-2.5 text-[13.5px] leading-6 text-muted-foreground">{t.note}</p>}
         <div className="site-fade-in mt-8 flex flex-wrap justify-center gap-3" style={{ "--d": "340ms" } as React.CSSProperties}>
-          <Link href={demoHref} className="inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+          <Link href={demoHref} className="a-btn">
             <Play className="size-4" /> {user ? t.demo : t.signup}
           </Link>
-          <a href="#conta" className="inline-flex h-11 items-center gap-1.5 rounded-full border px-6 text-[15px] font-medium hover:bg-secondary">
+          <a href="#conta" className="a-btn-2">
             {t.first} <ArrowRight className="size-4" />
           </a>
         </div>
@@ -200,7 +200,7 @@ export default async function DocsPage() {
             <p className="mx-auto mt-3 max-w-[520px] text-[16px] leading-7 text-muted-foreground">
               {t.readyText}
             </p>
-            <Link href={demoHref} className="mt-7 inline-flex h-11 items-center gap-2 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+            <Link href={demoHref} className="mt-7 a-btn">
               <Play className="size-4" /> {user ? t.readyCta : t.readySignup}
             </Link>
           </section>

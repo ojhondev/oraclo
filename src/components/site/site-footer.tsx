@@ -82,22 +82,23 @@ const COLS: Record<Lang, Col[]> = {
 export function SiteFooter({ lang }: { lang: Lang }) {
   const en = lang === "en";
   return (
-    <footer className="px-4 pt-20 pb-10 sm:px-6 lg:px-8">
-      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_repeat(4,1fr)]">
+    <footer className="site-ink mt-24 px-4 pt-20 pb-10 sm:px-6 lg:px-8">
+      <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:gap-16">
         <div>
-          <Link href="/" className="flex items-center gap-2" aria-label="ArchRay">
-            <BrandMark className="h-[18px]" />
-            <BrandLogo className="site-logo h-[17px]" />
+          <Link href="/" className="flex items-center gap-2.5 text-foreground" aria-label="ArchRay">
+            <BrandMark className="h-[24px]" />
+            <BrandLogo className="site-logo h-[23px]" />
           </Link>
-          <p className="mt-4 max-w-xs text-[14px] leading-6 text-muted-foreground">
+          <p className="mt-5 max-w-xs text-[14px] leading-6 text-muted-foreground">
             {en
               ? "ArchRay is Estúdio Restaura's diagnosis arm: damage maps, budgets and condition reports, produced by restoration architects with in-house technology."
               : "O ArchRay é o braço de diagnóstico do Estúdio Restaura: mapa de danos, orçamento e laudo, feitos por arquitetos de restauro com tecnologia própria."}
           </p>
         </div>
+        <div className="grid gap-x-8 gap-y-10 sm:grid-cols-2 xl:grid-cols-4">
         {COLS[lang].map((c) => (
-          <div key={c.title}>
-            <p className="text-[13px] font-medium">{c.title}</p>
+          <div key={c.title} className="border-t pt-4">
+            <p className="text-[13px] font-semibold">{c.title}</p>
             <ul className="mt-3 grid gap-2 text-[14px] text-muted-foreground">
               {c.links.map((l) => (
                 <li key={l.href}>
@@ -109,6 +110,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
             </ul>
           </div>
         ))}
+        </div>
       </div>
 
       {/* produto exclusivo do Estúdio Restaura */}
@@ -116,15 +118,13 @@ export function SiteFooter({ lang }: { lang: Lang }) {
         href="https://estudiorestaura.com.br"
         target="_blank"
         rel="noreferrer"
-        className="group mt-14 flex flex-col gap-4 rounded-2xl border bg-[var(--site-elev)] p-6 transition-colors hover:border-foreground/25 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+        className="a-card group mt-16 flex flex-col gap-4 p-6 transition-colors hover:bg-[var(--site-pill)] sm:flex-row sm:items-center sm:justify-between sm:p-8"
       >
         <div>
           <p className="text-[12.5px] font-medium tracking-wide text-muted-foreground uppercase">{en ? "An exclusive product of" : "Um produto exclusivo do"}</p>
-          {/* versão branca no tema escuro, colorida no claro */}
+          {/* o rodapé é sempre escuro: logo branca */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/estudio-restaura-branco.png" alt="Estúdio Restaura" width={600} height={152} className="mt-3 block h-10 w-auto sm:h-12 [.site-light_&]:hidden" />
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/brand/estudio-restaura.png" alt="Estúdio Restaura" width={600} height={152} className="mt-3 hidden h-10 w-auto sm:h-12 [.site-light_&]:block" />
+          <img src="/brand/estudio-restaura-branco.png" alt="Estúdio Restaura" width={600} height={152} className="mt-3 block h-10 w-auto sm:h-12" />
         </div>
         <p className="max-w-md text-[14px] leading-6 text-muted-foreground sm:text-right">
           {en

@@ -7,13 +7,13 @@ import { fmtPostDate, type Post } from "@/lib/updates";
 import { fmtStoryDate, type Story } from "@/lib/site/stories";
 import type { Lang } from "@/lib/site/lang";
 
-/** Título de seção com "Ver tudo" à direita (padrão da home da OpenAI). */
+/** Cabeçalho de seção entre linhas finas, título curto em negrito e "Ver tudo" à direita (como a Anthropic). */
 export function SectionHead({ title, href, more = "Ver tudo" }: { title: string; href?: string; more?: string }) {
   return (
-    <div className="flex items-end justify-between gap-4" data-reveal="fade">
-      <h2 className="text-[22px] leading-tight font-medium tracking-[-0.015em] sm:text-[26px]">{title}</h2>
+    <div className="flex items-center justify-between gap-4 border-y py-3" data-reveal="fade">
+      <h2 className="text-[13.5px] leading-tight font-bold">{title}</h2>
       {href && (
-        <Link href={href} className="group inline-flex shrink-0 items-center gap-1 text-[13.5px] font-medium text-foreground/80 hover:text-foreground">
+        <Link href={href} className="group inline-flex shrink-0 items-center gap-1 text-[13px] text-muted-foreground hover:text-foreground">
           {more} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </Link>
       )}
@@ -21,48 +21,47 @@ export function SectionHead({ title, href, more = "Ver tudo" }: { title: string;
   );
 }
 
+/** Etiqueta "··· Categoria  data". */
 export function Meta({ label, date, extra }: { label: string; date: string; extra?: string }) {
   return (
-    <p className="text-[12.5px]">
-      <span className="font-medium">{label}</span>
-      <span className="ml-2 text-muted-foreground">{date}</span>
-      {extra && <span className="ml-2 text-muted-foreground">{extra}</span>}
+    <p className="a-tag">
+      <span>{label}</span>
+      <span>{date}</span>
+      {extra && <span>{extra}</span>}
     </p>
   );
 }
 
-/** Capa gerada para publicações do Index: símbolo do ArchRay sobre grade (sem fotos de terceiros). */
+/** Capa gerada para publicações do Index: símbolo do ArchRay sobre grade em fundo bege (sem fotos de terceiros). */
 export function SiteCover({ className }: { className?: string }) {
   return (
-    <div className={cn("relative grid place-items-center overflow-hidden bg-secondary", className)} aria-hidden>
+    <div className={cn("relative grid place-items-center overflow-hidden bg-[var(--site-band)]", className)} aria-hidden>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--site-grid)_1px,transparent_1px),linear-gradient(to_bottom,var(--site-grid)_1px,transparent_1px)] bg-[size:28px_28px]" />
-      <svg viewBox="0 0 723 508" className="relative w-[38%] transition-transform duration-500 group-hover:scale-105">
+      <svg viewBox="0 0 723 508" className="relative w-[34%] transition-transform duration-500 group-hover:scale-105">
         <path d={MARK_PATH} fill="var(--foreground)" fillRule="evenodd" />
       </svg>
     </div>
   );
 }
 
-/** Linha do Index: miniatura quadrada + título + categoria e data. */
+/** Publicação do Index: capa, etiqueta e título em negrito. */
 export function PostRow({ post, delay = 0, lang = "pt" }: { post: Post; delay?: number; lang?: Lang }) {
   return (
-    <Link href={`/index/${post.slug}`} className="group grid grid-cols-[104px_1fr] items-center gap-5 sm:grid-cols-[150px_1fr]" data-reveal data-reveal-delay={delay}>
-      <SiteCover className="aspect-square rounded-lg" />
-      <div className="min-w-0">
-        <h3 className="text-[16px] leading-snug font-medium text-balance group-hover:underline group-hover:underline-offset-4 sm:text-[17px]">{post.title}</h3>
-        <div className="mt-2">
-          <Meta label={post.category} date={fmtPostDate(post.date, "short", lang)} />
-        </div>
+    <Link href={`/index/${post.slug}`} className="group block" data-reveal data-reveal-delay={delay}>
+      <SiteCover className="aspect-[4/3] rounded-[8px]" />
+      <div className="mt-4">
+        <Meta label={post.category} date={fmtPostDate(post.date, "short", lang)} />
       </div>
+      <h3 className="a-title mt-2 text-[19px] leading-snug text-balance group-hover:underline group-hover:underline-offset-4">{post.title}</h3>
     </Link>
   );
 }
 
-/** Card de história: imagem (com paralaxe) e título por baixo. */
+/** Card de caso: imagem (com paralaxe), etiqueta e título em negrito. */
 export function StoryCard({ story, large, delay = 0, lang = "pt" }: { story: Story; large?: boolean; delay?: number; lang?: Lang }) {
   return (
     <Link href={`/historias/${story.slug}`} className="group block" data-reveal data-reveal-delay={delay}>
-      <div className={cn("relative overflow-hidden rounded-lg bg-secondary", large ? "aspect-[16/9]" : "aspect-[4/5]")}>
+      <div className={cn("relative overflow-hidden rounded-[8px] bg-[var(--site-band)]", large ? "aspect-[16/9]" : "aspect-[4/5]")}>
         <div className="absolute inset-0" data-parallax="0.06">
           <Image
             src={story.cover}
@@ -73,30 +72,30 @@ export function StoryCard({ story, large, delay = 0, lang = "pt" }: { story: Sto
           />
         </div>
       </div>
-      <h3 className={cn("mt-4 leading-snug font-medium text-balance group-hover:underline group-hover:underline-offset-4", large ? "text-[24px] sm:text-[30px]" : "text-[17px]")}>
-        {story.title}
-      </h3>
-      <div className="mt-2">
+      <div className="mt-4">
         <Meta label={story.segment} date={fmtStoryDate(story.date, lang)} />
       </div>
+      <h3 className={cn("a-title mt-2 leading-snug text-balance group-hover:underline group-hover:underline-offset-4", large ? "text-[26px] sm:text-[34px]" : "text-[19px]")}>
+        {story.title}
+      </h3>
     </Link>
   );
 }
 
-/** Card de segmento (ArchRay para empresas). */
+/** Card de segmento (setores atendidos): cartão bege com desenho de linha. */
 export function SegmentCard({ href, title, text, index, delay = 0, more = "Saiba mais" }: { href: string; title: string; text: string; index: number; delay?: number; more?: string }) {
   return (
     <Link
       href={href}
-      className="group flex aspect-[4/4.6] flex-col justify-between overflow-hidden rounded-lg border bg-[var(--site-elev)] p-6 transition-colors hover:border-foreground/25"
+      className="a-card group flex aspect-[4/4.4] flex-col justify-between overflow-hidden p-8 transition-colors hover:bg-[var(--site-band)]"
       data-reveal
       data-reveal-delay={delay}
     >
       <SegmentArt index={index} />
       <div>
-        <h3 className="text-[20px] leading-snug font-medium tracking-[-0.01em]">{title}</h3>
+        <h3 className="a-title text-[21px] leading-snug">{title}</h3>
         <p className="mt-2 text-[14.5px] leading-6 text-muted-foreground">{text}</p>
-        <span className="mt-4 inline-flex items-center gap-1 text-[13.5px] font-medium">
+        <span className="mt-4 inline-flex items-center gap-1 text-[14px] font-medium">
           {more} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
       </div>
@@ -104,11 +103,11 @@ export function SegmentCard({ href, title, text, index, delay = 0, more = "Saiba
   );
 }
 
-/** Desenhos de linha simples para os segmentos (traço some e reaparece no hover). */
+/** Desenhos de linha simples para os segmentos (sobem um pouco no hover). */
 function SegmentArt({ index }: { index: number }) {
   const common = { fill: "none", stroke: "currentColor", strokeWidth: 1.4 } as const;
   return (
-    <svg viewBox="0 0 160 100" className="h-24 w-auto text-foreground/70 transition-transform duration-500 group-hover:-translate-y-1" aria-hidden>
+    <svg viewBox="0 0 160 100" className="h-24 w-auto text-[var(--site-clay)] transition-transform duration-500 group-hover:-translate-y-1" aria-hidden>
       {index === 0 && (
         <g {...common}>
           <path d="M20 90V40l30-24 30 24v50" />

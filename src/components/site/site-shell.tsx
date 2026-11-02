@@ -9,12 +9,13 @@ import "./site.css";
 
 const ROOT_ID = "archray-site";
 
-/** Invólucro do site público: tema próprio (escuro por padrão), cabeçalho, rodapé e movimento. */
+/** Invólucro do site público: tema próprio (claro por padrão), cabeçalho, rodapé e movimento. */
 export async function SiteShell({ children }: { children: React.ReactNode }) {
-  const light = (await cookies()).get(SITE_THEME_COOKIE)?.value === "claro";
+  // claro (marfim) por padrão; escuro só se a pessoa escolheu
+  const dark = (await cookies()).get(SITE_THEME_COOKIE)?.value === "escuro";
   const lang = await getLang();
   return (
-    <div id={ROOT_ID} lang={lang === "en" ? "en" : "pt-BR"} className={cn("site-theme flex min-h-svh flex-col", light && "site-light")}>
+    <div id={ROOT_ID} lang={lang === "en" ? "en" : "pt-BR"} className={cn("site-theme flex min-h-svh flex-col", dark && "site-dark")}>
       <SiteHeader rootId={ROOT_ID} lang={lang} />
       <main className="flex-1">{children}</main>
       <SiteFooter lang={lang} />

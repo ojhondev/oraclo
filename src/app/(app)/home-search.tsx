@@ -49,7 +49,7 @@ export function HomeSearch({ sites, maps, canEdit, autoFocus }: { sites: HomeSit
     <div className="mx-auto w-full max-w-[640px]">
       <div className="mb-5 text-center">
         <p className="mb-1.5 text-[13px] text-muted-foreground">Mapa de danos com IA</p>
-        <h1 className="text-[28px] leading-tight font-normal tracking-[-0.015em] sm:text-[30px]">Qual imóvel vamos diagnosticar?</h1>
+        <h1 className="font-serif text-[32px] leading-tight font-normal tracking-[-0.01em] sm:text-[38px]">Qual imóvel vamos diagnosticar?</h1>
       </div>
 
       <div data-tour="busca" className="rounded-2xl border bg-card shadow-(--shadow-soft) transition-shadow focus-within:border-foreground/25 focus-within:shadow-(--shadow-focus)">

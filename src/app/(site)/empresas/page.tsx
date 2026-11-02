@@ -129,10 +129,10 @@ export default async function EmpresasPage() {
           {t.lead}
         </p>
         <div className="site-fade-in mt-8 flex flex-wrap gap-3" style={{ "--d": "380ms" } as React.CSSProperties}>
-          <Link href="/contato" className="inline-flex h-11 items-center rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85">
+          <Link href="/contato" className="a-btn">
             {t.cta}
           </Link>
-          <Link href="/#como-funciona" className="inline-flex h-11 items-center rounded-full border px-6 text-[15px] font-medium hover:bg-secondary">
+          <Link href="/#como-funciona" className="a-btn-2">
             {t.cta2}
           </Link>
         </div>

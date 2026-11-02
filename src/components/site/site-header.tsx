@@ -15,56 +15,55 @@ export const siteNav = (lang: Lang) => [
   { href: "/docs", label: lang === "en" ? "Docs" : "Documentação" },
 ];
 
-/** Cabeçalho do site público (home, empresas, histórias e Index). */
+/** Cabeçalho do site público: pílulas à esquerda, marca ao centro e ações à direita (como a Anthropic). */
 export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang }) {
   const user = await getUser();
   const en = lang === "en";
   const SITE_NAV = siteNav(lang);
   return (
-    <header className="sticky top-0 z-40 bg-background/80 backdrop-blur-xl">
-      <div className="flex h-[60px] items-center gap-8 px-4 sm:px-6 lg:px-8">
-        <Link href="/" aria-label={en ? "ArchRay — home" : "ArchRay — início"} className="flex shrink-0 items-center gap-2">
-          <BrandMark className="h-[18px]" />
-          <BrandLogo className="site-logo h-[17px]" />
-        </Link>
-        <nav className="hidden items-center gap-6 text-[13.5px] font-medium md:flex">
+    <header className="sticky top-0 z-40 bg-background/90 backdrop-blur-xl">
+      <div className="grid h-[68px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 lg:px-8">
+        <nav className="hidden min-w-0 items-center gap-1.5 lg:flex" aria-label={en ? "Main" : "Principal"}>
           {SITE_NAV.map((n) => (
-            <Link key={n.href} href={n.href} className="text-foreground/75 transition-colors hover:text-foreground">
+            <Link key={n.href} href={n.href} className="a-pill">
               {n.label}
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-1.5">
+        <Link href="/" aria-label={en ? "ArchRay — home" : "ArchRay — início"} className="col-start-1 row-start-1 flex shrink-0 items-center gap-2 justify-self-start lg:col-start-2 lg:justify-self-center">
+          <BrandMark className="h-[19px] shrink-0" />
+          <BrandLogo className="site-logo h-[18px]" />
+        </Link>
+        <div className="col-start-3 row-start-1 flex items-center justify-end gap-1.5">
           <SiteLangToggle lang={lang} className="hidden sm:flex" />
           <SiteThemeToggle rootId={rootId} />
           {user ? (
-            <Link href="/" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium whitespace-nowrap text-background hover:opacity-85">
+            <Link href="/" className="a-btn a-btn-sm">
               {en ? "Open ArchRay" : "Abrir o ArchRay"} <ArrowUpRight className="size-3.5" />
             </Link>
           ) : (
             <>
-              <Link href="/login" className="hidden h-9 items-center rounded-full bg-secondary px-4 text-[13.5px] font-medium hover:bg-accent sm:inline-flex">
+              <Link href="/login" className="a-pill hidden sm:inline-flex">
                 {en ? "Client area" : "Área do cliente"}
               </Link>
-              <Link href="/contato" className="inline-flex h-9 items-center gap-1 rounded-full bg-foreground px-4 text-[13.5px] font-medium whitespace-nowrap text-background hover:opacity-85">
+              <Link href="/contato" className="a-btn a-btn-sm">
                 <span className="sm:hidden">{en ? "Request" : "Solicitar"}</span>
                 <span className="hidden sm:inline">{en ? "Request a diagnosis" : "Solicitar diagnóstico"}</span>
-                <ArrowUpRight className="size-3.5" />
               </Link>
             </>
           )}
-          <details className="relative md:hidden">
-            <summary className="grid size-9 cursor-pointer list-none place-items-center rounded-full hover:bg-muted [&::-webkit-details-marker]:hidden" aria-label="Menu">
-              <Menu className="size-5" />
+          <details className="relative lg:hidden">
+            <summary className="grid size-[30px] cursor-pointer list-none place-items-center rounded-full bg-[var(--site-pill)] hover:bg-[var(--site-pill-hover)] [&::-webkit-details-marker]:hidden" aria-label="Menu">
+              <Menu className="size-4" />
             </summary>
-            <nav className="absolute top-11 right-0 grid w-56 gap-0.5 rounded-2xl border bg-popover p-2 text-[15px] shadow-2xl">
+            <nav className="absolute top-10 right-0 grid w-60 gap-0.5 rounded-2xl border bg-popover p-2 text-[15px] shadow-2xl">
               {SITE_NAV.map((n) => (
-                <Link key={n.href} href={n.href} className="rounded-xl px-3 py-2 hover:bg-muted">
+                <Link key={n.href} href={n.href} className="rounded-lg px-3 py-2 hover:bg-muted">
                   {n.label}
                 </Link>
               ))}
               {!user && (
-                <Link href="/login" className="rounded-xl px-3 py-2 hover:bg-muted">
+                <Link href="/login" className="rounded-lg px-3 py-2 hover:bg-muted">
                   {en ? "Client area" : "Área do cliente"}
                 </Link>
               )}

@@ -59,7 +59,7 @@ export function DamageMap({
                 fontSize={11 * u}
                 fontWeight={600}
                 fill="#fff"
-                fontFamily="var(--font-geist), sans-serif"
+                fontFamily="var(--font-sans-ui), sans-serif"
               >
                 {label}
               </text>

@@ -1,12 +1,18 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
+import { Instrument_Sans, Source_Serif_4 } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/components/theme";
 import "./globals.css";
 
-const geist = Geist({
-  variable: "--font-geist",
+// fontes livres no lugar das proprietárias da Anthropic: sem serifa para a interface, serifada para manchetes
+const sans = Instrument_Sans({
+  variable: "--font-sans-ui",
+  subsets: ["latin"],
+  display: "swap",
+});
+const serif = Source_Serif_4({
+  variable: "--font-serif-ui",
   subsets: ["latin"],
   display: "swap",
 });
@@ -19,14 +25,14 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
-    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+    { media: "(prefers-color-scheme: light)", color: "#faf9f5" },
+    { media: "(prefers-color-scheme: dark)", color: "#262624" },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="pt-BR" className={`${geist.variable} h-full antialiased`} suppressHydrationWarning>
+    <html lang="pt-BR" className={`${sans.variable} ${serif.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full">
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>{children}</TooltipProvider>

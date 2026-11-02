@@ -10,7 +10,7 @@ import { acceptInvite, requestPasswordReset, resetPassword } from "./account-act
 
 function Submit({ pending, children }: { pending: boolean; children: React.ReactNode }) {
   return (
-    <Button type="submit" size="lg" className="mt-2 h-11 rounded-full" disabled={pending}>
+    <Button type="submit" size="lg" className="mt-2 h-11 rounded-[10px]" disabled={pending}>
       {pending && <Loader2 className="animate-spin" />}
       {children}
     </Button>

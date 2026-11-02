@@ -1,62 +1,217 @@
 /*
- * Site público do ArchRay: tema próprio (escuro por padrão, claro opcional) e movimento.
- * Os tokens são redefinidos no invólucro .site-theme, então valem só para o site,
- * independentemente do tema escolhido dentro do app.
+ * Site público do ArchRay — linguagem visual inspirada na Anthropic: fundo marfim, grafite,
+ * cartões bege, títulos sem serifa em negrito, manchetes-manifesto em serifa, terracota como
+ * destaque e rodapé quase preto. Claro por padrão; .site-dark liga a variante escura quente.
+ * Os tokens valem só dentro de .site-theme (independem do tema escolhido no app).
  */
 
 .site-theme {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #0d0d0d;
-  --card-foreground: #ffffff;
-  --popover: #111111;
-  --popover-foreground: #ffffff;
-  --primary: #ffffff;
-  --primary-foreground: #000000;
-  --secondary: #161616;
-  --secondary-foreground: #ffffff;
-  --muted: #121212;
-  --muted-foreground: #9b9b9b;
-  --accent: #1c1c1c;
-  --accent-foreground: #ffffff;
-  --border: #242424;
-  --input: #2e2e2e;
-  --ring: #ffffff;
-  --site-elev: #0b0b0b;
-  --site-grid: rgb(255 255 255 / 0.07);
-  color-scheme: dark;
+  --background: #faf9f5;
+  --foreground: #141413;
+  --card: #f5f4ed;
+  --card-foreground: #141413;
+  --popover: #ffffff;
+  --popover-foreground: #141413;
+  --primary: #141413;
+  --primary-foreground: #faf9f5;
+  --secondary: #f0eee6;
+  --secondary-foreground: #141413;
+  --muted: #f0eee6;
+  --muted-foreground: #5e5d59;
+  --accent: #e8e6dc;
+  --accent-foreground: #141413;
+  --border: #e8e6dc;
+  --input: #dedcd1;
+  --ring: #c6613f;
+  /* cartões, faixas e pílulas */
+  --site-elev: #f5f4ed;
+  --site-band: #f0eee6;
+  --site-pill: #f0eee6;
+  --site-pill-hover: #e8e6dc;
+  --site-btn2: #e8e6dc;
+  --site-clay: #d97757;
+  --site-grid: rgb(20 20 19 / 0.07);
+  color-scheme: light;
   background: var(--background);
   color: var(--foreground);
 }
 
-.site-theme.site-light {
-  --background: #ffffff;
-  --foreground: #0a0a0a;
-  --card: #ffffff;
-  --card-foreground: #0a0a0a;
-  --popover: #ffffff;
-  --popover-foreground: #0a0a0a;
-  --primary: #0a0a0a;
-  --primary-foreground: #ffffff;
-  --secondary: #f4f4f4;
-  --secondary-foreground: #0a0a0a;
-  --muted: #f3f3f3;
-  --muted-foreground: #6b6b6b;
-  --accent: #ececec;
-  --accent-foreground: #0a0a0a;
-  --border: #e6e6e6;
-  --input: #dcdcdc;
-  --ring: #0a0a0a;
-  --site-elev: #f7f7f7;
-  --site-grid: rgb(0 0 0 / 0.06);
-  color-scheme: light;
+.site-theme.site-dark {
+  --background: #1f1e1d;
+  --foreground: #faf9f5;
+  --card: #262624;
+  --card-foreground: #faf9f5;
+  --popover: #262624;
+  --popover-foreground: #faf9f5;
+  --primary: #faf9f5;
+  --primary-foreground: #141413;
+  --secondary: #30302e;
+  --secondary-foreground: #faf9f5;
+  --muted: #30302e;
+  --muted-foreground: #b0aea5;
+  --accent: #3d3d3a;
+  --accent-foreground: #faf9f5;
+  --border: #3d3d3a;
+  --input: #4d4c48;
+  --ring: #d97757;
+  --site-elev: #262624;
+  --site-band: #262624;
+  --site-pill: #30302e;
+  --site-pill-hover: #3d3d3a;
+  --site-btn2: #3d3d3a;
+  --site-grid: rgb(250 249 245 / 0.07);
+  color-scheme: dark;
+}
+
+/* faixa sempre escura (rodapé, destaques): redefine os tokens localmente */
+.site-theme .site-ink {
+  --background: #141413;
+  --foreground: #faf9f5;
+  --card: #1f1e1d;
+  --muted: #262624;
+  --muted-foreground: #b0aea5;
+  --accent: #30302e;
+  --border: #30302e;
+  --site-elev: #1f1e1d;
+  --site-pill: #262624;
+  --site-pill-hover: #30302e;
+  --site-btn2: #30302e;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 html:has(.site-theme) {
-  background: #000;
+  background: #faf9f5;
 }
-html:has(.site-theme.site-light) {
-  background: #fff;
+html:has(.site-theme.site-dark) {
+  background: #1f1e1d;
+}
+
+/* ── tipografia (vale para todas as páginas do site, acima dos utilitários do Tailwind) ── */
+.site-theme :is(h1, h2, h3, h4) {
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: -0.012em;
+}
+/* manchete-manifesto: abertura em negrito sem serifa, continuação em serifa */
+.site-theme .a-serif {
+  font-family: var(--font-serif);
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+.site-theme .a-lead {
+  font-family: var(--font-sans);
+  font-weight: 650;
+  letter-spacing: -0.015em;
+}
+/* títulos de cartão em negrito */
+.site-theme .a-title {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* componentes (camada components: os utilitários do Tailwind, como hidden e sm:inline-flex, continuam valendo) */
+@layer components {
+  /* pílula do menu e de filtros */
+  .site-theme .a-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 30px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--site-pill);
+    color: color-mix(in srgb, var(--foreground) 80%, transparent);
+    font-size: 13px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .site-theme .a-pill:hover,
+  .site-theme .a-pill[aria-current="page"] {
+    background: var(--site-pill-hover);
+    color: var(--foreground);
+  }
+
+  /* botões: raio de 10 px, escuro (principal) e bege (secundário) */
+  .site-theme .a-btn,
+  .site-theme .a-btn-2 {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 46px;
+    padding: 0 22px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition:
+      background 0.15s,
+      opacity 0.15s;
+  }
+  .site-theme .a-btn {
+    background: var(--foreground);
+    color: var(--background);
+  }
+  .site-theme .a-btn:hover {
+    opacity: 0.86;
+  }
+  .site-theme .a-btn-2 {
+    background: var(--site-btn2);
+    color: var(--foreground);
+  }
+  .site-theme .a-btn-2:hover {
+    background: var(--site-pill-hover);
+  }
+  .site-theme .a-btn-sm {
+    height: 36px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: 8px;
+  }
+
+  /* cartão bege, raio 16 */
+  .site-theme .a-card {
+    border-radius: 16px;
+    background: var(--site-elev);
+  }
+
+  /* etiqueta "···  Categoria  data" acima dos títulos */
+  .site-theme .a-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12.5px;
+    color: var(--muted-foreground);
+  }
+  .site-theme .a-tag::before {
+    content: "\00B7\00B7\00B7";
+    display: inline-grid;
+    place-items: center;
+    height: 16px;
+    padding: 0 7px;
+    border-radius: 999px;
+    background: var(--site-pill);
+    font-size: 10px;
+    line-height: 1;
+    letter-spacing: 0.08em;
+    color: var(--muted-foreground);
+  }
+}
+
+/* colagem de quadros flutuando devagar */
+@keyframes a-drift {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(var(--dx, 0px), var(--dy, -10px), 0);
+  }
+}
+.a-float {
+  animation: a-drift var(--t, 9s) ease-in-out infinite alternate;
 }
 
 /* ── revelar ao rolar (só depois que o JS marca .motion-ready; sem JS tudo aparece) ── */
@@ -190,7 +345,7 @@ html:has(.site-theme.site-light) {
   background: linear-gradient(110deg, transparent 30%, rgb(255 255 255 / 0.14) 50%, transparent 70%) 0 0 / 200% 100%;
   animation: site-sheen 6s linear infinite;
 }
-.site-light .site-sheen {
+.site-theme:not(.site-dark) .site-sheen {
   background-image: linear-gradient(110deg, transparent 30%, rgb(0 0 0 / 0.06) 50%, transparent 70%);
 }
 
@@ -215,7 +370,8 @@ html:has(.site-theme.site-light) {
   }
   .site-marquee,
   .site-kenburns,
-  .site-sheen {
+  .site-sheen,
+  .a-float {
     animation: none;
   }
   [data-parallax] {
@@ -248,10 +404,11 @@ html:has(.site-theme.site-light) {
   mask-image: linear-gradient(to right, transparent, #000 9%, #000 91%, transparent);
 }
 
-/* logotipo em PNG preto: inverte no tema escuro do site (independe do tema do app) */
+/* logotipo em PNG preto: inverte no tema escuro do site e nas faixas escuras */
 .site-theme .site-logo {
-  filter: invert(1);
-}
-.site-theme.site-light .site-logo {
   filter: none;
+}
+.site-theme.site-dark .site-logo,
+.site-theme .site-ink .site-logo {
+  filter: invert(1);
 }

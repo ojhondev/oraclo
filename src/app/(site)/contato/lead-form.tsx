@@ -132,7 +132,7 @@ export function LeadForm({ lang }: { lang: Lang }) {
       <input name="website" tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] h-0 w-0 opacity-0" />
       {state && "error" in state && <p className="text-[14px] text-red-500">{state.error}</p>}
       <div className="flex flex-wrap items-center gap-4 pt-1">
-        <button type="submit" disabled={pending} className="inline-flex h-11 items-center gap-1.5 rounded-full bg-foreground px-6 text-[15px] font-medium text-background hover:opacity-85 disabled:opacity-60">
+        <button type="submit" disabled={pending} className="a-btn disabled:opacity-60">
           {pending ? <Loader2 className="size-4 animate-spin" /> : null}
           {pending ? t.sending : t.send}
           {!pending && <ArrowRight className="size-4" />}

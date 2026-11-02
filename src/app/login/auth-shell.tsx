@@ -23,7 +23,7 @@ export function AuthShell({
             <BrandLogo className="h-7" />
           </span>
           <p className="mb-1 text-[13px] text-muted-foreground">{eyebrow}</p>
-          <h1 className="text-[26px] leading-tight font-normal tracking-[-0.015em]">{title}</h1>
+          <h1 className="font-serif text-[32px] leading-tight font-normal tracking-[-0.01em]">{title}</h1>
           <p className="mt-2 text-[14px] text-muted-foreground">{description}</p>
         </div>
         <div className="rounded-2xl border bg-card p-6 shadow-(--shadow-soft)">{children}</div>

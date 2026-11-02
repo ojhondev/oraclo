@@ -98,7 +98,7 @@ html:has(.site-theme.site-dark) {
 .site-theme .a-serif {
   font-family: var(--font-serif);
   font-weight: 400;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
 }
 .site-theme .a-lead {
   font-family: var(--font-sans);

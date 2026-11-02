@@ -36,7 +36,7 @@ export default async function SiteHome() {
     <>
       {/* manifesto: abertura em negrito sem serifa e continuação em serifa, no mesmo parágrafo */}
       <section className="px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-20 lg:px-8">
-        <h1 className="a-serif max-w-[1320px] text-[27px] leading-[1.24] sm:text-[38px] xl:text-[46px]">
+        <h1 className="a-serif text-[27px] leading-[1.22] tracking-[-0.02em] sm:text-[38px] xl:text-[48px]">
           <span className="a-lead">{t.lead}</span> <span className="text-foreground/85">{t.manifesto}</span>
         </h1>
       </section>

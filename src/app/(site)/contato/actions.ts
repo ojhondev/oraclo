@@ -7,7 +7,7 @@ import { getLang } from "@/lib/site/get-lang";
 
 export type LeadState = { ok: true } | { error: string } | null;
 
-const GOALS = ["restauro", "inspecao", "retrofit", "compra", "patrimonio", "outro"] as const;
+const GOALS = ["restauro", "estrutural", "inspecao", "retrofit", "compra", "patrimonio", "pericia", "outro"] as const;
 
 const leadSchema = z.object({
   name: z.string().trim().min(2).max(120),

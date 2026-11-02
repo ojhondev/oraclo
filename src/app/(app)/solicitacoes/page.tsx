@@ -8,11 +8,13 @@ import { LeadStatus } from "./lead-status";
 export const metadata: Metadata = { title: "Solicitações" };
 
 const GOALS: Record<string, string> = {
-  restauro: "Restauro",
+  restauro: "Arquitetura e restauro",
+  estrutural: "Patologia / estrutural",
   inspecao: "Inspeção predial",
   retrofit: "Retrofit / reforma",
   compra: "Compra / avaliação",
   patrimonio: "Monitoramento de patrimônio",
+  pericia: "Perícia / seguro / cautelar",
   outro: "Outro",
 };
 

@@ -56,8 +56,8 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* ArchRay — paleta quente inspirada na Anthropic: marfim, grafite e terracota.
-   Cinzas quentes (escala 050–950), terracota como destaque e, nos gráficos, oliva, céu e figo.
+/* ArchRay — marfim, grafite e o lilás da marca (#83809A, a cor do polvo) como destaque.
+   Cinzas quentes (escala 050–950) e, nos gráficos, lilás, oliva, céu e figo.
    As cores da legenda de danos continuam sendo as do desenho técnico. */
 :root {
   --background: #faf9f5;
@@ -77,13 +77,13 @@
   --destructive: #b5432f;
   --border: #e8e6dc;
   --input: #dedcd1;
-  --ring: #c6613f;
-  --brand: #c6613f;
-  --brand-soft: #f5e9e2;
+  --ring: #83809a;
+  --brand: #83809a;
+  --brand-soft: #eeedf3;
   --success: #788c5d;
   --warning: #d97757;
   --canvas: #262624;
-  --chart-1: #d97757;
+  --chart-1: #83809a;
   --chart-2: #788c5d;
   --chart-3: #6a9bcc;
   --chart-4: #c46686;
@@ -96,7 +96,7 @@
   --sidebar-accent: #e8e6dc;
   --sidebar-accent-foreground: #141413;
   --sidebar-border: #e8e6dc;
-  --sidebar-ring: #c6613f;
+  --sidebar-ring: #83809a;
   --shadow-soft: 0 1px 2px rgb(20 20 19 / 0.04), 0 4px 16px rgb(20 20 19 / 0.05);
   --shadow-focus: 0 2px 24px rgb(20 20 19 / 0.08);
   color-scheme: light;
@@ -120,13 +120,13 @@
   --destructive: #e07a63;
   --border: #3d3d3a;
   --input: #4d4c48;
-  --ring: #d97757;
-  --brand: #d97757;
-  --brand-soft: #3a2a22;
+  --ring: #a6a3bb;
+  --brand: #a6a3bb;
+  --brand-soft: #2f2e38;
   --success: #9db27f;
   --warning: #d97757;
   --canvas: #141413;
-  --chart-1: #d97757;
+  --chart-1: #a6a3bb;
   --chart-2: #9db27f;
   --chart-3: #90c3f6;
   --chart-4: #d987a3;
@@ -138,7 +138,7 @@
   --sidebar-accent: #30302e;
   --sidebar-accent-foreground: #faf9f5;
   --sidebar-border: #30302e;
-  --sidebar-ring: #d97757;
+  --sidebar-ring: #a6a3bb;
   --shadow-soft: 0 1px 2px rgb(0 0 0 / 0.5);
   --shadow-focus: 0 0 0 1px rgb(255 255 255 / 0.06);
   color-scheme: dark;
@@ -161,7 +161,7 @@
 }
 
 ::selection {
-  background: #d97757;
+  background: #cfcddc;
   color: #141413;
 }
 

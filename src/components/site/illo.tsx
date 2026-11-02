@@ -1,12 +1,12 @@
 /**
  * Ilustrações originais do site (mídia própria, sem fotos de terceiros): fundos chapados da
- * paleta quente e desenho técnico em traço fino, no espírito das colagens da Anthropic.
+ * paleta quente com o lilás da marca e desenho técnico em traço fino, no espírito das colagens da Anthropic.
  * Cada uma fala de uma parte da tecnologia do ArchRay. SVG 200×200, preenche o contêiner.
  */
 import { cn } from "@/lib/utils";
 
 const C = {
-  clay: "#d97757",
+  lilac: "#83809a",
   olive: "#788c5d",
   sky: "#6a9bcc",
   oat: "#e3dacc",
@@ -52,7 +52,7 @@ function Art({ name }: { name: IlloName }) {
       return (
         <>
           <rect width="200" height="200" fill={C.oat} />
-          <rect x="96" y="70" width="84" height="84" fill={C.clay} />
+          <rect x="96" y="70" width="84" height="84" fill={C.lilac} />
           <polygon points={q.map((p) => p.join(",")).join(" ")} {...line} fill={C.ivory} fillOpacity="0.55" />
           {[...v, ...h].map(([a, b], i) => (
             <line key={i} x1={a![0]} y1={a![1]} x2={b![0]} y2={b![1]} {...line} strokeWidth={0.8} />
@@ -73,7 +73,7 @@ function Art({ name }: { name: IlloName }) {
             <path key={x} d={`M${x} 112V90a8 8 0 0116 0v22zM${x} 165v-28h16v28`} {...line} />
           ))}
           <path d="M62 40V22h76v18M100 22V12" {...line} />
-          <rect x="128" y="132" width="26" height="22" fill={C.clay} fillOpacity="0.85" />
+          <rect x="128" y="132" width="26" height="22" fill={C.lilac} fillOpacity="0.85" />
         </>
       );
     case "fissura":
@@ -84,16 +84,16 @@ function Art({ name }: { name: IlloName }) {
           <path d="M40 18l14 26-6 14 16 22-4 18 20 26-8 16 22 30 4 18" {...line} strokeWidth={2.2} />
           <path d="M70 80l18-6M84 124l-16 10" {...line} strokeWidth={1} />
           {[0, 1, 2, 3, 4, 5, 6].map((i) => (
-            <path key={i} d={`M150 ${30 + i * 22}h${i % 2 ? 10 : 18}`} stroke={C.clay} strokeWidth="1.6" />
+            <path key={i} d={`M150 ${30 + i * 22}h${i % 2 ? 10 : 18}`} stroke={C.lilac} strokeWidth="1.6" />
           ))}
-          <path d="M150 30v132" stroke={C.clay} strokeWidth="1.6" />
+          <path d="M150 30v132" stroke={C.lilac} strokeWidth="1.6" />
         </>
       );
     case "contorno":
       return (
         <>
           <rect width="200" height="200" fill={C.cactus} />
-          <path d="M48 70l30-28 44 8 30 26-6 40 18 26-34 22-44-8-30-24 6-30z" fill={C.clay} fillOpacity="0.7" stroke={C.ink} strokeWidth="1.4" strokeDasharray="5 4" />
+          <path d="M48 70l30-28 44 8 30 26-6 40 18 26-34 22-44-8-30-24 6-30z" fill={C.lilac} fillOpacity="0.7" stroke={C.ink} strokeWidth="1.4" strokeDasharray="5 4" />
           {[
             [48, 70],
             [78, 42],
@@ -125,14 +125,14 @@ function Art({ name }: { name: IlloName }) {
           ].map(([x, y, w, h], i) => (
             <rect key={i} x={x} y={y} width={w} height={h} fill="none" stroke={C.ivory} strokeWidth="1.2" strokeDasharray="4 3" />
           ))}
-          <path d="M30 120c8-6 14 4 22-4s12 2 20 0" stroke={C.clay} strokeWidth="2" fill="none" />
+          <path d="M30 120c8-6 14 4 22-4s12 2 20 0" stroke={C.lilac} strokeWidth="2" fill="none" />
           {[
             [130, 40],
             [150, 116],
             [60, 50],
             [146, 164],
           ].map(([x, y], i) => (
-            <circle key={i} cx={x} cy={y} r="4.5" fill={C.clay} />
+            <circle key={i} cx={x} cy={y} r="4.5" fill={C.lilac} />
           ))}
         </>
       );
@@ -146,8 +146,8 @@ function Art({ name }: { name: IlloName }) {
               <path d={`M${20 + s * 100} 170V60h60v110M${32 + s * 100} 104v-14a8 8 0 0116 0v14M${32 + s * 100} 150v-24h36v24`} />
             </g>
           ))}
-          <rect x="140" y="128" width="24" height="16" fill={C.clay} />
-          <rect x="38" y="132" width="10" height="8" fill={C.clay} fillOpacity="0.6" />
+          <rect x="140" y="128" width="24" height="16" fill={C.lilac} />
+          <rect x="38" y="132" width="10" height="8" fill={C.lilac} fillOpacity="0.6" />
           <path d="M100 0v200" stroke={C.ivory} strokeWidth="2" />
           <circle cx="100" cy="100" r="11" fill={C.ivory} />
           <path d="M94 100h12M94 100l3-3M94 100l3 3M106 100l-3-3M106 100l-3 3" stroke={C.ink} strokeWidth="1.3" fill="none" />
@@ -167,7 +167,7 @@ function Art({ name }: { name: IlloName }) {
             <path d="M66 94l14-18 12 10 16-14 22 22" fill="none" stroke={C.ink} strokeWidth="1.2" />
             {[0, 1, 2, 3].map((i) => (
               <g key={i}>
-                <rect x="58" y={112 + i * 12} width="6" height="6" fill={[C.clay, C.sky, C.olive, C.fig][i]} />
+                <rect x="58" y={112 + i * 12} width="6" height="6" fill={[C.lilac, C.sky, C.olive, C.fig][i]} />
                 <rect x="70" y={113 + i * 12} width={56 - i * 8} height="4" fill={C.ink} fillOpacity="0.25" />
               </g>
             ))}
@@ -181,7 +181,7 @@ function Art({ name }: { name: IlloName }) {
           {[0, 1, 2].flatMap((r) =>
             [0, 1, 2].map((c) => {
               const k = r * 3 + c;
-              const fill = [C.ivory, C.oat, C.clay, C.oat, C.clay, C.ink, C.clay, C.ink, C.ink][k];
+              const fill = [C.ivory, C.oat, C.lilac, C.oat, C.lilac, C.ink, C.lilac, C.ink, C.ink][k];
               return <rect key={k} x={34 + c * 46} y={34 + r * 46} width="40" height="40" fill={fill} />;
             }),
           )}
@@ -191,7 +191,7 @@ function Art({ name }: { name: IlloName }) {
     case "escala":
       return (
         <>
-          <rect width="200" height="200" fill={C.clay} />
+          <rect width="200" height="200" fill={C.lilac} />
           <g transform="rotate(-28 100 100)">
             <rect x="10" y="80" width="180" height="40" fill={C.ivory} />
             {Array.from({ length: 35 }).map((_, i) => (
@@ -223,7 +223,7 @@ function Art({ name }: { name: IlloName }) {
           {[48, 62, 80, 104, 136, 180].map((y, i) => (
             <path key={`h${i}`} d={`M${100 - (y - 40) * 0.69 - 36} ${y}H${100 + (y - 40) * 0.69 + 36}`} {...line} strokeWidth={0.9} />
           ))}
-          <circle cx="100" cy="24" r="6" fill={C.clay} />
+          <circle cx="100" cy="24" r="6" fill={C.lilac} />
         </>
       );
     case "pontos":
@@ -237,7 +237,7 @@ function Art({ name }: { name: IlloName }) {
             const x = 40 + ((i * 53) % 120);
             const roof = x < 100 ? 70 - (x - 40) * 0.6 : 34 + (x - 100) * 0.6;
             const y = roof + r * (170 - roof);
-            return <circle key={i} cx={x + Math.sin(t) * 1.5} cy={y} r={i % 9 ? 1.4 : 2.2} fill={i % 11 ? C.ivory : C.clay} />;
+            return <circle key={i} cx={x + Math.sin(t) * 1.5} cy={y} r={i % 9 ? 1.4 : 2.2} fill={i % 11 ? C.ivory : C.lilac} />;
           })}
         </>
       );
@@ -245,7 +245,7 @@ function Art({ name }: { name: IlloName }) {
       return (
         <>
           <rect width="200" height="200" fill={C.sand} />
-          {[C.sky, C.olive, C.clay].map((fill, i) => (
+          {[C.sky, C.olive, C.lilac].map((fill, i) => (
             <polygon key={i} points={`100,${40 + i * 34} 168,${74 + i * 34} 100,${108 + i * 34} 32,${74 + i * 34}`} fill={fill} stroke={C.ink} strokeWidth="1.2" />
           ))}
         </>

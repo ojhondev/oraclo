@@ -121,7 +121,7 @@ export const DOC_STEPS: DocStep[] = [
       "Clique numa sugestão para aproximar. Se a classe estiver errada, troque em Classe do dano.",
       "Enter (ou Aceitar como dano) transforma a sugestão em dano; Delete (ou Não é dano) descarta. A próxima abre sozinha.",
     ],
-    shot: { src: "/docs/12-deteccao.jpg", alt: "Editor com sugestões tracejadas da detecção automática e a lista no painel direito", caption: "Quatro sugestões tracejadas na fachada do Carmo, com a confiança de cada uma no painel à direita." },
+    shot: { src: "/docs/12-deteccao.jpg", alt: "Editor com sugestões tracejadas da detecção automática e a lista no painel direito", caption: "Sugestões tracejadas na fachada do Carmo, com a confiança de cada uma no painel à direita." },
     tips: [
       "Use a Confiança mínima para esconder as sugestões duvidosas.",
       "Funciona melhor em fachadas retificadas de reboco claro. Em pedra escura, texturas fortes e sombras, confira com mais cuidado.",

@@ -78,7 +78,7 @@ export default async function TechPage() {
               <ul className="mt-8 border-t text-[15px] leading-6">
                 {it.bullets.map((b) => (
                   <li key={b} className="flex gap-3 border-b py-3">
-                    <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-[var(--site-clay)]" />
+                    <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-[var(--site-accent)]" />
                     {b}
                   </li>
                 ))}

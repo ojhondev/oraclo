@@ -1,6 +1,6 @@
 /*
  * Site público do ArchRay — linguagem visual inspirada na Anthropic: fundo marfim, grafite,
- * cartões bege, títulos sem serifa em negrito, manchetes-manifesto em serifa, terracota como
+ * cartões bege, títulos sem serifa em negrito, manchetes-manifesto em serifa, o lilás da marca como
  * destaque e rodapé quase preto. Claro por padrão; .site-dark liga a variante escura quente.
  * Os tokens valem só dentro de .site-theme (independem do tema escolhido no app).
  */
@@ -22,14 +22,14 @@
   --accent-foreground: #141413;
   --border: #e8e6dc;
   --input: #dedcd1;
-  --ring: #c6613f;
+  --ring: #83809a;
   /* cartões, faixas e pílulas */
   --site-elev: #f5f4ed;
   --site-band: #f0eee6;
   --site-pill: #f0eee6;
   --site-pill-hover: #e8e6dc;
   --site-btn2: #e8e6dc;
-  --site-clay: #d97757;
+  --site-accent: #83809a;
   --site-grid: rgb(20 20 19 / 0.07);
   color-scheme: light;
   background: var(--background);
@@ -53,13 +53,14 @@
   --accent-foreground: #faf9f5;
   --border: #3d3d3a;
   --input: #4d4c48;
-  --ring: #d97757;
+  --ring: #a6a3bb;
   --site-elev: #262624;
   --site-band: #262624;
   --site-pill: #30302e;
   --site-pill-hover: #3d3d3a;
   --site-btn2: #3d3d3a;
   --site-grid: rgb(250 249 245 / 0.07);
+  --site-accent: #a6a3bb;
   color-scheme: dark;
 }
 

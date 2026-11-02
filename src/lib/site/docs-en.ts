@@ -109,7 +109,7 @@ export const DOC_STEPS_EN: DocStep[] = [
       "Click a suggestion to zoom in. If the class is wrong, change it under Classe do dano.",
       "Enter (or Aceitar como dano) turns the suggestion into a damage; Delete (or Não é dano) discards it. The next one opens by itself.",
     ],
-    shot: { src: "/docs/12-deteccao.jpg", alt: "Editor with dashed suggestions from automatic detection and the list in the right panel", caption: "Four dashed suggestions on the Carmo facade, each with its confidence in the right panel." },
+    shot: { src: "/docs/12-deteccao.jpg", alt: "Editor with dashed suggestions from automatic detection and the list in the right panel", caption: "Dashed suggestions on the Carmo facade, each with its confidence in the right panel." },
     tips: [
       "Use the minimum confidence (Confiança mínima) to hide doubtful suggestions.",
       "It works best on rectified facades with light render. On dark stone, strong textures and shadows, check more carefully.",

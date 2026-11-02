@@ -70,12 +70,12 @@ const pt = {
   },
 
   home: {
-    metaTitle: "ArchRay — Laudo com Mapa de danos com tecnologia própria",
+    metaTitle: "ArchRay — Laudo com Mapa de Danos com IA assistida",
     metaDescription:
       "O ArchRay converte fotos de fachada em desenho técnico em escala, mede cada patologia e entrega orçamento e laudo. Tecnologia própria do Estúdio Restaura.",
-    lead: "Laudo com Mapa de danos com tecnologia própria.",
+    lead: "Laudo com Mapa de Danos com IA assistida.",
     manifesto:
-      "O ArchRay converte fotos de fachada em desenho técnico em escala, mede cada patologia e entrega orçamento e laudo — com o rigor do Estúdio Restaura e um motor que nós mesmos construímos.",
+      "Vistoriamos, retificamos e mapeamos cada dano de fachadas com tecnologia própria — e entregamos quantitativos, orçamento do tratamento e laudo com prioridades, prontos para decidir, aprovar e começar a obra.",
     featureTitle: "Reinventamos o mapa de danos",
     featureText:
       "Retificação métrica, detecção automática e comparação entre vistorias num motor próprio, que roda no navegador. A máquina mede; o arquiteto decide.",
@@ -330,12 +330,12 @@ const en: Copy = {
   },
 
   home: {
-    metaTitle: "ArchRay — Condition reports with damage mapping, built on in-house technology",
+    metaTitle: "ArchRay — Condition reports with AI-assisted damage mapping",
     metaDescription:
       "ArchRay turns facade photos into scaled technical drawings, measures every defect and delivers the budget and the report. In-house technology by Estúdio Restaura.",
-    lead: "Condition reports with damage mapping, built on in-house technology.",
+    lead: "Condition reports with AI-assisted damage mapping.",
     manifesto:
-      "ArchRay turns facade photos into scaled technical drawings, measures every defect and delivers the budget and the report — with Estúdio Restaura's rigour and an engine we built ourselves.",
+      "We survey, rectify and map every damage on facades with in-house technology — and deliver quantities, a treatment budget and a prioritised report, ready to decide, approve and start the works.",
     featureTitle: "We reinvented the damage map",
     featureText:
       "Metric rectification, automatic detection and survey comparison in an engine of our own that runs in the browser. The machine measures; the architect decides.",

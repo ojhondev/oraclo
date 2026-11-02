@@ -64,7 +64,7 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
           ))}
         </nav>
         <Link href="/" aria-label={lang === "en" ? "ArchRay — home" : "ArchRay — início"} className="col-start-1 row-start-1 flex shrink-0 items-center gap-2 justify-self-start lg:col-start-2 lg:justify-self-center">
-          <BrandMark className="h-[30px]" />
+          <BrandMark className="h-[24px]" />
           <BrandLogo className="site-logo h-[15px]" />
         </Link>
         <div className="col-start-3 row-start-1 flex items-center justify-end gap-1.5">

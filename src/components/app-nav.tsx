@@ -179,7 +179,7 @@ function NavContent({
           aria-label="ArchRay — início"
           className={cn("flex h-9 items-center rounded-lg hover:bg-sidebar-accent", collapsed ? "w-9 justify-center" : "gap-2 px-2")}
         >
-          <BrandMark className="h-[26px]" />
+          <BrandMark className="h-[21px]" />
           {!collapsed && <BrandLogo className="h-[13px]" />}
         </Link>
         <div className={cn("flex items-center gap-0.5", collapsed && "flex-col")}>
@@ -294,7 +294,7 @@ export function MobileBar({ user, recent }: { user: SessionUser; recent: Recent 
       <button aria-label="Menu" onClick={() => setOpen(true)} className="-ml-1 grid size-9 place-items-center rounded-lg hover:bg-muted">
         <Menu className="size-5" />
       </button>
-      <BrandMark className="h-6" />
+      <BrandMark className="h-[19px]" />
       <BrandLogo className="h-[12px]" />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-72 bg-sidebar p-0">

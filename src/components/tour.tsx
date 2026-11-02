@@ -111,7 +111,7 @@ export function Tour({ autoStart }: { autoStart: boolean }) {
         <button onClick={finish} aria-label="Fechar tour" className="absolute top-3 right-3 text-muted-foreground hover:text-foreground">
           <X className="size-4" />
         </button>
-        {i === 0 && <BrandMark className="mb-3 h-6" />}
+        {i === 0 && <BrandMark className="mb-3 h-9" />}
         <p className="mb-1 text-[12px] text-muted-foreground">
           {i + 1} de {STEPS.length}
         </p>

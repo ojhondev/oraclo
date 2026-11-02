@@ -19,8 +19,8 @@ export function AuthShell({
       <div className="w-full max-w-[400px]">
         <div className="mb-8 flex flex-col items-center text-center">
           <span className="mb-6 flex items-center gap-3">
-            <BrandMark className="h-7" />
-            <BrandLogo className="h-7" />
+            <BrandMark className="h-10" />
+            <BrandLogo className="h-[19px]" />
           </span>
           <p className="mb-1 text-[13px] text-muted-foreground">{eyebrow}</p>
           <h1 className="font-serif text-[32px] leading-tight font-normal tracking-[-0.01em]">{title}</h1>

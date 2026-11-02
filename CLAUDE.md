@@ -29,8 +29,7 @@ As rotas continuam em `/bens/...` e `/ortofotos/...` (nomes internos antigos).
   Serif 4 em manchetes e títulos de página (`h-display`, `font-serif`). Botões com raio de 10 px.
   Site público: tokens próprios em `src/components/site/site.css` (claro por padrão, `.site-dark`
   opcional, `.site-ink` = faixa escura do rodapé), componentes `a-pill`/`a-btn`/`a-btn-2`/`a-card`/
-  `a-tag`/`a-title`/`a-serif` e títulos padronizados por regra. Marca em `src/components/brand.tsx`
-  + `public/brand`. Barra lateral recolhível
+  `a-tag`/`a-title`/`a-serif` e títulos padronizados por regra. Marca (desde 2026-11-02): ícone terracota em "x" com a·r·a·y (`public/brand/icone.png`) + nome ARCHRAY (`logo.png`; completas em `logo-completa*.png`, usadas nos PDFs). Componentes em `src/components/brand.tsx`; favicons gerados por `.cache/favicons.mjs`. Barra lateral recolhível
   (cookie `oraclo_sidebar`, ver `src/lib/ui-prefs.ts`).
 - Neon Postgres + Drizzle (`src/lib/db/schema.ts`). `npm run db:push` aplica o schema.
 - Dev: `npm run dev` → porta **3022** (entrada `oraclo` em `A:\Claude Code\Velo\.claude\launch.json`).

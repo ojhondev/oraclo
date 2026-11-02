@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { MARK_PATH } from "@/components/brand";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,9 +36,8 @@ export function SiteCover({ className }: { className?: string }) {
   return (
     <div className={cn("relative grid place-items-center overflow-hidden bg-[var(--site-band)]", className)} aria-hidden>
       <div className="absolute inset-0 bg-[linear-gradient(to_right,var(--site-grid)_1px,transparent_1px),linear-gradient(to_bottom,var(--site-grid)_1px,transparent_1px)] bg-[size:28px_28px]" />
-      <svg viewBox="0 0 723 508" className="relative w-[34%] transition-transform duration-500 group-hover:scale-105">
-        <path d={MARK_PATH} fill="var(--foreground)" fillRule="evenodd" />
-      </svg>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src="/brand/icone.png" alt="" width={374} height={458} className="relative h-[42%] w-auto transition-transform duration-500 group-hover:scale-105" />
     </div>
   );
 }

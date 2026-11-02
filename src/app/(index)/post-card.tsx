@@ -1,26 +1,37 @@
 import Link from "next/link";
 import { fmtPostDate, type Post } from "@/lib/updates";
 import type { Lang } from "@/lib/site/lang";
+import { Illo, type IlloName } from "@/components/site/illo";
 
-export function PostCard({ post, lang = "pt" }: { post: Post; lang?: Lang }) {
+/** Ilustração de cada publicação do Index (mídia própria, sem fotos). */
+const POST_ILLO: Record<string, IlloName> = {
+  "comparar-vistorias": "comparar",
+  "deteccao-automatica-de-danos": "deteccao",
+  "archray-mapa-de-danos-com-ia": "retifica",
+};
+export const postIllo = (slug: string): IlloName => POST_ILLO[slug] ?? "grade";
+
+/** Publicação em cartão: etiqueta, ilustração, título em negrito e resumo. */
+export function PostCard({ post, lang = "pt", image = true }: { post: Post; lang?: Lang; image?: boolean }) {
   return (
     <Link href={`/index/${post.slug}`} className="group block">
-      <Cover title={post.title} />
-      <h3 className="mt-4 text-[17px] leading-6 font-medium group-hover:underline group-hover:underline-offset-4">{post.title}</h3>
-      <p className="mt-1 text-[14px] font-medium text-muted-foreground">
+      <p className="a-tag">
         {post.category} · {fmtPostDate(post.date, "short", lang)}
       </p>
+      {image && <Cover slug={post.slug} title={post.title} className="mt-3" />}
+      <h3 className="a-title mt-3 text-[19px] leading-snug group-hover:underline group-hover:underline-offset-4">{post.title}</h3>
+      <p className="mt-2 line-clamp-4 text-[14.5px] leading-6 text-muted-foreground">{post.summary}</p>
     </Link>
   );
 }
 
-/** Capa gerada: o símbolo do ArchRay sobre um campo neutro (sem fotos de terceiros). */
-export function Cover({ title, large }: { title: string; large?: boolean }) {
+/** Capa da publicação: a ilustração do tema. */
+export function Cover({ slug, title, className, aspect = "aspect-[4/3]" }: { slug: string; title: string; className?: string; aspect?: string }) {
   return (
-    <div className="relative grid aspect-[16/10] place-items-center overflow-hidden rounded-2xl bg-muted" aria-label={title}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/brand/icone.png" alt="" aria-hidden width={374} height={458} className={large ? "relative z-10 h-[46%] w-auto" : "relative z-10 h-[40%] w-auto"} />
-      <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,var(--border)_1px,transparent_1px),linear-gradient(to_bottom,var(--border)_1px,transparent_1px)] bg-[size:48px_48px] opacity-60 mix-blend-multiply dark:mix-blend-screen" />
+    <div className={`overflow-hidden rounded-[8px] ${aspect} ${className ?? ""}`} aria-label={title}>
+      <div className="size-full transition-transform duration-700 group-hover:scale-[1.03]">
+        <Illo name={postIllo(slug)} />
+      </div>
     </div>
   );
 }

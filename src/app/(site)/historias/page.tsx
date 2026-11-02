@@ -26,13 +26,11 @@ export default async function HistoriasPage() {
   const t = T[lang];
   const [first, ...rest] = getStories(lang);
   return (
-    <div className="px-4 pt-16 pb-24 sm:px-6 sm:pt-24 lg:px-8">
-      <h1 className="site-fade-in text-[44px] leading-[1.05] font-medium tracking-[-0.04em] sm:text-[72px]">{t.title}</h1>
-      <p className="site-fade-in mt-4 max-w-xl text-[17px] leading-7 text-muted-foreground" style={{ "--d": "200ms" } as React.CSSProperties}>
-        {t.lead}
-      </p>
+    <div className="px-4 pt-12 pb-8 sm:px-6 sm:pt-16 lg:px-8">
+      <p className="a-label">{t.title}</p>
+      <h1 className="mt-5 max-w-[1100px] text-[30px] leading-[1.15] sm:text-[44px]">{t.lead}</h1>
       {first && (
-        <div className="mt-12 border-t pt-8">
+        <div className="mt-14 border-t pt-8">
           <StoryCard story={first} large lang={lang} />
           <p className="mt-3 max-w-2xl text-[15.5px] leading-7 text-muted-foreground">{first.summary}</p>
         </div>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { POSTS, fmtPostDate, getPost, getPosts, type PostBlock } from "@/lib/updates";
 import { getLang } from "@/lib/site/get-lang";
-import { PostCard } from "../../post-card";
+import { Cover, PostCard } from "../../post-card";
 import { ShareButton, Toc } from "./toc";
 
 export function generateStaticParams() {
@@ -71,16 +71,17 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
   return (
     <article className="px-4 pb-24 sm:px-8">
       {/* cabeçalho centralizado */}
-      <header className="mx-auto max-w-[800px] pt-16 text-center sm:pt-24">
-        <p className="text-[14px] font-medium">
-          {fmtPostDate(post.date, "long", lang)}
-          <Link href="/index" className="ml-3 text-muted-foreground hover:text-foreground">
+      <header className="mx-auto max-w-[1100px] pt-12 sm:pt-16">
+        <p className="a-tag">
+          <Link href="/index" className="hover:text-foreground">
             {post.category}
           </Link>
+          <span>{fmtPostDate(post.date, "long", lang)}</span>
         </p>
-        <h1 className="mt-6 text-[38px] leading-[1.05] font-medium tracking-[-0.03em] text-balance sm:text-[56px]">{post.title}</h1>
-        <p className="mx-auto mt-6 max-w-[520px] text-[17px] leading-7 text-balance">{post.summary}</p>
-        <div className="mx-auto mt-12 flex max-w-[600px] items-center justify-between border-t pt-4 text-[14px] font-medium">
+        <h1 className="mt-5 max-w-[22ch] text-[38px] leading-[1.06] sm:text-[60px]">{post.title}</h1>
+        <p className="a-serif mt-6 max-w-[48ch] text-[20px] leading-[1.45] sm:text-[23px]">{post.summary}</p>
+        <Cover slug={post.slug} title={post.title} aspect="aspect-[21/9]" className="mt-10" />
+        <div className="mt-6 flex items-center justify-between border-b pb-4 text-[14px]">
           <span className="text-muted-foreground">{post.author}</span>
           <ShareButton title={post.title} lang={lang} />
         </div>
@@ -89,13 +90,13 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
       {/* sumário fixo à esquerda + texto numa coluna estreita */}
       <div className="mx-auto mt-14 grid max-w-[1100px] gap-10 lg:grid-cols-[180px_minmax(0,600px)] lg:justify-center lg:gap-16">
         <Toc items={post.sections.map((s) => ({ id: s.id, title: s.title }))} label={en ? "On this page" : "Nesta página"} />
-        <div className="grid gap-6 text-[17px] leading-7 tracking-[-0.01em]">
+        <div className="a-serif grid gap-6 text-[19px] leading-[1.6]">
           {post.intro.map((t) => (
             <p key={t}>{t}</p>
           ))}
           {post.sections.map((s) => (
             <section key={s.id} id={s.id} className="grid scroll-mt-24 gap-6">
-              <h2 className="mt-8 text-[29px] leading-[1.3] font-medium tracking-[-0.015em]">{s.title}</h2>
+              <h2 className="mt-8 text-[26px] leading-[1.25]">{s.title}</h2>
               {s.blocks.map((b, i) => (
                 <Block key={i} b={b} />
               ))}
@@ -131,7 +132,7 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
 
       {more.length > 0 && (
         <section className="mx-auto mt-24 max-w-[1100px] border-t pt-8">
-          <h2 className="text-[22px] font-medium tracking-[-0.01em]">{en ? "Keep reading" : "Continuar lendo"}</h2>
+          <h2 className="text-[13.5px] font-bold">{en ? "Keep reading" : "Continuar lendo"}</h2>
           <ul className="mt-6 grid gap-6 sm:grid-cols-3">
             {more.map((p) => (
               <li key={p.slug}>

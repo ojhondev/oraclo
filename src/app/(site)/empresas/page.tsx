@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Camera, FileStack, Gauge, Lock, MonitorSmartphone, UserRound } from "lucide-react";
 import { getStories } from "@/lib/site/stories";
 import { getLang } from "@/lib/site/get-lang";
 import type { Lang } from "@/lib/site/lang";
 import { SectionHead, StoryCard } from "@/components/site/blocks";
+import { Illo, type IlloName } from "@/components/site/illo";
 
 const T = {
   pt: {
@@ -14,7 +14,7 @@ const T = {
     h1: "Diagnóstico de danos para quem decide a obra",
     lead: "Restauro, inspeção, retrofit ou patrimônio: fazemos a vistoria, mapeamos cada dano e entregamos quantitativos, orçamento e laudo prontos para a sua decisão.",
     cta: "Solicitar diagnóstico",
-    cta2: "Como funciona",
+    cta2: "Conheça a tecnologia",
     segments: [
       {
         id: "restauro",
@@ -63,7 +63,7 @@ const T = {
     h1: "Damage diagnosis for those who decide the works",
     lead: "Restoration, inspection, retrofit or heritage: we survey the building, map every damage and deliver quantities, a budget and a report ready for your decision.",
     cta: "Request a diagnosis",
-    cta2: "How it works",
+    cta2: "Explore the technology",
     segments: [
       {
         id: "restauro",
@@ -107,78 +107,78 @@ const T = {
   },
 } satisfies Record<Lang, unknown>;
 
-const TEAM_ICONS = [UserRound, Camera, Gauge, MonitorSmartphone, FileStack, Lock];
+const SEGMENT_ILLOS: IlloName[] = ["arco", "gut", "escala", "fachada"];
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = T[await getLang()];
   return { title: t.title, description: t.description };
 }
 
+/** Setores atendidos, no padrão das páginas internas da Anthropic. */
 export default async function EmpresasPage() {
   const lang = await getLang();
   const t = T[lang];
   const stories = getStories(lang);
   return (
     <>
-      <section className="px-4 pt-20 pb-20 sm:px-6 sm:pt-28 lg:px-8">
-        <p className="site-fade-in text-[14px] font-medium text-muted-foreground">{t.kicker}</p>
-        <h1 className="site-fade-in mt-4 max-w-[18ch] text-[42px] leading-[1.03] font-medium tracking-[-0.045em] text-balance sm:text-[80px]" style={{ "--d": "120ms" } as React.CSSProperties}>
-          {t.h1}
-        </h1>
-        <p className="site-fade-in mt-6 max-w-2xl text-[17px] leading-7 text-muted-foreground sm:text-[19px] sm:leading-8" style={{ "--d": "260ms" } as React.CSSProperties}>
-          {t.lead}
-        </p>
-        <div className="site-fade-in mt-8 flex flex-wrap gap-3" style={{ "--d": "380ms" } as React.CSSProperties}>
-          <Link href="/contato" className="a-btn">
-            {t.cta}
-          </Link>
-          <Link href="/#como-funciona" className="a-btn-2">
-            {t.cta2}
-          </Link>
+      {/* título em duas colunas */}
+      <section className="grid gap-8 px-4 pt-12 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-2 lg:gap-16 lg:px-8">
+        <div>
+          <p className="a-label">{t.kicker}</p>
+          <h1 className="mt-5 text-[40px] leading-[1.05] sm:text-[58px]">{t.h1}</h1>
+        </div>
+        <div className="lg:pt-10">
+          <p className="a-serif text-[21px] leading-[1.45] sm:text-[24px]">{t.lead}</p>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link href="/contato" className="a-btn a-btn-sm">
+              {t.cta}
+            </Link>
+            <Link href="/tecnologia" className="a-btn-2 a-btn-sm">
+              {t.cta2}
+            </Link>
+          </div>
         </div>
       </section>
 
-      <section className="border-t">
+      {/* um bloco por setor, com ilustração */}
+      <section className="px-4 sm:px-6 lg:px-8">
         {t.segments.map((s, i) => (
-          <div key={s.id} id={s.id} className="grid scroll-mt-16 gap-8 border-b px-4 py-16 sm:px-6 lg:grid-cols-[1fr_1.2fr] lg:gap-20 lg:px-8 lg:py-24">
-            <div data-reveal>
-              <span className="text-[13px] text-muted-foreground tabular-nums">0{i + 1}</span>
-              <h2 className="mt-2 text-[30px] leading-[1.1] font-medium tracking-[-0.025em] sm:text-[40px]">{s.title}</h2>
+          <article key={s.id} id={s.id} className="grid scroll-mt-24 gap-8 border-t py-14 lg:grid-cols-[minmax(0,4fr)_minmax(0,8fr)] lg:gap-16">
+            <div className="aspect-square max-w-[420px] overflow-hidden rounded-[8px]" data-reveal="fade">
+              <Illo name={SEGMENT_ILLOS[i]!} />
             </div>
-            <div data-reveal data-reveal-delay={120}>
-              <p className="text-[18px] leading-8 text-balance sm:text-[20px]">{s.pain}</p>
-              <ul className="mt-6 grid gap-3 border-t pt-6 text-[15.5px]">
+            <div className="min-w-0 self-center" data-reveal data-reveal-delay={100}>
+              <p className="a-label">0{i + 1}</p>
+              <h2 className="mt-4 text-[30px] leading-tight sm:text-[40px]">{s.title}</h2>
+              <p className="a-serif mt-4 max-w-[52ch] text-[20px] leading-[1.45] sm:text-[22px]">{s.pain}</p>
+              <ul className="mt-8 border-t text-[15px] leading-6">
                 {s.gain.map((g) => (
-                  <li key={g} className="flex items-start gap-3">
-                    <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-foreground" />
+                  <li key={g} className="flex gap-3 border-b py-3">
+                    <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-[var(--site-clay)]" />
                     {g}
                   </li>
                 ))}
               </ul>
             </div>
-          </div>
+          </article>
         ))}
       </section>
 
-      <section className="px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-        <h2 className="max-w-[20ch] text-[32px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[56px]" data-reveal>
-          {t.teamTitle}
-        </h2>
-        <ul className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {t.team.map(([title, text], i) => {
-            const Icon = TEAM_ICONS[i]!;
-            return (
-              <li key={title} className="rounded-lg border bg-[var(--site-elev)] p-6 sm:p-7" data-reveal data-reveal-delay={(i % 3) * 100}>
-                <Icon className="size-[18px]" strokeWidth={1.6} />
-                <h3 className="mt-4 text-[17px] font-medium">{title}</h3>
-                <p className="mt-1.5 text-[14.5px] leading-6 text-muted-foreground">{text}</p>
-              </li>
-            );
-          })}
+      {/* como trabalhamos: colunas com linha fina no topo */}
+      <section className="px-4 pt-20 sm:px-6 sm:pt-28 lg:px-8">
+        <h2 className="text-[30px] leading-tight sm:text-[40px]">{t.teamTitle}</h2>
+        <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          {t.team.map(([title, text], i) => (
+            <li key={title} className="border-t pt-4" data-reveal data-reveal-delay={(i % 3) * 80}>
+              <p className="a-label">0{i + 1}</p>
+              <h3 className="a-title mt-3 text-[17px]">{title}</h3>
+              <p className="mt-2 text-[14.5px] leading-6 text-muted-foreground">{text}</p>
+            </li>
+          ))}
         </ul>
       </section>
 
-      <section className="px-4 pb-24 sm:px-6 lg:px-8">
+      <section className="px-4 pt-20 sm:px-6 sm:pt-28 lg:px-8">
         <SectionHead title={t.stories} href="/historias" more={t.seeAll} />
         <ul className="mt-8 grid gap-8 md:grid-cols-3">
           {stories.map((s) => (
@@ -189,11 +189,11 @@ export default async function EmpresasPage() {
         </ul>
       </section>
 
-      <section className="px-4 pb-24 sm:px-6 lg:px-8">
-        <div className="rounded-lg bg-foreground px-6 py-20 text-center text-background sm:py-28" data-reveal="scale">
-          <h2 className="mx-auto max-w-[20ch] text-[32px] leading-[1.08] font-medium tracking-[-0.03em] text-balance sm:text-[48px]">{t.finalTitle}</h2>
-          <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-background/70">{t.finalText}</p>
-          <Link href="/contato" className="mt-8 inline-flex h-11 items-center rounded-full bg-background px-6 text-[15px] font-medium text-foreground hover:opacity-90">
+      <section className="px-4 pt-24 sm:px-6 lg:px-8">
+        <div className="a-card px-6 py-20 text-center">
+          <h2 className="a-serif mx-auto max-w-[22ch] text-[32px] leading-[1.15] sm:text-[46px]">{t.finalTitle}</h2>
+          <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-muted-foreground">{t.finalText}</p>
+          <Link href="/contato" className="a-btn mt-8">
             {t.finalCta}
           </Link>
         </div>

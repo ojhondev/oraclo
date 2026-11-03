@@ -4,6 +4,7 @@
  * Cada uma fala de uma parte da tecnologia do ArchRay. SVG 200×200, preenche o contêiner.
  */
 import { cn } from "@/lib/utils";
+import { EXTRA_NAMES, ExtraArt, type ExtraName } from "./illo-extra";
 
 const C = {
   lilac: "#83809a",
@@ -19,7 +20,7 @@ const C = {
   ink: "#141413",
 };
 
-export type IlloName =
+type BaseName =
   | "retifica"
   | "fachada"
   | "fissura"
@@ -36,7 +37,15 @@ export type IlloName =
 
 const line = { fill: "none", stroke: C.ink, strokeWidth: 1.4, strokeLinecap: "round", strokeLinejoin: "round" } as const;
 
-function Art({ name }: { name: IlloName }) {
+/** Todas as ilustrações: as do site (abaixo) e as extras de arquitetura, engenharia e patrimônio. */
+export type IlloName = BaseName | ExtraName;
+export const ILLO_NAMES: IlloName[] = [
+  ...(["retifica", "fachada", "fissura", "contorno", "deteccao", "comparar", "laudo", "gut", "escala", "arco", "grade", "pontos", "camadas"] satisfies BaseName[]),
+  ...EXTRA_NAMES,
+];
+const isExtra = (n: IlloName): n is ExtraName => (EXTRA_NAMES as readonly string[]).includes(n);
+
+function Art({ name }: { name: BaseName }) {
   switch (name) {
     case "retifica": {
       // fachada em perspectiva (trapézio) virando plano em escala (quadrado terracota)
@@ -256,7 +265,7 @@ function Art({ name }: { name: IlloName }) {
 export function Illo({ name, className, title }: { name: IlloName; className?: string; title?: string }) {
   return (
     <svg viewBox="0 0 200 200" preserveAspectRatio="xMidYMid slice" className={cn("block size-full", className)} role={title ? "img" : undefined} aria-label={title} aria-hidden={title ? undefined : true}>
-      <Art name={name} />
+      {isExtra(name) ? <ExtraArt name={name} /> : <Art name={name} />}
     </svg>
   );
 }

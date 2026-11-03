@@ -20,6 +20,7 @@ import {
   PanelRightOpen,
   Search,
   Trash2,
+  TriangleAlert,
   Undo2,
   WandSparkles,
   X,
@@ -147,6 +148,8 @@ export function DamageMapEditor({
   const aiSeq = useRef(0);
   // detecção automática: sugestões tracejadas, revisadas uma a uma (nada entra sem aceitar)
   const [suggestions, setSuggestions] = useState(initialSuggestions);
+  /** Avisos sobre a imagem da última detecção (sombra dura, superfície decorada…). */
+  const [detectWarnings, setDetectWarnings] = useState<string[]>([]);
   const [selSug, setSelSug] = useState<string | null>(null);
   const [sugType, setSugType] = useState<Record<string, string>>({});
   const [detecting, setDetecting] = useState<string | null>(null);
@@ -433,14 +436,15 @@ export function DamageMapEditor({
     clearAi();
     setDetecting("Preparando a análise");
     try {
-      const { detections, ms } = await runDetection(ortho.url, setDetecting);
+      const { detections, quality, ms } = await runDetection(ortho.url, setDetecting);
+      setDetectWarnings(quality.map((q) => q.message));
       // o que já está marcado não volta como sugestão
       const covered = (p: Pt) => damages.some((d) => typeById.get(d.typeId)?.geometry === "area" && pointInPolygon(p, pts(d)));
       const list = detections.flatMap((d) => {
         const t = typeByCode.get(d.code);
         const points = d.points as Pt[];
         if (!t || covered(centroid(points))) return [];
-        return [{ typeId: t.id, points, confidence: Math.round(d.confidence * 100) / 100, detector: d.detector }];
+        return [{ typeId: t.id, points, confidence: Math.round(d.confidence * 100) / 100, detector: d.detector, reason: d.reason }];
       });
       setDetecting("Salvando as sugestões");
       const saved = await saveSuggestions(siteId, ortho.id, list);
@@ -448,11 +452,15 @@ export function DamageMapEditor({
       setMinConf((m) => Math.min(m, 0.4));
       if (saved.length)
         toast.success(`${saved.length} ${saved.length === 1 ? "sugestão" : "sugestões"} da IA em ${(ms / 1000).toFixed(1)} s`, {
-          description: "Confira uma a uma: aceite o que é dano e rejeite o que não é. Nada entra no orçamento sem você aceitar.",
+          description: quality.length
+            ? `Confira uma a uma. Atenção: ${quality.map((q) => q.message.split(":")[0]!.toLowerCase()).join("; ")}.`
+            : "Confira uma a uma: aceite o que é dano e rejeite o que não é. Nada entra no orçamento sem você aceitar.",
         });
       else
         toast.info("A detecção não encontrou danos novos nesta vista.", {
-          description: "Ela procura fissuras, manchas de umidade e sujidade, biodeterioração, perda de reboco e eflorescência.",
+          description: quality.length
+            ? quality.map((q) => q.message).join(" ")
+            : "Ela procura fissuras, perda de pintura, manchas de umidade e sujidade, biodeterioração, perda de reboco e eflorescência.",
         });
       window.dispatchEvent(new Event("archray:deteccao-ia"));
     } catch (e) {
@@ -1396,6 +1404,7 @@ export function DamageMapEditor({
                   typeOf={sugTypeOf}
                   minConf={minConf}
                   onMinConf={setMinConf}
+                  warnings={detectWarnings}
                   canEdit={canEdit}
                   onOpen={(s) => {
                     setTool("mover");
@@ -1725,12 +1734,12 @@ const SOURCE_LABELS: Record<NonNullable<Damage["source"]>, string> = {
   ia_deteccao: "Detecção automática",
 };
 
-/** O que cada detector viu (mostrado ao revisar a sugestão). */
+/** O que cada detector viu, para sugestões antigas que não trazem a justificativa medida. */
 const DETECTOR_HINTS: Record<string, string> = {
   fissura: "Linha fina mais escura que a parede dos dois lados.",
   verde: "Região esverdeada destoando da parede: fungos, musgos, liquens ou plantas.",
   reboco: "Região avermelhada destoando do reboco: alvenaria aparente.",
-  mancha: "Mancha mais escura e mosqueada sobre o reboco claro.",
+  mancha: "Região que destoa da superfície em volta.",
   clara: "Mancha clara e sem cor sobre a parede: sais na superfície.",
 };
 
@@ -1740,6 +1749,7 @@ function SuggestionsCard({
   typeOf,
   minConf,
   onMinConf,
+  warnings,
   canEdit,
   onOpen,
   onAccept,
@@ -1750,6 +1760,7 @@ function SuggestionsCard({
   typeOf: (s: Suggestion) => DamageType | undefined;
   minConf: number;
   onMinConf: (v: number) => void;
+  warnings: string[];
   canEdit: boolean;
   onOpen: (s: Suggestion) => void;
   onAccept: (ids: string[]) => void;
@@ -1764,8 +1775,18 @@ function SuggestionsCard({
         </span>
       </div>
       <p className="mt-1 text-[11.5px] leading-snug text-muted-foreground">
-        Detecção automática feita no seu navegador. Nada entra no orçamento nem no laudo sem você aceitar.
+        Detecção automática feita no seu navegador. Revise uma a uma: nada entra no orçamento nem no laudo sem você aceitar.
       </p>
+      {warnings.length > 0 && (
+        <ul className="mt-2.5 grid gap-1.5">
+          {warnings.map((w) => (
+            <li key={w} className="flex gap-1.5 rounded-md bg-amber-500/10 px-2 py-1.5 text-[11.5px] leading-snug text-amber-900 dark:text-amber-200">
+              <TriangleAlert className="mt-px size-3.5 shrink-0" />
+              <span>{w}</span>
+            </li>
+          ))}
+        </ul>
+      )}
       <label className="mt-3 flex items-center gap-2 text-[12px]" title="Esconde as sugestões com confiança abaixo deste valor">
         <span className="shrink-0 text-muted-foreground">Confiança mínima</span>
         <input
@@ -1811,13 +1832,13 @@ function SuggestionsCard({
         </ul>
       )}
       {canEdit && visible.length > 1 && (
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <Button size="sm" variant="secondary" onClick={() => onAccept(visible.map((s) => s.id))}>
-            Aceitar as {visible.length}
-          </Button>
+        <div className="mt-3 grid gap-1.5">
           <Button size="sm" variant="ghost" onClick={() => onReject(visible.map((s) => s.id))}>
             Rejeitar as {visible.length}
           </Button>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Não há aceite em lote: cada dano do laudo é conferido por você, um a um.
+          </p>
         </div>
       )}
     </div>
@@ -1851,7 +1872,7 @@ function SuggestionPanel({
 }) {
   const points = suggestion.geometry.points as Pt[];
   const m = measure(type.geometry, points, mmPerPixel);
-  const hint = DETECTOR_HINTS[suggestion.detector.split(":")[1] ?? ""];
+  const hint = suggestion.reason ?? DETECTOR_HINTS[suggestion.detector.split(":")[1] ?? ""];
   return (
     <div className="grid min-w-0 grid-cols-1 gap-4 p-4 pb-20">
       <div className="flex items-center gap-2">
@@ -1901,8 +1922,8 @@ function SuggestionPanel({
         </div>
       )}
       <p className="rounded-lg bg-muted px-3 py-2 text-[11.5px] leading-snug text-muted-foreground">
-        A confiança é uma estimativa do detector, não uma precisão medida. Ao aceitar, o dano fica registrado como detectado pela IA e
-        validado por você. As rejeitadas ensinam a IA o que não é dano.
+        A confiança é uma estimativa do detector ({suggestion.detector.split(":")[0]}), não uma precisão medida. Ao aceitar, o dano fica
+        registrado como detectado pela IA e validado por você. As rejeitadas ensinam a IA o que não é dano.
       </p>
     </div>
   );

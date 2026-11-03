@@ -327,6 +327,8 @@ export const damages = pgTable("damages", {
   source: damageSourceEnum("source").notNull().default("manual"),
   /** Confiança da IA (0–1) quando o desenho veio dela; estimativa do detector, não precisão medida. */
   aiConfidence: real("ai_confidence"),
+  /** Motor que sugeriu o dano (ex.: "cv-2"), para a rastreabilidade do laudo. */
+  aiDetector: text("ai_detector"),
   /** Profissional que validou o dano (humano no circuito: nada da IA entra sem revisão). */
   reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
@@ -367,8 +369,10 @@ export const damageSuggestions = pgTable("damage_suggestions", {
   typeId: uuid("type_id").notNull().references(() => damageTypes.id, { onDelete: "cascade" }),
   geometry: jsonb("geometry").$type<{ points: [number, number][] }>().notNull(),
   confidence: real("confidence").notNull(),
-  /** Detector e versão (ex.: "cv-1:fissura"). */
+  /** Detector e versão (ex.: "cv-2:fissura"). */
   detector: text("detector").notNull(),
+  /** Por que o motor sugeriu (medidas do desvio), mostrado na revisão. */
+  reason: text("reason"),
   status: suggestionStatusEnum("status").notNull().default("pendente"),
   damageId: uuid("damage_id").references(() => damages.id, { onDelete: "set null" }),
   reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),

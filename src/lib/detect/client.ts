@@ -2,9 +2,9 @@
 
 // Roda a detecção automática num worker descartável (libera a memória ao terminar).
 import type { DetectResponse } from "./detect.worker";
-import type { Detection } from "./detect";
+import type { Detection, QualityWarning } from "./detect";
 
-export type DetectOutcome = { detections: Detection[]; ms: number; size: [number, number] };
+export type DetectOutcome = { detections: Detection[]; quality: QualityWarning[]; ms: number; size: [number, number] };
 
 /** Lado maior da imagem analisada: detalhe para fissuras sem travar computadores modestos. */
 export const DETECT_MAX_SIDE = 2200;
@@ -18,7 +18,7 @@ export function runDetection(url: string, onProgress?: (label: string) => void):
       if (m.type === "progress") return onProgress?.(m.label);
       done();
       if (m.type === "error") reject(new Error(m.message));
-      else resolve({ detections: m.detections, ms: m.ms, size: m.size });
+      else resolve({ detections: m.detections, quality: m.quality, ms: m.ms, size: m.size });
     };
     w.onerror = (e) => {
       e.preventDefault();

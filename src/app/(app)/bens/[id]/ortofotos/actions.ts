@@ -283,6 +283,7 @@ const suggestionSchema = z.object({
   points: z.array(pt).min(1).max(2000),
   confidence: z.number().min(0).max(1),
   detector: z.string().max(60),
+  reason: z.string().max(400).optional(),
 });
 
 /** Troca as sugestões pendentes da vista pelas de uma nova detecção (aceitas e rejeitadas ficam). */
@@ -302,6 +303,7 @@ export async function saveSuggestions(siteId: string, oid: string, input: z.inpu
       geometry: { points: s.points },
       confidence: s.confidence,
       detector: s.detector,
+      reason: s.reason ?? null,
       createdBy: user.id,
     }));
   if (!rows.length) return [];
@@ -342,6 +344,7 @@ export async function acceptSuggestions(siteId: string, oid: string, ids: string
         ...measure(type.geometry, points, o.mmPerPixel),
         source: "ia_deteccao",
         aiConfidence: s.confidence,
+        aiDetector: s.detector.split(":")[0] ?? s.detector,
         reviewedBy: user.id,
         reviewedAt: now,
         createdBy: user.id,

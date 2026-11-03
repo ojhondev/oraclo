@@ -199,8 +199,9 @@ export async function buildLaudo({ site, dx, author, orgName, images, text: t }:
         bySource.ia_deteccao > 0 && `${bySource.ia_deteccao} ${bySource.ia_deteccao === 1 ? "foi sugerido" : "foram sugeridos"} pela detecção automática`,
         bySource.ia_contorno > 0 && `${bySource.ia_contorno} ${bySource.ia_contorno === 1 ? "foi contornado" : "foram contornados"} com apoio da IA`,
       ].filter(Boolean);
+      const engines = [...new Set(dx.damages.map((d) => d.aiDetector).filter(Boolean))].join(", ");
       para(
-        `Uso de inteligência artificial: dos ${dx.damages.length} danos deste laudo, ${parts.join(" e ")}. Todos foram revisados e validados pelo profissional responsável. A IA mapeia apenas o que é visível na imagem e não substitui ensaios, prospecções nem análise estrutural.`,
+        `Uso de inteligência artificial: dos ${dx.damages.length} danos deste laudo, ${parts.join(" e ")}${engines ? ` (motor de detecção ${engines}, visão computacional executada localmente)` : ""}. Cada sugestão foi revisada individualmente e validada pelo profissional responsável, que pode ter corrigido a classe e o contorno. A IA mapeia apenas o que é visível na imagem e não substitui ensaios, prospecções nem análise estrutural.`,
       );
     }
   }

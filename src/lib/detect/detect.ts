@@ -94,7 +94,7 @@ function boxMean(src: Float32Array, weight: Uint8Array, w: number, h: number, r:
 }
 
 /** Suaviza uma máscara binária: fica ligado onde mais de `frac` da vizinhança está ligada. */
-function smooth(mask: Uint8Array, valid: Uint8Array, w: number, h: number, r: number, frac: number): Uint8Array {
+export function smooth(mask: Uint8Array, valid: Uint8Array, w: number, h: number, r: number, frac: number): Uint8Array {
   const f = new Float32Array(w * h);
   for (let i = 0; i < w * h; i++) f[i] = mask[i]!;
   const m = boxMean(f, valid, w, h, r);
@@ -104,7 +104,7 @@ function smooth(mask: Uint8Array, valid: Uint8Array, w: number, h: number, r: nu
 }
 
 /** Dilata uma máscara (quadrado 2r+1). */
-function dilate(mask: Uint8Array, w: number, h: number, r: number): Uint8Array {
+export function dilate(mask: Uint8Array, w: number, h: number, r: number): Uint8Array {
   // contagem deslizante de pixels ligados na janela, linha e depois coluna
   const tmp = new Uint8Array(w * h);
   for (let y = 0; y < h; y++) {
@@ -131,7 +131,7 @@ function dilate(mask: Uint8Array, w: number, h: number, r: number): Uint8Array {
 }
 
 
-type Comp = {
+export type Comp = {
   id: number;
   n: number;
   x0: number;
@@ -149,7 +149,7 @@ type Comp = {
 };
 
 /** Componentes 8-conexos da máscara, com estatísticas de forma e médias de `feats`. */
-function components(mask: Uint8Array, w: number, h: number, feats: Float32Array[], minN: number) {
+export function components(mask: Uint8Array, w: number, h: number, feats: Float32Array[], minN: number) {
   const lab = new Int32Array(w * h);
   const comps: Comp[] = [];
   const stack: number[] = [];
@@ -219,7 +219,7 @@ function components(mask: Uint8Array, w: number, h: number, feats: Float32Array[
 }
 
 /** Contorno (polígono) de um componente, recortando só a caixa dele. */
-function polygonOf(lab: Int32Array, w: number, c: Comp, maxVertices = 48): XY[] {
+export function polygonOf(lab: Int32Array, w: number, c: Comp, maxVertices = 48): XY[] {
   const bx = Math.max(0, c.x0 - 1);
   const by = Math.max(0, c.y0 - 1);
   const bw = c.x1 - bx + 3;
@@ -230,7 +230,7 @@ function polygonOf(lab: Int32Array, w: number, c: Comp, maxVertices = 48): XY[] 
 }
 
 /** Eixos principais (autovalores e direção do maior) da nuvem de pixels. */
-function axes(c: Comp) {
+export function axes(c: Comp) {
   const tr = c.sxx + c.syy;
   const det = c.sxx * c.syy - c.sxy * c.sxy;
   const disc = Math.sqrt(Math.max(0, (tr * tr) / 4 - det));
@@ -241,7 +241,7 @@ function axes(c: Comp) {
 }
 
 /** Linha central de uma fissura: média dos pixels em fatias ao longo do eixo principal. */
-function centerline(lab: Int32Array, w: number, c: Comp): XY[] {
+export function centerline(lab: Int32Array, w: number, c: Comp): XY[] {
   const { ux, uy, l1 } = axes(c);
   const len = Math.sqrt(12 * l1);
   const bins = clamp(Math.round(len / 6), 2, 60);
@@ -530,7 +530,7 @@ function blur(src: Float32Array, w: number, h: number, r: number) {
 }
 
 /** Erosão de uma máscara (quadrado 2r+1). */
-function erode(mask: Uint8Array, w: number, h: number, r: number) {
+export function erode(mask: Uint8Array, w: number, h: number, r: number) {
   const inv = new Uint8Array(w * h);
   for (let i = 0; i < w * h; i++) inv[i] = mask[i] ? 0 : 1;
   const d = dilate(inv, w, h, r);

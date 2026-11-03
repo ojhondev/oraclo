@@ -21,7 +21,14 @@ export async function GET() {
   const siteIds = siteRows.map((s) => s.id);
   const [vistas, dmg, rejected, types] = await Promise.all([
     db
-      .select({ id: orthophotos.id, url: orthophotos.url, width: orthophotos.widthPx, height: orthophotos.heightPx, mmPerPixel: orthophotos.mmPerPixel })
+      .select({
+        id: orthophotos.id,
+        url: orthophotos.url,
+        width: orthophotos.widthPx,
+        height: orthophotos.heightPx,
+        mmPerPixel: orthophotos.mmPerPixel,
+        mappingCompleteAt: orthophotos.mappingCompleteAt,
+      })
       .from(orthophotos)
       .where(inArray(orthophotos.siteId, siteIds)),
     db.select().from(damages).where(inArray(damages.siteId, siteIds)),
@@ -54,7 +61,15 @@ export async function GET() {
     });
   return Response.json({
     info: { description: "ArchRay · danos de fachada", orgs: orgs.length, generatedAt: new Date().toISOString() },
-    images: vistas.map((v) => ({ id: imgId.get(v.id), file_name: v.url, width: v.width, height: v.height, mm_per_pixel: v.mmPerPixel })),
+    images: vistas.map((v) => ({
+      id: imgId.get(v.id),
+      file_name: v.url,
+      width: v.width,
+      height: v.height,
+      mm_per_pixel: v.mmPerPixel,
+      // vista completa: o que não foi marcado é parede sã; nas outras, é desconhecido
+      mapping_complete: v.mappingCompleteAt != null,
+    })),
     categories: codes.map((c) => ({ id: catId.get(c), name: c, geometry: types.find((t) => t.code === c)?.geometry })),
     annotations: ann(dmg, (d: (typeof dmg)[number]) => ({ source: d.source, ai_confidence: d.aiConfidence, reviewed: d.reviewedBy != null })),
     negatives: ann(rejected, (s: (typeof rejected)[number]) => ({ detector: s.detector, confidence: s.confidence })),

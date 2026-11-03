@@ -30,6 +30,7 @@ import {
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { SimpleSelect } from "@/components/form";
@@ -39,7 +40,18 @@ import { centroid, fmtArea, fmtLength, fmtMmPerPixel, fmtPlusMinus, measure, mea
 import { geometryKinds, severities } from "@/lib/labels";
 import { TREND_LABELS, URGENCY_LABELS, budget, damageCostCents, fmtBRL, gut, priority, unitLabels, type Price } from "@/lib/pricing";
 import type { schema } from "@/lib/db";
-import { acceptSuggestions, calibrate, createDamage, deleteDamage, deleteOrthophoto, rejectSuggestions, saveSuggestions, setScale, updateDamage } from "../actions";
+import {
+  acceptSuggestions,
+  calibrate,
+  createDamage,
+  deleteDamage,
+  deleteOrthophoto,
+  rejectSuggestions,
+  saveSuggestions,
+  setMappingComplete,
+  setScale,
+  updateDamage,
+} from "../actions";
 import { DamagePattern, lineStyle } from "./patterns";
 import { fmtPrecision } from "@/lib/rectify";
 import { getSam, type SamProgress } from "@/lib/sam/client";
@@ -150,6 +162,7 @@ export function DamageMapEditor({
   const [suggestions, setSuggestions] = useState(initialSuggestions);
   /** Avisos sobre a imagem da última detecção (sombra dura, superfície decorada…). */
   const [detectWarnings, setDetectWarnings] = useState<string[]>([]);
+  const [mappedAt, setMappedAt] = useState<Date | null>(ortho.mappingCompleteAt);
   const [selSug, setSelSug] = useState<string | null>(null);
   const [sugType, setSugType] = useState<Record<string, string>>({});
   const [detecting, setDetecting] = useState<string | null>(null);
@@ -436,7 +449,7 @@ export function DamageMapEditor({
     clearAi();
     setDetecting("Preparando a análise");
     try {
-      const { detections, quality, ms } = await runDetection(ortho.url, setDetecting);
+      const { detections, quality, engines, ms } = await runDetection(ortho.url, setDetecting);
       setDetectWarnings(quality.map((q) => q.message));
       // o que já está marcado não volta como sugestão
       const covered = (p: Pt) => damages.some((d) => typeById.get(d.typeId)?.geometry === "area" && pointInPolygon(p, pts(d)));
@@ -451,7 +464,7 @@ export function DamageMapEditor({
       setSuggestions(saved);
       setMinConf((m) => Math.min(m, 0.4));
       if (saved.length)
-        toast.success(`${saved.length} ${saved.length === 1 ? "sugestão" : "sugestões"} da IA em ${(ms / 1000).toFixed(1)} s`, {
+        toast.success(`${saved.length} ${saved.length === 1 ? "sugestão" : "sugestões"} da IA em ${(ms / 1000).toFixed(1)} s (${engines.join(" + ")})`, {
           description: quality.length
             ? `Confira uma a uma. Atenção: ${quality.map((q) => q.message.split(":")[0]!.toLowerCase()).join("; ")}.`
             : "Confira uma a uma: aceite o que é dano e rejeite o que não é. Nada entra no orçamento sem você aceitar.",
@@ -1415,6 +1428,32 @@ export function DamageMapEditor({
                   onReject={rejectSugs}
                 />
               )}
+              {/* mapeamento completo: a vista vira exemplo confiável para treinar a IA */}
+              <label className="flex items-start gap-3 rounded-xl border bg-card p-3.5">
+                <Switch
+                  className="mt-0.5"
+                  checked={!!mappedAt}
+                  disabled={!canEdit}
+                  onCheckedChange={async (v) => {
+                    const prev = mappedAt;
+                    setMappedAt(v ? new Date() : null);
+                    try {
+                      setMappedAt(await setMappingComplete(siteId, ortho.id, v));
+                    } catch {
+                      setMappedAt(prev);
+                      toast.error("Não foi possível salvar.");
+                    }
+                  }}
+                />
+                <span className="grid gap-0.5">
+                  <span className="text-[13px] font-medium">Mapeamento completo</span>
+                  <span className="text-[11.5px] leading-snug text-muted-foreground">
+                    {mappedAt
+                      ? `Todos os danos visíveis desta vista estão marcados (atestado em ${new Date(mappedAt).toLocaleDateString("pt-BR")}).`
+                      : "Marque quando todos os danos visíveis desta vista estiverem marcados. Vistas completas ensinam a IA do ArchRay a acertar mais."}
+                  </span>
+                </span>
+              </label>
               {/* orçamento da vista */}
               <div className="rounded-xl border bg-card p-3.5">
                 <div className="flex items-baseline justify-between gap-2">

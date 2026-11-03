@@ -131,6 +131,17 @@ export async function renameOrthophoto(siteId: string, oid: string, name: string
   await touch(siteId, oid);
 }
 
+/** Marca (ou desmarca) a vista como mapeamento completo: todos os danos visíveis estão marcados. */
+export async function setMappingComplete(siteId: string, oid: string, complete: boolean) {
+  const user = await requireUser(editors);
+  await getSite(user.orgId, siteId);
+  await getOrthophoto(siteId, oid);
+  const set = complete ? { mappingCompleteBy: user.id, mappingCompleteAt: new Date() } : { mappingCompleteBy: null, mappingCompleteAt: null };
+  await db.update(orthophotos).set(set).where(eq(orthophotos.id, oid));
+  await touch(siteId, oid);
+  return set.mappingCompleteAt;
+}
+
 export async function deleteOrthophoto(siteId: string, oid: string) {
   const user = await requireUser(editors);
   await getSite(user.orgId, siteId);

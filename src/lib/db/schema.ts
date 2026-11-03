@@ -279,6 +279,12 @@ export const orthophotos = pgTable("orthophotos", {
   url: text("url").notNull(),
   storageKey: text("storage_key"),
   contentType: text("content_type").notNull().default("image/jpeg"),
+  /**
+   * Mapeamento completo: o profissional atesta que todos os danos visíveis da vista estão
+   * marcados. Só essas vistas ensinam ao modelo que o que não foi marcado é parede sã.
+   */
+  mappingCompleteBy: uuid("mapping_complete_by").references(() => users.id, { onDelete: "set null" }),
+  mappingCompleteAt: timestamp("mapping_complete_at", { withTimezone: true }),
   createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
   createdAt: createdAt(),
 }, (t) => [index("orthophotos_site_idx").on(t.siteId)]);

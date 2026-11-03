@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
@@ -39,6 +40,30 @@ export default async function CompanyPage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      {/* quem criou o ArchRay: retrato e carta em primeira pessoa */}
+      <section className="grid gap-10 px-4 pt-20 sm:px-6 sm:pt-28 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:px-8" aria-labelledby="fundador">
+        <div data-reveal="fade">
+          <div className="relative aspect-square max-w-[560px] overflow-hidden rounded-2xl bg-[var(--site-band)]">
+            <Image src="/site/jhonatan-ribeiro.webp" alt={t.founder.photoAlt} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+          </div>
+        </div>
+        <div className="min-w-0 self-center">
+          <p className="a-label">{t.founder.label}</p>
+          <h2 id="fundador" className="mt-4 text-[32px] leading-tight sm:text-[44px]">
+            {t.founder.title}
+          </h2>
+          <div className="a-serif mt-6 grid max-w-[60ch] gap-5 text-[19px] leading-[1.6] sm:text-[20px]">
+            {t.founder.paragraphs.map((p) => (
+              <p key={p}>{p}</p>
+            ))}
+          </div>
+          <div className="mt-8 border-t pt-4">
+            <p className="a-title text-[17px]">{t.founder.name}</p>
+            <p className="mt-0.5 text-[14px] text-muted-foreground">{t.founder.role}</p>
+          </div>
+        </div>
       </section>
 
       {/* painel bege: como trabalhamos */}

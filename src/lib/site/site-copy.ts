@@ -216,6 +216,19 @@ const pt = {
     lead:
       "O ArchRay é o braço de diagnóstico do Estúdio Restaura: arquitetos de restauro que construíram as ferramentas de que precisavam para medir, orçar e documentar danos com rigor.",
     cta: "Fale com a gente",
+    founder: {
+      label: "Quem criou o ArchRay",
+      title: "Por que criei o ArchRay",
+      paragraphs: [
+        "No restauro, todo projeto começa pelo mapa de danos. É ele que fundamenta o diagnóstico, o orçamento e a prestação de contas — e é também a etapa que mais consome tempo: fotos numa pasta, desenho à mão no CAD, áreas somadas numa planilha e o laudo montado num editor de texto. A cada mudança de escopo, refaz-se tudo.",
+        "Procurei uma ferramenta que resolvesse isso em português, com a legenda de patologias que usamos no Brasil e com o rigor que um laudo exige. Não encontrei uma que juntasse tudo isso. Então decidimos construir.",
+        "O ArchRay nasceu dentro do Estúdio Restaura com uma regra simples: a tecnologia mede, sugere e organiza; quem decide é o arquiteto. Cada número sai com escala e margem de erro, e nenhum dano entra no laudo sem revisão humana.",
+        "Quero que o tempo do profissional volte para o que importa: entender a edificação e escolher a melhor intervenção.",
+      ],
+      name: "Jhonatan Ribeiro Alves",
+      role: "Estúdio Restaura · ArchRay",
+      photoAlt: "Retrato de Jhonatan Ribeiro Alves",
+    },
     purposeLabel: "Nosso propósito",
     purpose: [
       ["Medir com rigor", "Toda área e todo comprimento vêm de uma vista em escala, com a margem de erro declarada."],
@@ -481,6 +494,19 @@ const en: Copy = {
     lead:
       "ArchRay is Estúdio Restaura's diagnosis arm: restoration architects who built the tools they needed to measure, price and document damage rigorously.",
     cta: "Talk to us",
+    founder: {
+      label: "Who built ArchRay",
+      title: "Why I built ArchRay",
+      paragraphs: [
+        "In restoration, every project starts with the damage map. It underpins the diagnosis, the budget and the accountability — and it is also the most time-consuming step: photos in a folder, hand drawing in CAD, areas added up in a spreadsheet and the report assembled in a word processor. Every change of scope means redoing it all.",
+        "I looked for a tool that solved this in Portuguese, with the damage legend we use in Brazil and the rigour a condition report demands. I couldn't find one that brought it all together. So we decided to build it.",
+        "ArchRay was born inside Estúdio Restaura with a simple rule: technology measures, suggests and organises; the architect decides. Every number comes with a scale and an error margin, and no damage reaches the report without human review.",
+        "I want professionals to get their time back for what matters: understanding the building and choosing the best intervention.",
+      ],
+      name: "Jhonatan Ribeiro Alves",
+      role: "Estúdio Restaura · ArchRay",
+      photoAlt: "Portrait of Jhonatan Ribeiro Alves",
+    },
     purposeLabel: "Our purpose",
     purpose: [
       ["Measure rigorously", "Every area and length comes from a scaled view, with the error margin stated."],

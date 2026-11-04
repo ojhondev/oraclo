@@ -81,7 +81,7 @@ export function MemberRow({ member, isMe, canManage }: { member: Member; isMe: b
         <Avatar className="size-9">
           <AvatarFallback className="bg-primary text-[11px] text-primary-foreground">{initials(member.name)}</AvatarFallback>
         </Avatar>
-        <div className="grid min-w-0 flex-1 leading-tight">
+        <div className="grid min-w-0 flex-1 leading-tight max-sm:basis-[calc(100%-3rem)]">
           <span className="flex items-center gap-2 truncate text-[14.5px]">
             {member.name}
             {isMe && <span className="text-[12px] text-muted-foreground">(você)</span>}
@@ -135,7 +135,7 @@ export function InviteRow({ invite }: { invite: { id: string; email: string; rol
   return (
     <li className="grid gap-2 px-5 py-3">
       <div className="flex flex-wrap items-center gap-3">
-        <div className="grid min-w-0 flex-1 leading-tight">
+        <div className="grid min-w-0 flex-1 leading-tight max-sm:basis-[calc(100%-3rem)]">
           <span className="truncate text-[14.5px]">{invite.email}</span>
           <span className="text-[12.5px] text-muted-foreground">
             {roles[invite.role]} · expira em {days} dia{days === 1 ? "" : "s"}

@@ -165,6 +165,45 @@
   color: #141413;
 }
 
+/* rolagem lateral sem barra (abas e filtros no celular) */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* celular e tablet: comportamento de app */
+@media (max-width: 1023.98px) {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    overscroll-behavior-y: none;
+  }
+  a,
+  button,
+  label,
+  [role="tab"],
+  [role="radio"] {
+    touch-action: manipulation;
+  }
+  /* abaixo de 16 px o iPhone dá zoom ao focar o campo */
+  input:not([type="checkbox"], [type="radio"], [type="range"]),
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}
+/* resposta ao toque, onde não existe hover */
+@media (hover: none) {
+  a:active,
+  button:active {
+    opacity: 0.6;
+  }
+}
+
 .thin-scroll {
   scrollbar-width: thin;
   scrollbar-color: var(--input) transparent;

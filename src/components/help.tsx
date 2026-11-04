@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ChevronRight, CircleHelp, Compass, GraduationCap, Lightbulb, Search } from "lucide-react";
@@ -65,6 +65,9 @@ function TopicButton({ t, onClick }: { t: HelpTopic; onClick: () => void }) {
   );
 }
 
+/** Evento que abre a ajuda de fora do componente (barra superior do celular). */
+export const HELP_EVENT = "archray:abrir-ajuda";
+
 /** Botão "Ajuda" fixo no canto inferior direito + painel lateral com os tópicos. */
 export function HelpCenter() {
   const pathname = usePathname();
@@ -82,12 +85,18 @@ export function HelpCenter() {
   }, [query]);
   const categories = [...new Set(HELP_TOPICS.map((t) => t.category))];
 
+  useEffect(() => {
+    const show = () => setOpen(true);
+    window.addEventListener(HELP_EVENT, show);
+    return () => window.removeEventListener(HELP_EVENT, show);
+  }, []);
+
   return (
     <>
       <button
         data-tour="ajuda"
         onClick={() => setOpen(true)}
-        className="fixed right-4 bottom-4 z-40 flex h-10 items-center gap-2 rounded-full bg-primary px-4 text-[14px] font-medium text-primary-foreground shadow-lg transition-transform hover:scale-[1.03] print:hidden"
+        className="fixed right-4 bottom-4 z-40 hidden h-10 items-center gap-2 rounded-full bg-primary lg:flex px-4 text-[14px] font-medium text-primary-foreground shadow-lg transition-transform hover:scale-[1.03] print:hidden"
       >
         <CircleHelp className="size-4" /> Ajuda
       </button>

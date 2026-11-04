@@ -27,9 +27,12 @@ export const metadata: Metadata = {
   title: { default: "ArchRay", template: "%s · ArchRay" },
   description:
     "Mapa de danos com IA: aponte os danos sobre fachadas e plantas em escala e receba quantitativos, orçamento do tratamento e laudo prontos.",
+  appleWebApp: { capable: true, title: "ArchRay", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {
+  // o app desenha até as bordas do aparelho; as barras respeitam as áreas seguras (notch, indicador)
+  viewportFit: "cover",
   themeColor: [
     { media: "(prefers-color-scheme: light)", color: "#faf9f5" },
     { media: "(prefers-color-scheme: dark)", color: "#262624" },
@@ -42,7 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         <ThemeProvider>
           <TooltipProvider delayDuration={300}>{children}</TooltipProvider>
-          <Toaster position="bottom-right" />
+          <Toaster position="bottom-right" mobileOffset={{ bottom: "calc(4.5rem + env(safe-area-inset-bottom))" }} />
         </ThemeProvider>
       </body>
     </html>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { BetaBadge } from "@/components/beta-badge";
+import { ScrollActiveTab } from "./scroll-active-tab";
 
 /** Abas da tela de Projeto — a "barra de funcionalidades". */
 export const TABS = [
@@ -43,8 +44,9 @@ export function TabBar({
     <nav
       aria-label="Seções do projeto"
       data-tour="project-tabs"
-      className="thin-scroll flex gap-1 overflow-x-auto border-b px-5 sm:px-8 lg:px-10"
+      className="no-scrollbar sticky top-[calc(3.5rem+env(safe-area-inset-top))] z-20 flex gap-1 overflow-x-auto border-b bg-background px-4 sm:px-8 lg:static lg:px-10"
     >
+      <ScrollActiveTab />
       {TABS.map((t) => {
         const on = t.id === active;
         const n = counts[t.id];

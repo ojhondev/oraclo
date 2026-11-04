@@ -32,7 +32,7 @@ export default async function LibraryPage() {
         title="Biblioteca de danos"
         description="Legenda dos danos e a tabela de preços do escritório: cada tipo tem um tratamento e um preço unitário que viram o orçamento automático. Os valores marcados como sugeridos são só um ponto de partida — ajuste para a sua realidade."
       />
-      <PageBody className="grid gap-5 lg:grid-cols-2 2xl:grid-cols-3">
+      <PageBody className="grid grid-cols-1 gap-5 lg:grid-cols-2 2xl:grid-cols-3">
         {categories.map((cat) => (
           <section key={cat} className="rounded-2xl border bg-card">
             <h2 className="border-b px-5 py-3 text-[16px] font-medium">{cat}</h2>

@@ -418,7 +418,7 @@ export function ModelViewer({
   }
 
   return (
-    <div className="flex h-[calc(100svh-3.5rem)] min-h-0 flex-col lg:h-svh">
+    <div className="flex h-svh min-h-0 flex-col pt-[env(safe-area-inset-top)]">
       <header className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-2 sm:px-4">
         <Button variant="ghost" size="icon-sm" asChild aria-label="Voltar">
           <Link href={`/bens/${siteId}`}>

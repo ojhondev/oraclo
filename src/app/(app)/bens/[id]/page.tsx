@@ -206,11 +206,11 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
         counts={{ vistas: dx.vistas.length, danos: dx.kpis.damages, vistorias: campaigns.length, areas: elements.length }}
       />
 
-      <PageBody className="grid gap-5 pt-5">
+      <PageBody className="grid grid-cols-1 gap-5 pt-5">
         {/* filtro por vistoria: só faz sentido com mais de uma, e só nas abas que dependem dele */}
         {dx.campaigns.length > 1 && (tab === "resumo" || tab === "vistas" || tab === "danos" || tab === "laudo") && (
-          <nav className="flex flex-wrap items-center gap-1.5 text-[13px]" aria-label="Filtrar por vistoria">
-            <span className="mr-1 text-muted-foreground">Vistoria:</span>
+          <nav className="no-scrollbar -mx-4 flex items-center gap-1.5 overflow-x-auto px-4 text-[13px] sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0" aria-label="Filtrar por vistoria">
+            <span className="mr-1 shrink-0 text-muted-foreground">Vistoria:</span>
             {[{ id: null as string | null, name: "Todas" }, ...dx.campaigns].map((c) => {
               const active = (dx.campaign?.id ?? null) === c.id;
               return (
@@ -218,7 +218,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
                   key={c.id ?? "all"}
                   href={tabHref(site.id, tab, c.id)}
                   className={cn(
-                    "rounded-full border px-3 py-1 transition-colors",
+                    "shrink-0 rounded-full border px-3 py-1.5 whitespace-nowrap transition-colors sm:py-1",
                     active ? "border-foreground bg-foreground text-background" : "hover:border-foreground/40",
                   )}
                 >

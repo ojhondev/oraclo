@@ -14,19 +14,19 @@ export function PageHeader({
   className?: string;
 }) {
   return (
-    <header className={cn("flex flex-wrap items-end gap-4 px-5 pt-8 pb-6 sm:px-8 lg:px-10", className)}>
+    <header className={cn("flex flex-col gap-4 px-4 pt-5 pb-5 sm:flex-row sm:flex-wrap sm:items-end sm:px-8 sm:pt-8 sm:pb-6 lg:px-10", className)}>
       <div className="min-w-0 flex-1">
         {eyebrow && <p className="label mb-1">{eyebrow}</p>}
         <h1 className="h-display text-[24px] sm:text-[28px]">{title}</h1>
         {description && <p className="mt-1.5 text-sm text-muted-foreground">{description}</p>}
       </div>
-      {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+      {actions && <div className="flex flex-wrap items-center gap-2 max-sm:[&_a]:flex-1 max-sm:[&_button]:flex-1 max-sm:[&>*]:flex-1">{actions}</div>}
     </header>
   );
 }
 
 export function PageBody({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn("px-5 pb-12 sm:px-8 lg:px-10", className)}>{children}</div>;
+  return <div className={cn("min-w-0 px-4 pb-12 sm:px-8 lg:px-10", className)}>{children}</div>;
 }
 
 export function EmptyState({ icon: Icon, title, children }: { icon: React.ElementType; title: string; children?: React.ReactNode }) {

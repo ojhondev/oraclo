@@ -28,7 +28,7 @@ export default async function AcademyPage() {
         title="Aprenda a usar o ArchRay"
         description="Aulas curtas, com passo a passo, prints de cada tela e um teste rápido no fim. Siga na ordem ou vá direto ao que precisa."
       />
-      <PageBody className="grid max-w-6xl gap-6">
+      <PageBody className="grid max-w-6xl grid-cols-1 gap-6">
         {/* progresso geral e próxima aula */}
         <section className="grid gap-5 rounded-2xl border bg-card p-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
           <div className="grid gap-3">
@@ -42,25 +42,28 @@ export default async function AcademyPage() {
             </div>
             <Progress value={doneCount / total} />
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex min-w-0 flex-wrap gap-2">
             {next && (
-              <Link href={`/academy/${next.id}`} className="inline-flex h-9 items-center gap-2 rounded-lg bg-foreground px-4 text-[14px] font-medium text-background hover:opacity-90">
-                {doneCount ? "Continuar" : "Começar"}: {next.title} <ArrowRight className="size-4" />
+              <Link href={`/academy/${next.id}`} className="inline-flex h-10 max-w-full min-w-0 items-center gap-2 rounded-lg bg-foreground px-4 text-[14px] font-medium text-background hover:opacity-90 max-lg:w-full max-lg:justify-center">
+                <span className="truncate">
+                  {doneCount ? "Continuar" : "Começar"}: {next.title}
+                </span>
+                <ArrowRight className="size-4 shrink-0" />
               </Link>
             )}
-            <Link href="/academy/glossario" className="inline-flex h-9 items-center gap-2 rounded-lg border px-4 text-[14px] font-medium hover:bg-muted">
+            <Link href="/academy/glossario" className="inline-flex h-10 items-center gap-2 rounded-lg border px-4 text-[14px] font-medium hover:bg-muted max-lg:w-full max-lg:justify-center">
               <BookOpen className="size-4" /> Glossário
             </Link>
           </div>
         </section>
 
         {/* trilhas */}
-        <div className="grid gap-5 lg:grid-cols-2">
+        <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {TRACKS.map((t, ti) => {
             const lessons = lessonsOf(t.id);
             const n = lessons.filter((l) => done.has(l.id)).length;
             return (
-              <section key={t.id} id={t.id} className="flex flex-col rounded-2xl border bg-card">
+              <section key={t.id} id={t.id} className="flex min-w-0 flex-col rounded-2xl border bg-card">
                 <div className="grid gap-2 border-b p-5">
                   <div className="flex items-center gap-3">
                     <span className="grid size-8 place-items-center rounded-lg bg-muted text-[13px] font-semibold tabular-nums">{ti + 1}</span>

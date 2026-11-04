@@ -21,6 +21,7 @@ import {
   Search,
   Trash2,
   TriangleAlert,
+  Layers,
   Undo2,
   WandSparkles,
   X,
@@ -164,6 +165,10 @@ export function DamageMapEditor({
   const [detectWarnings, setDetectWarnings] = useState<string[]>([]);
   const [mappedAt, setMappedAt] = useState<Date | null>(ortho.mappingCompleteAt);
   const [selSug, setSelSug] = useState<string | null>(null);
+  /** Gaveta aberta no celular: biblioteca de danos ou painel do dano e do orçamento. */
+  const [sheet, setSheet] = useState<"lib" | "side" | null>(null);
+  /** Toque de exclusão do Contorno IA (no celular não há Shift). */
+  const [aiMinus, setAiMinus] = useState(false);
   const [sugType, setSugType] = useState<Record<string, string>>({});
   const [detecting, setDetecting] = useState<string | null>(null);
   const [minConf, setMinConf] = useState(0.4);
@@ -175,7 +180,10 @@ export function DamageMapEditor({
     viewRef.current = view;
   }, [view]);
   const [grabbing, setGrabbing] = useState(false);
-  const panRef = useRef<{ sx: number; sy: number; vx: number; vy: number; moved: boolean; button: number } | null>(null);
+  const panRef = useRef<{ sx: number; sy: number; vx: number; vy: number; moved: boolean; button: number; touch: boolean } | null>(null);
+  /** Dedos na tela e a última pinça (distância e centro), para o zoom com dois dedos. */
+  const touchesRef = useRef(new Map<number, { x: number; y: number }>());
+  const pinchRef = useRef<{ dist: number; x: number; y: number } | null>(null);
   const spaceRef = useRef(false);
 
   const activeType = typeId ? typeById.get(typeId) ?? null : null;
@@ -676,11 +684,41 @@ export function DamageMapEditor({
     } catch {
       // ponteiro sem captura (ex.: caneta que saiu da tela) — segue sem
     }
+    if (e.pointerType === "touch") {
+      touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      // segundo dedo: vira pinça e o toque em andamento deixa de contar
+      if (touchesRef.current.size === 2) {
+        const [a, b] = [...touchesRef.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
+        pinchRef.current = { dist: Math.hypot(a.x - b.x, a.y - b.y), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
+        panRef.current = null;
+        setBoxDrag(null);
+        return;
+      }
+    }
     const v = viewRef.current;
-    panRef.current = { sx: e.clientX, sy: e.clientY, vx: v.x, vy: v.y, moved: false, button: e.button };
+    panRef.current = { sx: e.clientX, sy: e.clientY, vx: v.x, vy: v.y, moved: false, button: e.button, touch: e.pointerType === "touch" };
+  }
+
+  function endTouch(e: React.PointerEvent) {
+    touchesRef.current.delete(e.pointerId);
+    if (touchesRef.current.size < 2) pinchRef.current = null;
   }
 
   function onPointerMove(e: React.PointerEvent) {
+    if (e.pointerType === "touch" && touchesRef.current.has(e.pointerId)) {
+      touchesRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const pinch = pinchRef.current;
+      if (pinch && touchesRef.current.size >= 2) {
+        const [a, b] = [...touchesRef.current.values()] as [{ x: number; y: number }, { x: number; y: number }];
+        const dist = Math.hypot(a.x - b.x, a.y - b.y);
+        const x = (a.x + b.x) / 2;
+        const y = (a.y + b.y) / 2;
+        zoomAt(toImage(x, y), pinch.dist / Math.max(1, dist));
+        setView((v) => ({ ...v, x: v.x - (x - pinch.x) / scale, y: v.y - (y - pinch.y) / scale }));
+        pinchRef.current = { dist, x, y };
+        return;
+      }
+    }
     const p = toImage(e.clientX, e.clientY);
     setHover(p);
     if (drag && selDamage) {
@@ -692,8 +730,9 @@ export function DamageMapEditor({
     if (!pan) return;
     const dx = e.clientX - pan.sx;
     const dy = e.clientY - pan.sy;
-    if (Math.hypot(dx, dy) > 4) pan.moved = true;
-    const canPan = tool === "mover" || spaceRef.current || pan.button === 1;
+    if (Math.hypot(dx, dy) > (pan.touch ? 10 : 4)) pan.moved = true;
+    // no toque, arrastar sempre move a imagem (exceto a caixa do Contorno IA)
+    const canPan = tool === "mover" || spaceRef.current || pan.button === 1 || (pan.touch && tool !== "contorno");
     if (pan.moved && canPan) {
       if (!grabbing) setGrabbing(true);
       setView((v) => ({ ...v, x: pan.vx - dx / scale, y: pan.vy - dy / scale }));
@@ -703,6 +742,7 @@ export function DamageMapEditor({
   }
 
   function onPointerUp(e: React.PointerEvent) {
+    endTouch(e);
     const pan = panRef.current;
     panRef.current = null;
     setGrabbing(false);
@@ -750,7 +790,7 @@ export function DamageMapEditor({
     }
     if (tool === "contorno" && activeType?.geometry === "area" && canEdit) {
       // Shift ou Alt + clique = "não é isso" (ponto negativo)
-      const next = [...aiPoints, { p, label: e.shiftKey || e.altKey ? 0 : 1 } as AiPoint];
+      const next = [...aiPoints, { p, label: e.shiftKey || e.altKey || aiMinus ? 0 : 1 } as AiPoint];
       setAiPoints(next);
       runAi(next);
       return;
@@ -776,6 +816,7 @@ export function DamageMapEditor({
     setTool("desenhar");
     setDraft([]);
     setSelected(null);
+    setSheet(null);
   }
 
   /* ── calibração ── */
@@ -859,6 +900,7 @@ export function DamageMapEditor({
     const select = () => {
       if (tool !== "mover") return;
       setSelected(d.id);
+      setSheet("side");
       setSelSug(null);
     };
     const common = { "data-damage": d.id, onPointerDown: select, style: { cursor: tool === "mover" ? "pointer" : undefined } };
@@ -918,6 +960,7 @@ export function DamageMapEditor({
         if (tool !== "mover") return;
         setSelSug(s.id);
         setSelected(null);
+        setSheet("side");
       },
       style: { cursor: tool === "mover" ? "pointer" : undefined },
     };
@@ -954,7 +997,7 @@ export function DamageMapEditor({
   const preview = hover && draft.length ? [...draft, hover] : draft;
 
   return (
-    <div className="flex h-[calc(100svh-3.5rem)] min-h-0 flex-col lg:h-svh">
+    <div className="flex h-svh min-h-0 flex-col pt-[env(safe-area-inset-top)]">
       {/* barra superior */}
       <header className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-2 sm:px-4">
         <Button variant="ghost" size="icon-sm" asChild aria-label="Voltar ao projeto">
@@ -965,14 +1008,14 @@ export function DamageMapEditor({
         <Button variant="ghost" size="icon-sm" className="hidden md:inline-flex" onClick={() => togglePanel("lib")} aria-label={panels.lib ? "Recolher biblioteca de danos" : "Mostrar biblioteca de danos"} title={panels.lib ? "Recolher biblioteca de danos" : "Mostrar biblioteca de danos"}>
           {panels.lib ? <PanelLeftClose /> : <PanelLeftOpen />}
         </Button>
-        <div className="mr-auto grid min-w-0 leading-tight">
+        <div className="mr-auto grid min-w-0 leading-tight max-sm:basis-[calc(100%-5.5rem)]">
           <span className="truncate text-[11.5px] text-muted-foreground">{siteName} · mapa de danos</span>
           <span className="truncate text-[16px] font-medium">{ortho.name}</span>
         </div>
 
         <Popover open={calOpen} onOpenChange={setCalOpen}>
           <PopoverTrigger asChild>
-            <Button variant={mm ? "outline" : "default"} size="sm" disabled={!canEdit && !mm}>
+            <Button variant={mm ? "outline" : "default"} size="sm" disabled={!canEdit && !mm} className="max-sm:order-2">
               <Ruler /> {mm ? fmtMmPerPixel(mm) : "Definir escala"}
             </Button>
           </PopoverTrigger>
@@ -1039,23 +1082,25 @@ export function DamageMapEditor({
           </PopoverContent>
         </Popover>
 
-        <Button variant="outline" size="sm" asChild>
+        <Button variant="outline" size="sm" asChild className="max-sm:order-2">
           <a href={`/bens/${siteId}/ortofotos/${ortho.id}/dxf`}>
             <FileDown /> DXF
           </a>
         </Button>
-        <Button size="sm" asChild>
+        <Button size="sm" asChild className="max-sm:order-2">
           <a href={`/bens/${siteId}/ortofotos/${ortho.id}/pdf`} target="_blank" rel="noreferrer">
             <FileDown /> Prancha PDF
           </a>
         </Button>
         {canEdit && (
-          <ConfirmButton
-            action={() => deleteOrthophoto(siteId, ortho.id)}
-            title="Excluir esta ortofoto?"
-            description="A imagem e todos os danos desenhados nela serão apagados."
-            size="icon-sm"
-          />
+          <div className="max-sm:order-1">
+            <ConfirmButton
+              action={() => deleteOrthophoto(siteId, ortho.id)}
+              title="Excluir esta ortofoto?"
+              description="A imagem e todos os danos desenhados nela serão apagados."
+              size="icon-sm"
+            />
+          </div>
         )}
         <Button variant="ghost" size="icon-sm" className="hidden lg:inline-flex" onClick={() => togglePanel("side")} aria-label={panels.side ? "Recolher painel de orçamento" : "Mostrar painel de orçamento"} title={panels.side ? "Recolher painel de orçamento" : "Mostrar painel de orçamento"}>
           {panels.side ? <PanelRightClose /> : <PanelRightOpen />}
@@ -1075,8 +1120,20 @@ export function DamageMapEditor({
             <span className="text-[12px] [writing-mode:vertical-rl] rotate-180">Biblioteca de danos</span>
           </button>
         )}
-        <aside data-tour="biblioteca-danos" className={cn("thin-scroll hidden w-56 shrink-0 overflow-y-auto border-r bg-sidebar 2xl:w-64", panels.lib && "md:block")}>
+        {sheet && <button aria-label="Fechar painel" onClick={() => setSheet(null)} className="fixed inset-0 z-30 bg-black/40 lg:hidden" />}
+        <aside
+          data-tour="biblioteca-danos"
+          className={cn(
+            "thin-scroll hidden w-56 shrink-0 overflow-y-auto border-r bg-sidebar 2xl:w-64",
+            panels.lib && "md:block",
+            "max-md:fixed max-md:inset-x-0 max-md:bottom-0 max-md:z-40 max-md:block max-md:max-h-[75svh] max-md:w-full max-md:rounded-t-3xl max-md:border-t max-md:border-r-0 max-md:pb-[env(safe-area-inset-bottom)] max-md:shadow-2xl max-md:transition-transform",
+            sheet !== "lib" && "max-md:invisible max-md:translate-y-full",
+          )}
+        >
           <div className="sticky top-0 z-10 border-b bg-sidebar p-3">
+            <button type="button" aria-label="Fechar biblioteca" onClick={() => setSheet(null)} className="mx-auto mb-2 flex h-4 w-full items-center justify-center md:hidden">
+              <span className="h-1 w-10 rounded-full bg-border" />
+            </button>
             <p className="label mb-2">Biblioteca de danos</p>
             <div className="relative">
               <Search className="absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -1122,6 +1179,10 @@ export function DamageMapEditor({
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
               onPointerUp={onPointerUp}
+              onPointerCancel={(e) => {
+                endTouch(e);
+                panRef.current = null;
+              }}
               onPointerLeave={() => setHover(null)}
               onDoubleClick={onDoubleClick}
             >
@@ -1305,6 +1366,9 @@ export function DamageMapEditor({
                         Contorno: {["justo", "médio", "amplo"][aiIndex] ?? aiIndex + 1}
                       </button>
                     )}
+                    <button type="button" onClick={() => setAiMinus((m) => !m)} aria-pressed={aiMinus} className={cn("rounded-full px-2.5 py-1 lg:hidden", aiMinus && "bg-white text-black")}>
+                      Excluir parte
+                    </button>
                     <button type="button" onClick={clearAi} className="rounded-full px-2.5 py-1 hover:bg-white/15" title="Esc">
                       Descartar
                     </button>
@@ -1322,6 +1386,21 @@ export function DamageMapEditor({
               </div>
             </div>
           )}
+
+            {/* no toque não há Enter nem duplo clique: os comandos do desenho ficam à mão */}
+            {tool === "desenhar" && draft.length > 0 && (
+              <div className="flex items-center gap-1 rounded-full bg-black/80 p-1 text-[13.5px] text-white lg:hidden">
+                <button type="button" onClick={() => setDraft((d) => d.slice(0, -1))} className="rounded-full px-3 py-1.5">
+                  Desfazer
+                </button>
+                <button type="button" onClick={cancelDraft} className="rounded-full px-3 py-1.5">
+                  Cancelar
+                </button>
+                <button type="button" onClick={() => finishDraft(draft)} className="rounded-full bg-white px-4 py-1.5 font-medium text-black">
+                  Concluir
+                </button>
+              </div>
+            )}
 
             {/* dica de uso */}
             <p className="max-w-full rounded-2xl bg-black/65 px-3 py-1.5 text-center text-[12px] text-balance text-white/90 backdrop-blur">
@@ -1352,14 +1431,22 @@ export function DamageMapEditor({
                 : tool === "desenhar" && activeType
                   ? activeType.geometry === "ponto"
                     ? `${activeType.name}: clique para marcar. Esc para sair.`
-                    : `${activeType.name}: clique para adicionar pontos · duplo clique ou Enter para concluir · Backspace desfaz · Esc cancela`
+                    : (
+                      <>
+                        <span className="lg:hidden">{activeType.name}: toque para adicionar pontos · arraste para mover</span>
+                        <span className="hidden lg:inline">{activeType.name}: clique para adicionar pontos · duplo clique ou Enter para concluir · Backspace desfaz · Esc cancela</span>
+                      </>
+                    )
                   : canEdit && selSuggestion
                     ? "Sugestão da IA: Enter aceita como dano · Delete rejeita · Esc fecha"
                   : canEdit && visibleSugs.length
                     ? `${visibleSugs.length} ${visibleSugs.length === 1 ? "sugestão tracejada" : "sugestões tracejadas"} da IA: clique para revisar · roda do mouse = zoom`
-                  : canEdit
-                    ? "Escolha um dano na biblioteca para desenhar · roda do mouse = zoom · arraste para mover"
-                    : "Roda do mouse = zoom · arraste para mover"}
+                  : (
+                    <>
+                      <span className="lg:hidden">{canEdit ? "Toque em Danos para desenhar · dois dedos = zoom · arraste para mover" : "Dois dedos = zoom · arraste para mover"}</span>
+                      <span className="hidden lg:inline">{canEdit ? "Escolha um dano na biblioteca para desenhar · roda do mouse = zoom · arraste para mover" : "Roda do mouse = zoom · arraste para mover"}</span>
+                    </>
+                  )}
               {!mm && " · ⚠ sem escala: defina para calcular áreas"}
             </p>
           </div>
@@ -1377,7 +1464,18 @@ export function DamageMapEditor({
           </button>
         )}
         {/* com um dano selecionado o painel abre mesmo recolhido, para editar; ao fechar o dano ele recolhe de novo */}
-        <aside data-tour="painel-orcamento" className={cn("thin-scroll hidden w-72 shrink-0 overflow-y-auto border-l bg-background 2xl:w-80", (panels.side || selDamage || selSuggestion) && "lg:block")}>
+        <aside
+          data-tour="painel-orcamento"
+          className={cn(
+            "thin-scroll hidden w-72 shrink-0 overflow-y-auto border-l bg-background 2xl:w-80",
+            (panels.side || selDamage || selSuggestion) && "lg:block",
+            "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:block max-lg:max-h-[75svh] max-lg:w-full max-lg:rounded-t-3xl max-lg:border-t max-lg:border-l-0 max-lg:pb-[env(safe-area-inset-bottom)] max-lg:shadow-2xl max-lg:transition-transform",
+            sheet !== "side" && "max-lg:invisible max-lg:translate-y-full",
+          )}
+        >
+          <button type="button" aria-label="Fechar painel" onClick={() => setSheet(null)} className="sticky top-0 z-20 flex w-full justify-center bg-background py-2.5 lg:hidden">
+            <span className="h-1 w-10 rounded-full bg-border" />
+          </button>
           {selDamage ? (
             <DamagePanel
               key={selDamage.id}
@@ -1584,6 +1682,16 @@ export function DamageMapEditor({
             </div>
           )}
         </aside>
+      </div>
+
+      {/* no celular a biblioteca e o painel sobem como gavetas */}
+      <div className="grid shrink-0 grid-cols-2 gap-2 border-t bg-background px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] md:grid-cols-1 lg:hidden">
+        <Button variant="outline" className="h-11 min-w-0 md:hidden" onClick={() => setSheet("lib")}>
+          <Layers /> <span className="truncate">{tool === "desenhar" && activeType ? activeType.name : "Danos"}</span>
+        </Button>
+        <Button variant="secondary" className="h-11 min-w-0" onClick={() => setSheet("side")}>
+          <span className="truncate">{selDamage ? "Dano selecionado" : selSuggestion || visibleSugs.length ? `Sugestões (${visibleSugs.length})` : `Orçamento · ${fmtBRL(orc.totalCents)}`}</span>
+        </Button>
       </div>
     </div>
   );

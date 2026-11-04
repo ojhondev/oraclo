@@ -75,6 +75,7 @@ export function CompareView({
   const [mode, setModeRaw] = useState<Mode>(initial ? "cortina" : "alinhar");
   const [split, setSplit] = useState(0.5);
   const [showDamages, setShowDamages] = useState(true);
+  const [panelOpen, setPanelOpen] = useState(false);
   const [view, setView] = useState<View | null>(null);
   const [viewB, setViewB] = useState<View | null>(null);
   const [pairs, setPairs] = useState<Pair[]>(initial?.pairs ?? []);
@@ -262,7 +263,7 @@ export function CompareView({
     : "Sem alinhamento";
 
   return (
-    <div className="flex h-[calc(100svh-3.5rem)] min-h-0 flex-col lg:h-svh">
+    <div className="flex h-svh min-h-0 flex-col pt-[env(safe-area-inset-top)]">
       <header className="flex flex-wrap items-center gap-2 border-b bg-background px-3 py-2 sm:px-4">
         <Button variant="ghost" size="icon-sm" asChild aria-label="Voltar ao projeto">
           <Link href={`/bens/${siteId}?aba=vistorias`}>
@@ -389,7 +390,15 @@ export function CompareView({
           </div>
         </div>
 
-        <aside className="thin-scroll hidden w-80 shrink-0 overflow-y-auto border-l bg-background lg:block 2xl:w-96">
+        {/* no celular o painel vira uma gaveta que sobe */}
+        {panelOpen && <button aria-label="Fechar painel" onClick={() => setPanelOpen(false)} className="fixed inset-0 z-30 bg-black/40 lg:hidden" />}
+        <aside
+          className={cn(
+            "thin-scroll w-80 shrink-0 overflow-y-auto border-l bg-background 2xl:w-96",
+            "max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:max-h-[75svh] max-lg:w-full max-lg:rounded-t-3xl max-lg:border-t max-lg:border-l-0 max-lg:pb-[env(safe-area-inset-bottom)] max-lg:shadow-2xl max-lg:transition-transform",
+            !panelOpen && "max-lg:invisible max-lg:translate-y-full",
+          )}
+        >
           <div className="grid min-w-0 gap-5 p-4 pb-16">
             <p className={cn("rounded-lg px-3 py-2 text-[12.5px]", alignment ? "bg-muted" : "border border-dashed text-muted-foreground")}>{quality}</p>
 
@@ -506,6 +515,11 @@ export function CompareView({
             )}
           </div>
         </aside>
+      </div>
+      <div className="shrink-0 border-t bg-background px-3 pt-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
+        <Button variant="secondary" className="h-11 w-full" onClick={() => setPanelOpen(true)}>
+          O que mudou
+        </Button>
       </div>
     </div>
   );

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
-import { ArrowLeft, ChevronRight, CircleHelp, Compass, Lightbulb, Search } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ChevronRight, CircleHelp, Compass, GraduationCap, Lightbulb, Search } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -137,6 +138,16 @@ export function HelpCenter() {
                         </div>
                       </section>
                     ))}
+                    <Link
+                      href="/academy"
+                      onClick={() => setOpen(false)}
+                      className="grid gap-0.5 rounded-xl border bg-muted/40 px-3 py-2.5 hover:bg-muted"
+                    >
+                      <span className="flex items-center gap-2 text-[14px] font-medium">
+                        <GraduationCap className="size-4" /> ArchRay Academy
+                      </span>
+                      <span className="text-[12.5px] text-muted-foreground">Aulas com passo a passo e prints de cada ferramenta.</span>
+                    </Link>
                     <button
                       onClick={() => {
                         setOpen(false);

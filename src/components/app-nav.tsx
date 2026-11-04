@@ -15,6 +15,7 @@ import {
   Plus,
   Search,
   Sparkles,
+  GraduationCap,
   Inbox,
   ImageIcon,
   UserRound,
@@ -40,6 +41,7 @@ const ITEMS: { href: string; label: string; icon: React.ElementType; match: (p: 
   { href: "/modelos", label: "Modelo 3D", icon: Box, beta: true, match: (p: string) => p.startsWith("/modelos") || p.includes("/modelos/") },
   { href: "/biblioteca", label: "Danos e preços", icon: Layers, match: (p: string) => p.startsWith("/biblioteca") },
   { href: "/equipe", label: "Equipe", icon: Users, match: (p: string) => p.startsWith("/equipe") },
+  { href: "/academy", label: "Academy", icon: GraduationCap, match: (p: string) => p.startsWith("/academy") },
   { href: "/index", label: "Novidades", icon: Sparkles, match: (p: string) => p.startsWith("/index") },
 ];
 

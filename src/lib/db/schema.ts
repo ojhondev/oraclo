@@ -456,3 +456,11 @@ export const leads = pgTable("leads", {
   status: text("status").notNull().default("novo"),
   createdAt: createdAt(),
 }, (t) => [index("leads_created_idx").on(t.createdAt)]);
+
+/** Academy: aulas concluídas por usuário (o conteúdo das aulas fica em src/lib/academy). */
+export const academyProgress = pgTable("academy_progress", {
+  id: id(),
+  userId: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  lessonId: text("lesson_id").notNull(),
+  completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [uniqueIndex("academy_progress_user_lesson_idx").on(t.userId, t.lessonId)]);

@@ -6,7 +6,7 @@ import { getSite, getSiteDetail } from "@/lib/sites";
 import { loadDiagnosis } from "@/lib/diagnosis";
 import { fmtArea, fmtLength, fmtMmPerPixel } from "@/lib/geometry";
 import { fmtBRL } from "@/lib/pricing";
-import { nextStep } from "@/lib/next-step";
+import { nextStep, STEP_LABELS } from "@/lib/next-step";
 import { getLaudoDraft } from "@/lib/laudo-draft";
 import { laudoDefaults, resolveLaudo } from "@/lib/laudo-text";
 import { db, schema } from "@/lib/db";
@@ -62,7 +62,9 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
   const qs = dx.campaign ? `?vistoria=${dx.campaign.id}` : "";
   const models = outputs.filter((o) => (o.meta as OutputMeta | null)?.viewable);
   const vistoriaId = dx.campaign?.id ?? null;
-  const step = nextStep({ elements: elements.length, campaigns: campaigns.length, vistas: dx.vistas.length, damages: dx.kpis.damages });
+  const captureCount = campaigns.reduce((n, c) => n + c.captures.filter((k) => k.mode !== "laser").length, 0);
+  const lastCapture = campaigns.flatMap((c) => c.captures).filter((k) => k.mode !== "laser").at(-1);
+  const step = nextStep({ captures: captureCount, models: models.length, vistas: dx.vistas.length, damages: dx.kpis.damages });
   const link = (t: TabId) => tabHref(site.id, t, vistoriaId);
 
   const facts: [string, string | null][] = [
@@ -85,10 +87,13 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
 
   /** Ação do "próximo passo". */
   const stepAction: Record<typeof step.id, { label: string; href: string; hidden?: boolean }> = {
-    areas: { label: "Cadastrar áreas", href: link("areas"), hidden: !canEdit },
-    vistoria: { label: "Criar vistoria", href: link("vistorias"), hidden: !canEdit },
-    vista: { label: "Criar vista", href: `/bens/${site.id}/ortofotos/nova${qs}`, hidden: !canEdit },
-    danos: { label: "Abrir a vista", href: firstVista ? `/bens/${site.id}/ortofotos/${firstVista.id}` : link("vistas") },
+    capturar: { label: "Filmar a fachada", href: "", hidden: !canCapture },
+    vista: models[0]
+      ? { label: "Abrir o modelo 3D", href: `/bens/${site.id}/modelos/${models[0].id}` }
+      : lastCapture
+        ? { label: "Abrir a captura", href: `/bens/${site.id}/capturas/${lastCapture.id}` }
+        : { label: "Preparar a imagem", href: `/bens/${site.id}/ortofotos/nova${qs}`, hidden: !canEdit },
+    danos: { label: "Abrir a imagem", href: firstVista ? `/bens/${site.id}/ortofotos/${firstVista.id}` : link("vistas") },
     laudo: { label: "Gerar laudo", href: `/bens/${site.id}/laudo${qs}` },
   };
 
@@ -182,7 +187,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
           </span>
         }
         actions={
-          <div className="flex flex-wrap gap-2" data-tour="project-actions">
+          <div className="flex flex-wrap gap-2 max-lg:hidden" data-tour="project-actions">
             {canCapture && (
               <form action={quickCapture.bind(null, site.id)}>
                 <Button type="submit" variant="outline">
@@ -239,25 +244,37 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
         {/* ───────── Resumo ───────── */}
         {tab === "resumo" && (
           <>
-            {step.id !== "laudo" && (
-              <section className="flex flex-wrap items-center gap-x-5 gap-y-3 rounded-2xl border bg-card p-5">
-                <div className="min-w-0 flex-1 basis-72">
-                  <p className="label mb-1">
-                    Próximo passo · {step.done} de {step.total}
-                  </p>
-                  <h2 className="text-[16px] font-medium">{step.title}</h2>
-                  <p className="mt-1 text-[13px] text-muted-foreground">{step.body}</p>
-                </div>
-                {!stepAction[step.id].hidden && (
-                  <Button asChild>
+            {/* o caminho do projeto: quatro passos, e um único botão com a próxima ação */}
+            <section className="grid gap-4 rounded-2xl border bg-card p-5">
+              <ol className="grid grid-cols-4 gap-1.5">
+                {STEP_LABELS.map((s, i) => (
+                  <li key={s.id} className="grid gap-1.5">
+                    <span className={cn("h-1 rounded-full", i < step.done ? "bg-foreground" : i === step.done ? "bg-brand" : "bg-muted")} />
+                    <span className={cn("text-[11.5px] leading-tight", i === step.done ? "font-medium" : "text-muted-foreground")}>{s.label}</span>
+                  </li>
+                ))}
+              </ol>
+              <div>
+                <h2 className="text-[19px] leading-snug font-medium">{step.title}</h2>
+                <p className="mt-1 text-[14px] text-muted-foreground">{step.body}</p>
+              </div>
+              {!stepAction[step.id].hidden &&
+                (step.id === "capturar" ? (
+                  <form action={quickCapture.bind(null, site.id)}>
+                    <Button type="submit" size="lg" className="h-12 w-full sm:w-auto">
+                      <Video /> {stepAction.capturar.label}
+                    </Button>
+                  </form>
+                ) : (
+                  <Button size="lg" className="h-12 w-full sm:w-fit" asChild>
                     <Link href={stepAction[step.id].href}>
                       {stepAction[step.id].label} <ArrowRight />
                     </Link>
                   </Button>
-                )}
-              </section>
-            )}
+                ))}
+            </section>
 
+            {dx.kpis.damages > 0 && (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5" data-tour="kpis">
               <Kpi label="Danos apontados" value={String(dx.kpis.damages)} hint={`em ${dx.vistas.length} vista${dx.vistas.length === 1 ? "" : "s"}`} />
               <Kpi label="Área afetada" value={fmtArea(dx.kpis.areaM2)} />
@@ -269,6 +286,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
               />
               <Kpi label="Prioridade imediata" value={String(dx.kpis.urgent)} hint="GUT ≥ 64" />
             </div>
+            )}
 
             {dx.kpis.damages > 0 ? (
               <div className="grid gap-5 lg:grid-cols-2">

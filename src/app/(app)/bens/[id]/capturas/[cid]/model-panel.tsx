@@ -145,6 +145,10 @@ export function ModelPanel({
         </ul>
       )}
 
+      {results.some((o) => (o.meta as OutputMeta | null)?.viewable) && (
+        <p className="text-[13px] text-muted-foreground">Próximo passo: abra o modelo, informe uma medida real e gere a imagem da fachada.</p>
+      )}
+
       {canCapture && !active && (
         <div className="grid gap-1.5">
           <Button size="lg" className="h-12" disabled={blocked || busy} onClick={send}>

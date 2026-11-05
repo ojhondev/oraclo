@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ConfirmButton } from "@/components/confirm-button";
 import { fmtBytes } from "@/lib/format";
 import { isBlurry, measureSharpness } from "@/lib/capture-queue";
-import { framesFromVideo, type Frame } from "@/lib/video-frames";
+import { framesFromVideo, MIN_FRAMES, type Frame } from "@/lib/video-frames";
 import type { schema } from "@/lib/db";
 import { deleteCapture, deleteFile, saveNotes } from "../actions";
 import { GuidedCamera, type Shot } from "./camera";
@@ -72,6 +72,8 @@ export function CaptureWorkspace({
   const galleryRef = useRef<HTMLInputElement>(null);
 
   const total = uploaded + up.pending;
+  const enough = uploaded >= MIN_FRAMES || !!job;
+  const panel = <ModelPanel siteId={siteId} captureId={capture.id} count={uploaded} pending={up.pending} job={job} report={report} results={results} canCapture={canCapture} />;
   const recent = useMemo(
     () => [...files.map((f) => f.sharpness).filter((s): s is number => s != null), ...session].slice(-20),
     [files, session],
@@ -153,7 +155,7 @@ export function CaptureWorkspace({
         )}
       </div>
 
-      <ModelPanel siteId={siteId} captureId={capture.id} count={uploaded} pending={up.pending} job={job} report={report} results={results} canCapture={canCapture} />
+      {enough && panel}
 
       {canCapture && (
         <section className="rounded-2xl border bg-card p-4 sm:p-5">
@@ -173,9 +175,12 @@ export function CaptureWorkspace({
         </section>
       )}
 
+      {!enough && (uploaded > 0 || job) && panel}
+
       {canCapture && (
-        <section className="rounded-2xl border bg-card p-4 sm:p-5">
-          <h2 className="text-[16px] font-medium">Fotos de campo</h2>
+        <details open={capture.mode !== "video"} className="group rounded-2xl border bg-card p-4 sm:p-5">
+          <summary className="cursor-pointer list-none text-[15px] font-medium [&::-webkit-details-marker]:hidden">{capture.mode === "video" ? "Prefiro enviar fotos" : "Fotos de campo"}</summary>
+          <div className="mt-2">
           <p className="mb-3 text-[13px] text-muted-foreground">
             Detalhes dos danos e fotos de frente das paredes. As fotos de frente podem virar vistas retificadas no projeto.
           </p>
@@ -212,7 +217,8 @@ export function CaptureWorkspace({
             readOnly={!canEdit && !canCapture}
             onBlur={(e) => start(() => saveNotes(siteId, capture.id, e.target.value))}
           />
-        </section>
+          </div>
+        </details>
       )}
 
       {files.length > 0 && (

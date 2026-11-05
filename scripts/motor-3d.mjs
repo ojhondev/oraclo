@@ -8,13 +8,14 @@ import { neon } from "@neondatabase/serverless";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { loadEnv } from "./treino-comum.mjs";
-import { odmArgs, odmCommand, photosUsed, qualityOf, readLasCount, stageFromLine, stepDetail } from "./motor-comum.mjs";
+import { levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, readLasCount, stageFromLine, stepDetail } from "./motor-comum.mjs";
 
 const env = loadEnv();
 const sql = neon(env.DATABASE_URL);
 const token = env.BLOB_READ_WRITE_TOKEN;
 const ODM_DIR = env.MOTOR_ODM_DIR || "A:\\Ferramentas\\ODM";
 const PROJECTS = env.MOTOR_PROJETOS || "A:\\Ferramentas\\odm-projetos";
+const CONVERTER = env.MOTOR_POTREE || "A:\\Ferramentas\\PotreeConverter\\PotreeConverter_2.1.5_x64_windows\\PotreeConverter.exe";
 const ONCE = process.env.MOTOR_UMA_VEZ === "1";
 const POLL_MS = 30_000;
 
@@ -115,6 +116,35 @@ function runOdm(job, project, total) {
   });
 }
 
+/** Prepara a nuvem em níveis de detalhe: o visualizador baixa só o que aparece na tela. */
+async function publishOctree(job, capture, las, dir) {
+  if (!existsSync(CONVERTER)) return null;
+  const out = join(dir, "potree");
+  const run = spawnSync(CONVERTER, [las, "-o", out, "--overwrite", "--encoding", "BROTLI"], { windowsHide: true });
+  if (run.status !== 0) {
+    log("aviso: conversão da nuvem falhou:", String(run.stderr).slice(0, 200));
+    return null;
+  }
+  const prefix = `orgs/${capture.org_id}/sites/${capture.site_id}/capturas/${capture.id}/resultado/potree-${job.id.slice(0, 8)}`;
+  let base = null;
+  for (const name of ["metadata.json", "hierarchy.bin", "octree.bin"]) {
+    const blob = await put(`${prefix}/${name}`, createReadStream(join(out, name)), { access: "public", token, multipart: true, addRandomSuffix: false, allowOverwrite: true, contentType: "application/octet-stream" });
+    base = blob.url.slice(0, blob.url.lastIndexOf("/") + 1);
+  }
+  return base;
+}
+
+function levelOf(dir) {
+  try {
+    const rec = JSON.parse(readFileSync(join(dir, "opensfm", "reconstruction.json"), "utf8"));
+    const biggest = rec.reduce((a, b) => (Object.keys(b.shots).length > Object.keys(a.shots).length ? b : a));
+    return levelFromShots(Object.values(biggest.shots));
+  } catch (e) {
+    log("aviso: sem nivelamento:", e.message);
+    return null;
+  }
+}
+
 async function publish(job, capture, dir) {
   const suffix = qualityOf(job.quality).suffix;
   const results = [
@@ -122,13 +152,18 @@ async function publish(job, capture, dir) {
     { file: join(dir, "odm_texturing", "odm_textured_model_geo.glb"), name: `modelo-3d${suffix}.glb`, kind: "malha", format: "glb", upAxis: "z" },
   ].filter((r) => existsSync(r.file));
   if (!results.some((r) => r.kind === "nuvem")) throw new Error("O motor terminou sem gerar a nuvem de pontos. Grave de novo mais devagar, com mais sobreposição.");
+  const level = levelOf(dir);
+  if (level) log(`nivelamento: modelo inclinado ${level.tilt}°`);
+  const cloud = results.find((r) => r.kind === "nuvem");
+  log("preparando a nuvem em níveis de detalhe");
+  const potree = await publishOctree(job, capture, cloud.file, dir);
   for (const r of results) {
     const bytes = statSync(r.file).size;
     log(`enviando ${r.name} (${Math.round(bytes / 1e6)} MB)`);
     const path = `orgs/${capture.org_id}/sites/${capture.site_id}/capturas/${capture.id}/resultado/${r.name}`;
     const blob = await put(path, createReadStream(r.file), { access: "public", token, multipart: true, addRandomSuffix: true, contentType: "application/octet-stream" });
     const points = r.format === "las" ? readLasCount(r.file) : null;
-    const meta = { viewable: true, upAxis: r.upAxis, source: "motor" };
+    const meta = { viewable: true, upAxis: r.upAxis, source: "motor", level: level?.quaternion ?? null, ...(r.kind === "nuvem" && potree ? { potree, points } : {}) };
     await sql`insert into outputs (site_id, capture_id, kind, format, name, storage_key, url, bytes, point_count, meta)
       values (${capture.site_id}, ${capture.id}, ${r.kind}, ${r.format}, ${r.name}, ${blob.pathname}, ${blob.url}, ${bytes}, ${points}, ${JSON.stringify(meta)}::jsonb)`;
   }

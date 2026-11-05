@@ -8,7 +8,7 @@ import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { upload } from "@vercel/blob/client";
 import { toast } from "sonner";
-import { ArrowLeft, Download, Frame, Loader2, Move3d, Ruler, Trash2 } from "lucide-react";
+import { ArrowLeft, Box as BoxIcon, Download, Frame, Grid3x3, Loader2, Move3d, Ruler, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,6 +20,20 @@ import { clearModelScale, saveModelScale } from "./actions";
 
 type Tool = "orbitar" | "medir" | "ortofoto";
 type Output = { id: string; name: string; url: string; format: string; meta: OutputMeta | null };
+type View = "frente" | "lado" | "topo" | "perspectiva";
+type Pot = {
+  potree: import("potree-core").Potree;
+  renderer: import("potree-core").PotreeRenderer;
+  pco: import("potree-core").PointCloudOctree;
+  Potree: typeof import("potree-core").Potree;
+};
+
+const VIEWS: { id: View; label: string; dir: [number, number, number] }[] = [
+  { id: "frente", label: "Frente", dir: [0, 0, 1] },
+  { id: "lado", label: "Lado", dir: [1, 0, 0] },
+  { id: "topo", label: "Topo", dir: [0, 1, 0.001] },
+  { id: "perspectiva", label: "3D", dir: [0.6, 0.35, 1] },
+];
 
 const nf = (v: number, d = 2) => v.toLocaleString("pt-BR", { minimumFractionDigits: d, maximumFractionDigits: d });
 
@@ -41,12 +55,15 @@ export function ModelViewer({
   siteId,
   orgId,
   output,
+  layers,
   elements,
   canEdit,
 }: {
   siteId: string;
   orgId: string;
   output: Output;
+  /** Outros resultados da mesma captura (nuvem e modelo), para alternar entre eles. */
+  layers: { id: string; name: string; kind: string }[];
   elements: { value: string; label: string }[];
   canEdit: boolean;
 }) {
@@ -59,6 +76,9 @@ export function ModelViewer({
     root: THREE.Group;
     overlay: THREE.Group;
     points: THREE.Points | null;
+    pot: Pot | null;
+    grid: THREE.GridHelper | null;
+    box: THREE.Box3 | null;
     size: number;
   } | null>(null);
   const [progress, setProgress] = useState<number | null>(0);
@@ -68,6 +88,8 @@ export function ModelViewer({
   const [measure, setMeasure] = useState<THREE.Vector3[]>([]);
   const [orthoPts, setOrthoPts] = useState<THREE.Vector3[]>([]);
   const [pointSize, setPointSize] = useState(2);
+  const [edl, setEdl] = useState(true);
+  const [showGrid, setShowGrid] = useState(true);
   const [gen, setGen] = useState<string | null>(null);
   const [scale, setScale] = useState<ModelScale | null>(output.meta?.scale ?? null);
   const [realM, setRealM] = useState("");
@@ -79,6 +101,17 @@ export function ModelViewer({
   toolRef.current = tool;
 
   const upAxis = output.meta?.upAxis ?? (output.format === "glb" ? "y" : "z");
+
+  /** Leva a câmera a uma vista pronta, olhando para o centro do modelo. */
+  function goTo(view: View) {
+    const t = three.current;
+    if (!t?.box) return;
+    const center = t.box.getCenter(new THREE.Vector3());
+    const dir = new THREE.Vector3(...VIEWS.find((v) => v.id === view)!.dir).normalize();
+    t.camera.position.copy(center).addScaledVector(dir, t.size * 0.95);
+    t.controls.target.copy(center);
+    t.controls.update();
+  }
 
   /* ── cena ── */
   useEffect(() => {
@@ -95,18 +128,36 @@ export function ModelViewer({
     const camera = new THREE.PerspectiveCamera(50, wrap.clientWidth / wrap.clientHeight, 0.01, 100000);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
+    controls.zoomToCursor = true;
+    controls.screenSpacePanning = true;
     const root = new THREE.Group();
     if (upAxis === "z") root.rotation.x = -Math.PI / 2;
+    // o motor calcula pelas câmeras como deixar o modelo em pé
+    const level = output.meta?.level;
+    if (level) root.quaternion.multiply(new THREE.Quaternion(...level));
     const overlay = new THREE.Group();
-    scene.add(root, overlay, new THREE.AmbientLight(0xffffff, 1));
-    three.current = { renderer, scene, camera, controls, root, overlay, points: null, size: 1 };
+    scene.add(root, new THREE.AmbientLight(0xffffff, 1));
+    // marcações ficam numa cena à parte, desenhada por cima da nuvem
+    const overlayScene = new THREE.Scene();
+    overlayScene.add(overlay);
+    three.current = { renderer, scene, camera, controls, root, overlay, points: null, pot: null, grid: null, box: null, size: 1 };
     // só em desenvolvimento: permite testes automatizados apontarem para pontos do modelo
     if (process.env.NODE_ENV !== "production") (window as unknown as { __oracloViewer?: unknown }).__oracloViewer = three.current;
 
     let raf = 0;
     const loop = () => {
       controls.update();
-      renderer.render(scene, camera);
+      const pot = three.current?.pot;
+      if (pot) {
+        pot.potree.updatePointClouds([pot.pco], camera, renderer);
+        pot.renderer.render({ renderer, scene, camera, pointClouds: [pot.pco] });
+      } else renderer.render(scene, camera);
+      if (overlay.children.length) {
+        renderer.autoClear = false;
+        renderer.clearDepth();
+        renderer.render(overlayScene, camera);
+        renderer.autoClear = true;
+      }
       raf = requestAnimationFrame(loop);
     };
     loop();
@@ -117,9 +168,57 @@ export function ModelViewer({
     });
     ro.observe(wrap);
 
+    /** Enquadra o modelo e coloca a grade no chão. */
+    const finishLoad = (box: THREE.Box3) => {
+      const t = three.current!;
+      const size = box.getSize(new THREE.Vector3()).length() || 1;
+      t.size = size;
+      t.box = box;
+      camera.near = size / 5000;
+      camera.far = size * 20;
+      camera.updateProjectionMatrix();
+      const grid = new THREE.GridHelper(size * 2, 40, 0x8a8a8a, 0x4a4a4a);
+      grid.position.set(box.getCenter(new THREE.Vector3()).x, box.min.y, box.getCenter(new THREE.Vector3()).z);
+      scene.add(grid);
+      t.grid = grid;
+      goTo("perspectiva");
+      setProgress(null);
+    };
+
     // carrega o arquivo com progresso
     (async () => {
       try {
+        if (output.meta?.potree) {
+          // nuvem em níveis de detalhe: baixa por partes, só o que aparece na tela
+          const lib = await import("potree-core");
+          const potree = new lib.Potree();
+          const memory = (navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8;
+          potree.pointBudget = window.innerWidth < 768 ? 700_000 : memory <= 4 ? 1_200_000 : 2_500_000;
+          const base = output.meta.potree;
+          // o armazenamento recusa o content-type que a biblioteca envia: pedimos só o intervalo de bytes
+          const pco = await potree.loadPointCloud("metadata.json", {
+            getUrl: async (url: string) => (url.startsWith("http") ? url : base + url),
+            fetch: (input: RequestInfo | URL, init?: RequestInit) => {
+              const range = new Headers(init?.headers).get("range");
+              return fetch(input, range ? { headers: { Range: range } } : undefined);
+            },
+          });
+          pco.material.pointSizeType = lib.PointSizeType.ADAPTIVE;
+          pco.material.shape = lib.PointShape.CIRCLE;
+          pco.material.inputColorEncoding = 1;
+          pco.material.outputColorEncoding = 1;
+          pco.material.size = 1;
+          root.add(pco);
+          root.updateMatrixWorld(true);
+          const pot: Pot = { potree, pco, renderer: new lib.PotreeRenderer({ edl: { enabled: true, strength: 0.7, radius: 1.3 } }), Potree: lib.Potree };
+          three.current!.pot = pot;
+          const b = pco.pcoGeometry.boundingBox;
+          const s = new THREE.Vector3().subVectors(b.max, b.min);
+          const total = output.meta.points ?? 0;
+          setInfo({ count: total, total, dims: [s.x, s.y, s.z], origin: [0, 0, 0] });
+          finishLoad(new THREE.Box3().copy(pco.boundingBox).applyMatrix4(pco.matrixWorld));
+          return;
+        }
         const download = async (cache: RequestCache) => {
           const res = await fetch(output.url, { cache });
           if (!res.ok || !res.body) throw new Error(`Não foi possível baixar o modelo (${res.status}).`);
@@ -197,18 +296,8 @@ export function ModelViewer({
           });
         }
 
-        // enquadra
         root.updateMatrixWorld(true);
-        const box = new THREE.Box3().setFromObject(root);
-        const center = box.getCenter(new THREE.Vector3());
-        const size = box.getSize(new THREE.Vector3()).length() || 1;
-        three.current!.size = size;
-        camera.near = size / 5000;
-        camera.far = size * 20;
-        camera.position.copy(center).add(new THREE.Vector3(0.35, 0.3, 1).normalize().multiplyScalar(size * 0.9));
-        camera.updateProjectionMatrix();
-        controls.target.copy(center);
-        setProgress(null);
+        finishLoad(new THREE.Box3().setFromObject(root));
       } catch (e) {
         setError((e as Error).message);
         setProgress(null);
@@ -218,6 +307,8 @@ export function ModelViewer({
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      three.current?.pot?.renderer.dispose();
+      three.current?.pot?.pco.dispose();
       controls.dispose();
       renderer.dispose();
       wrap.removeChild(renderer.domElement);
@@ -228,9 +319,19 @@ export function ModelViewer({
   }, [output.url]);
 
   useEffect(() => {
-    const p = three.current?.points;
-    if (p) (p.material as THREE.PointsMaterial).size = pointSize;
+    const t = three.current;
+    if (t?.points) (t.points.material as THREE.PointsMaterial).size = pointSize;
+    if (t?.pot) t.pot.pco.material.size = pointSize / 2;
   }, [pointSize]);
+
+  useEffect(() => {
+    three.current?.pot?.renderer.setEDL({ enabled: edl, strength: 0.7, radius: 1.3 });
+  }, [edl, progress]);
+
+  useEffect(() => {
+    const grid = three.current?.grid;
+    if (grid) grid.visible = showGrid;
+  }, [showGrid, progress]);
 
   /* ── marcadores (medição e ortofoto) ── */
   useEffect(() => {
@@ -267,6 +368,33 @@ export function ModelViewer({
     } else if (orthoPts.length === 2) line(orthoPts, 0xffffff);
   }, [measure, orthoPts]);
 
+  /** Ponto do modelo sob o cursor, na nuvem em níveis de detalhe ou na malha. */
+  const pointAt = useCallback((ndc: THREE.Vector2) => {
+    const t = three.current;
+    if (!t) return null;
+    const ray = new THREE.Raycaster();
+    ray.params.Points = { threshold: t.size / 600 };
+    ray.setFromCamera(ndc, t.camera);
+    if (t.pot) {
+      const rect = t.renderer.domElement.getBoundingClientRect();
+      const hit = t.pot.Potree.pick([t.pot.pco], t.renderer, t.camera, ray.ray, { pixelPosition: new THREE.Vector3(((ndc.x + 1) / 2) * rect.width, ((ndc.y + 1) / 2) * rect.height, 0), pickWindowSize: 15 });
+      return hit?.position?.clone() ?? null;
+    }
+    return ray.intersectObject(t.root, true)[0]?.point.clone() ?? null;
+  }, []);
+
+  /** Duplo clique: o giro passa a acontecer em torno do ponto clicado. */
+  const recenter = useCallback(
+    (e: React.MouseEvent) => {
+      const t = three.current;
+      if (!t) return;
+      const rect = t.renderer.domElement.getBoundingClientRect();
+      const p = pointAt(new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1));
+      if (p) t.controls.target.copy(p);
+    },
+    [pointAt],
+  );
+
   /* ── clique para escolher pontos ── */
   const down = useRef<{ x: number; y: number } | null>(null);
   const pick = useCallback((e: React.PointerEvent) => {
@@ -276,15 +404,30 @@ export function ModelViewer({
     if (!d || Math.hypot(e.clientX - d.x, e.clientY - d.y) > 4) return; // foi arraste
     const rect = t.renderer.domElement.getBoundingClientRect();
     const ndc = new THREE.Vector2(((e.clientX - rect.left) / rect.width) * 2 - 1, -((e.clientY - rect.top) / rect.height) * 2 + 1);
-    const ray = new THREE.Raycaster();
-    ray.params.Points = { threshold: t.size / 600 };
-    ray.setFromCamera(ndc, t.camera);
-    const hit = ray.intersectObject(t.root, true)[0];
-    if (!hit) return toast.info("Clique sobre o modelo.");
-    const p = hit.point.clone();
+    const p = pointAt(ndc);
+    if (!p) return toast.info("Clique sobre o modelo.");
     if (toolRef.current === "medir") setMeasure((m) => (m.length >= 2 ? [p] : [...m, p]));
     else setOrthoPts((m) => (m.length >= 3 ? [p] : [...m, p]));
-  }, []);
+  }, [pointAt]);
+
+  /** A ortofoto precisa de todos os pontos, não só dos visíveis: baixa a nuvem completa quando é preciso. */
+  async function ensureFullCloud() {
+    const t = three.current;
+    if (!t?.pot || t.points) return;
+    setGen("Baixando a nuvem completa…");
+    const res = await fetch(output.url);
+    if (!res.ok) throw new Error("Não foi possível baixar a nuvem.");
+    const pc: PointCloud = parsePointCloud(output.format, await res.arrayBuffer());
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pc.positions, 3));
+    if (pc.colors) geo.setAttribute("color", new THREE.BufferAttribute(pc.colors, 3, true));
+    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, vertexColors: !!pc.colors }));
+    pts.position.set(...pc.origin);
+    pts.visible = false;
+    t.root.add(pts);
+    t.root.updateMatrixWorld(true);
+    t.points = pts;
+  }
 
   const frame = orthoPts.length === 3 ? orthoFrame(orthoPts) : null;
   const defaultMm = frame ? Math.max(1, Math.round((Math.max(frame.width, frame.height) * k * 1000) / 5000)) : 2;
@@ -302,6 +445,12 @@ export function ModelViewer({
     if (Math.max(pxW, pxH) > 16000 || pxW * pxH > 150_000_000) return toast.error("Imagem grande demais. Aumente o mm/pixel.");
     setGen("Renderizando…");
     try {
+      await ensureFullCloud();
+      if (t.pot) {
+        t.pot.pco.visible = false;
+        t.points!.visible = true;
+      }
+      if (t.grid) t.grid.visible = false;
       const gl = t.renderer.getContext();
       const maxTex = Math.min(4096, gl.getParameter(gl.MAX_TEXTURE_SIZE) as number);
       const cam = new THREE.OrthographicCamera(-frame.width / 2, frame.width / 2, frame.height / 2, -frame.height / 2, 0, front + back);
@@ -357,6 +506,11 @@ export function ModelViewer({
       t.scene.background = oldBg;
       t.overlay.visible = true;
       if (pts) (pts.material as THREE.PointsMaterial).size = oldSize;
+      if (t.pot) {
+        t.pot.pco.visible = true;
+        t.points!.visible = false;
+      }
+      if (t.grid) t.grid.visible = showGrid;
 
       setGen("Enviando…");
       const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.92));
@@ -467,7 +621,15 @@ export function ModelViewer({
             className={cn("absolute inset-0", tool !== "orbitar" && "cursor-crosshair")}
             onPointerDown={(e) => (down.current = { x: e.clientX, y: e.clientY })}
             onPointerUp={pick}
+            onDoubleClick={recenter}
           />
+          <div className="absolute top-3 left-1/2 flex -translate-x-1/2 gap-0.5 rounded-full bg-black/65 p-1 text-[12.5px] text-white">
+            {VIEWS.map((v) => (
+              <button key={v.id} onClick={() => goTo(v.id)} className="h-8 rounded-full px-3 hover:bg-white/20">
+                {v.label}
+              </button>
+            ))}
+          </div>
           {progress != null && (
             <div className="absolute inset-0 grid place-items-center text-[14px] text-white">
               <span className="flex items-center gap-2 rounded-full bg-black/70 px-4 py-2">
@@ -489,9 +651,34 @@ export function ModelViewer({
         </div>
 
         <aside className="thin-scroll hidden w-80 shrink-0 overflow-y-auto border-l bg-background p-4 lg:block">
+          {layers.length > 1 && (
+            <div className="mb-4 grid gap-1 border-b pb-4 text-[13.5px]">
+              <p className="mb-1 text-[12px] text-muted-foreground">Camadas</p>
+              {layers.map((l) => (
+                <Link
+                  key={l.id}
+                  href={`/bens/${siteId}/modelos/${l.id}`}
+                  className={cn("flex items-center gap-2 rounded-lg px-2.5 py-2", l.id === output.id ? "bg-muted font-medium" : "text-muted-foreground hover:bg-muted")}
+                >
+                  {l.kind === "nuvem" ? <Sparkles className="size-3.5" /> : <BoxIcon className="size-3.5" />}
+                  <span className="truncate">{l.kind === "nuvem" ? "Nuvem de pontos" : "Modelo 3D"}</span>
+                </Link>
+              ))}
+            </div>
+          )}
           {tool === "orbitar" && (
             <div className="grid gap-4 text-[13.5px]">
-              <p className="text-muted-foreground">Arraste para girar, botão direito para mover, roda do mouse para aproximar.</p>
+              <p className="text-muted-foreground">
+                Arraste para girar, botão direito para mover, roda para aproximar. Dê <b className="font-medium text-foreground">duplo clique</b> em um ponto para girar em torno dele.
+              </p>
+              <button onClick={() => setShowGrid((v) => !v)} className={cn("flex h-9 items-center gap-2 rounded-lg border px-3", showGrid && "bg-muted")}>
+                <Grid3x3 className="size-4" /> Grade no chão
+              </button>
+              {output.meta?.potree && (
+                <button onClick={() => setEdl((v) => !v)} className={cn("flex h-9 items-center gap-2 rounded-lg border px-3", edl && "bg-muted")}>
+                  <Sparkles className="size-4" /> Sombreamento de volume
+                </button>
+              )}
               {output.format !== "glb" && (
                 <label className="grid gap-1.5">
                   <span className="text-muted-foreground">Tamanho do ponto: {pointSize}px</span>

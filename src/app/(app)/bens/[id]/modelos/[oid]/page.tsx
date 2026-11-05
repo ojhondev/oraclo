@@ -20,6 +20,12 @@ export default async function ModelPage({ params }: PageProps<"/bens/[id]/modelo
     .where(and(eq(schema.outputs.id, oid), eq(schema.outputs.siteId, id)))
     .limit(1);
   if (!output?.url) notFound();
+  const siblings = output.captureId
+    ? await db
+        .select({ id: schema.outputs.id, name: schema.outputs.name, kind: schema.outputs.kind })
+        .from(schema.outputs)
+        .where(and(eq(schema.outputs.captureId, output.captureId), eq(schema.outputs.siteId, id)))
+    : [];
   const elements = await db
     .select({ value: schema.elements.id, label: schema.elements.name })
     .from(schema.elements)
@@ -30,6 +36,7 @@ export default async function ModelPage({ params }: PageProps<"/bens/[id]/modelo
       siteId={id}
       orgId={user.orgId}
       output={{ id: output.id, name: output.name, url: output.url, format: output.format, meta: (output.meta ?? null) as OutputMeta | null }}
+      layers={siblings}
       elements={elements}
       canEdit={editors.includes(user.role)}
     />

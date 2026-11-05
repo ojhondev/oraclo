@@ -51,6 +51,7 @@ export function odmArgs(project, projectsDir, quality = "rapido") {
     "--project-path", projectsDir,
     ...qualityOf(quality).args,
     "--pc-las",
+    "--pc-filter", "3",
     "--use-3dmesh",
     "--gltf",
     "--skip-orthophoto",
@@ -86,6 +87,100 @@ export function readLasCount(file) {
   } finally {
     closeSync(fd);
   }
+}
+
+const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+const unit = (v) => {
+  const n = Math.hypot(...v) || 1;
+  return v.map((x) => x / n);
+};
+const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+
+/** Matriz de rotação de um vetor de Rodrigues (formato do OpenSfM: mundo → câmera). */
+export function rodrigues([x, y, z]) {
+  const t = Math.hypot(x, y, z) || 1e-12;
+  const [a, b, c] = [x / t, y / t, z / t];
+  const s = Math.sin(t), k = Math.cos(t), v = 1 - k;
+  return [
+    [k + a * a * v, a * b * v - c * s, a * c * v + b * s],
+    [b * a * v + c * s, k + b * b * v, b * c * v - a * s],
+    [c * a * v - b * s, c * b * v + a * s, k + c * c * v],
+  ];
+}
+
+/** Menor autovetor de uma matriz simétrica 3×3 (iteração de potência sobre cI − A). */
+function smallestEigen(A) {
+  const c = A[0][0] + A[1][1] + A[2][2] + 1e-9;
+  let v = unit([0.31, 0.53, 0.79]);
+  for (let i = 0; i < 300; i++) {
+    v = unit([0, 1, 2].map((r) => c * v[r] - dot(A[r], v)));
+  }
+  return v;
+}
+
+/**
+ * Nivela o modelo sem GPS, pela orientação das câmeras. Ao filmar, o eixo lateral da câmera fica quase
+ * horizontal mesmo quando ela aponta para cima, então a vertical é a direção perpendicular a todos esses
+ * eixos. Numa passada reta eles são quase paralelos: por isso o "para cima" médio das câmeras entra
+ * como desempate. Devolve o quaternion [x,y,z,w] que leva a vertical a +Z e a direção de frente da
+ * fachada, na mesma rotação (para onde olhar ao abrir).
+ */
+export function levelFromShots(shots) {
+  const rows = shots.map((s) => rodrigues(s.rotation));
+  if (rows.length < 3) return null;
+  const sumUp = [0, 0, 0];
+  const sumView = [0, 0, 0];
+  const A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  for (const [x, y, z] of rows) {
+    for (let i = 0; i < 3; i++) {
+      sumUp[i] -= y[i]; // o eixo y da imagem aponta para baixo
+      sumView[i] += z[i];
+      for (let j = 0; j < 3; j++) A[i][j] += x[i] * x[j];
+    }
+  }
+  const m = unit(sumUp);
+  const lambda = 0.01 * rows.length;
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) A[i][j] += lambda * ((i === j ? 1 : 0) - m[i] * m[j]);
+  let up = smallestEigen(A);
+  if (dot(up, m) < 0) up = up.map((v) => -v);
+  // base nivelada: X lateral, Y em frente, Z para cima
+  const view = unit(sumView.map((v, i) => v - dot(sumView, up) * up[i]));
+  const right = unit(cross(view, up));
+  const front = cross(up, right);
+  const R = [right, front, up]; // linhas: modelo → nivelado
+  const q = quaternionOf(R);
+  return { quaternion: q, up, tilt: Math.round((Math.acos(Math.min(1, Math.abs(up[2]))) * 180) / Math.PI) };
+}
+
+function quaternionOf(m) {
+  const t = m[0][0] + m[1][1] + m[2][2];
+  let x, y, z, w;
+  if (t > 0) {
+    const s = 0.5 / Math.sqrt(t + 1);
+    w = 0.25 / s;
+    x = (m[2][1] - m[1][2]) * s;
+    y = (m[0][2] - m[2][0]) * s;
+    z = (m[1][0] - m[0][1]) * s;
+  } else if (m[0][0] > m[1][1] && m[0][0] > m[2][2]) {
+    const s = 2 * Math.sqrt(1 + m[0][0] - m[1][1] - m[2][2]);
+    w = (m[2][1] - m[1][2]) / s;
+    x = 0.25 * s;
+    y = (m[0][1] + m[1][0]) / s;
+    z = (m[0][2] + m[2][0]) / s;
+  } else if (m[1][1] > m[2][2]) {
+    const s = 2 * Math.sqrt(1 + m[1][1] - m[0][0] - m[2][2]);
+    w = (m[0][2] - m[2][0]) / s;
+    x = (m[0][1] + m[1][0]) / s;
+    y = 0.25 * s;
+    z = (m[1][2] + m[2][1]) / s;
+  } else {
+    const s = 2 * Math.sqrt(1 + m[2][2] - m[0][0] - m[1][1]);
+    w = (m[1][0] - m[0][1]) / s;
+    x = (m[0][2] + m[2][0]) / s;
+    y = (m[1][2] + m[2][1]) / s;
+    z = 0.25 * s;
+  }
+  return [x, y, z, w];
 }
 
 /** Fotos aproveitadas: câmeras que entraram no maior bloco reconstruído. */

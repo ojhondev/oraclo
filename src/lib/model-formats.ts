@@ -36,4 +36,14 @@ export type ModelScale = {
   at: string;
 };
 
-export type OutputMeta = { viewable?: boolean; upAxis?: "y" | "z"; source?: string; scale?: ModelScale };
+export type OutputMeta = {
+  viewable?: boolean;
+  upAxis?: "y" | "z";
+  source?: string;
+  scale?: ModelScale;
+  /** Quaternion [x,y,z,w] que deixa o modelo em pé (calculado pelo motor a partir das câmeras). */
+  level?: [number, number, number, number] | null;
+  /** Pasta da nuvem em níveis de detalhe (Potree 2.0), quando o motor a gerou. */
+  potree?: string;
+  points?: number | null;
+};

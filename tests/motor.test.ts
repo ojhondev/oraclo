@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { lasPointCount, odmArgs, odmCommand, photosUsed, qualityOf, stageFromLine, stepDetail } from "../scripts/motor-comum.mjs";
+import { lasPointCount, levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, stageFromLine, stepDetail } from "../scripts/motor-comum.mjs";
 import { judgeFrame, meanDiff, tooFast } from "@/lib/video-frames";
 
 describe("motor 3D", () => {
@@ -33,6 +33,34 @@ describe("motor 3D", () => {
     expect(stepDetail("opensfm", { ...base, features: 28 })).toEqual({ progress: 18, text: "Analisando a imagem 28 de 56" });
     expect(stepDetail("openmvs", { ...base, depths: 84 })).toEqual({ progress: 58, text: "Calculando a imagem 56 de 56" });
     expect(stepDetail("odm_meshing", base)).toBeNull();
+  });
+
+  it("nivela o modelo pelas câmeras, mesmo com elas apontando para cima", () => {
+    // câmeras numa passada curva, olhando 25° para cima, num mundo inclinado 40° em X
+    const tilt = (40 * Math.PI) / 180;
+    const up: [number, number, number] = [0, Math.sin(tilt), Math.cos(tilt)];
+    const shots = [-30, -15, 0, 15, 30].map((deg) => {
+      const yaw = (deg * Math.PI) / 180;
+      const pitch = (25 * Math.PI) / 180;
+      // eixos da câmera no mundo nivelado (X lateral, Y frente, Z cima)
+      const x = [Math.cos(yaw), -Math.sin(yaw), 0];
+      const z = [Math.sin(yaw) * Math.cos(pitch), Math.cos(yaw) * Math.cos(pitch), Math.sin(pitch)];
+      const y = [z[1] * x[2] - z[2] * x[1], z[2] * x[0] - z[0] * x[2], z[0] * x[1] - z[1] * x[0]];
+      // inclina o mundo em torno de X
+      const toWorld = (v: number[]) => [v[0]!, v[1]! * Math.cos(tilt) + v[2]! * Math.sin(tilt), -v[1]! * Math.sin(tilt) + v[2]! * Math.cos(tilt)];
+      return { R: [toWorld(x), toWorld(y), toWorld(z)] };
+    });
+    const asRodrigues = (R: number[][]) => {
+      const a = R as [number[], number[], number[]];
+      const angle = Math.acos(Math.max(-1, Math.min(1, (a[0]![0]! + a[1]![1]! + a[2]![2]! - 1) / 2)));
+      const s = 2 * Math.sin(angle) || 1e-9;
+      return [((a[2]![1]! - a[1]![2]!) / s) * angle, ((a[0]![2]! - a[2]![0]!) / s) * angle, ((a[1]![0]! - a[0]![1]!) / s) * angle];
+    };
+    const result = levelFromShots(shots.map((s) => ({ rotation: asRodrigues(s.R) })))!;
+    expect(Math.abs(result.up[0]! - up[0]!)).toBeLessThan(0.08);
+    expect(Math.abs(result.up[1]! - up[1]!)).toBeLessThan(0.08);
+    expect(Math.abs(result.up[2]! - up[2]!)).toBeLessThan(0.08);
+    expect(Math.hypot(...result.quaternion)).toBeCloseTo(1, 5);
   });
 
   it("lê a quantidade de pontos nas versões 1.2 e 1.4 do LAS", () => {

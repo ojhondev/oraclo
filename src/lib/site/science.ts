@@ -16,20 +16,20 @@ type Science = {
     label: string;
     title: string;
     text: string;
-    items: { tag: string; title: string; tex: string; text: string }[];
-    note: string;
+    steps: { title: string; text: string }[];
+    beforeLabel: string;
+    afterLabel: string;
+    compare: [string, string][];
     cta: string;
   };
+  transform: { label: string; title: string; text: string; before: string; after: string; rows: [string, string, string][] };
   mathLabel: string;
   /** Equações por frente, na mesma ordem e com os mesmos ids de `tech.items`. */
   math: Record<string, Eq[]>;
   ai: { label: string; title: string; text: string; headers: [string, string, string, string, string]; rows: AiRow[]; note: string };
   diff: { label: string; title: string; text: string; headers: [string, string, string, string]; rows: [string, string, string, string][]; note: string };
-  limits: { label: string; title: string; items: [string, string][] };
 };
 
-const homography = m`\mathbf{x}' \sim H\,\mathbf{x}`;
-const rawDeviation = m`z(p)=\dfrac{|\Delta L(p)|}{\sigma_S}`;
 const areaError = m`\sigma_A=\sigma_p\sqrt{\sum_i\bigl(\tfrac12\lVert\mathbf{v}_{i+1}-\mathbf{v}_{i-1}\rVert\bigr)^2}`;
 
 const math = {
@@ -53,21 +53,49 @@ const en = (tex: string) =>
 
 const pt: Science = {
   home: {
-    label: "Inovação",
-    title: "O mapa de danos como problema de medição",
+    label: "O que é o ArchRay",
+    title: "O mapa de danos, reinventado do vídeo ao laudo",
     text:
-      "O mapa de danos convencional é um desenho: depende do olho e do tempo de quem traça, e o seu erro nunca é declarado. A inovação do ArchRay na Arquitetura e na Engenharia é tratá-lo como medição: cada patologia vira um polígono em coordenadas métricas, com incerteza propagada, origem registrada e decisão humana. A inteligência artificial não dá o veredito. Ela formula hipóteses, com justificativa, para um profissional confirmar ou recusar.",
-    items: [
-      { tag: "Geometria", title: "Da foto ao plano métrico", tex: homography, text: "Uma homografia estimada por mínimos quadrados leva a fotografia em perspectiva a um plano em escala, com a lente corrigida e o erro calculado." },
-      { tag: "Estatística", title: "O dano medido contra a própria parede", tex: rawDeviation, text: "Cada superfície tem o seu ruído. O desvio é medido nessa unidade, e não por uma cor fixa, o que torna a detecção independente da tinta e da luz da foto." },
-      { tag: "Metrologia", title: "Toda medida com margem de erro", tex: areaError, text: "A precisão da retificação se propaga até a área e o comprimento de cada dano, e a margem de erro (95%) sai no laudo." },
-      { tag: "Decisão", title: "A máquina sugere, o profissional assina", tex: m`\text{sugestão}\ \xrightarrow{\ \text{revisão humana}\ }\ \text{dano}`, text: "Cada sugestão traz a sua justificativa e é aceita uma a uma. O motor que a gerou fica registrado no dano, e o laudo declara o uso de IA." },
+      "O ArchRay é a plataforma que transforma um vídeo da fachada em diagnóstico completo. Em vez de juntar trena, CAD, planilha e editor de texto, você grava com o celular e segue um único fluxo: modelo 3D, nuvem de pontos, imagem em escala, mapa de danos com IA e laudo.",
+    steps: [
+      { title: "Grave a fachada", text: "Filme com o celular. O ArchRay escolhe os quadros mais nítidos." },
+      { title: "Modelo 3D e nuvem de pontos", text: "A fotogrametria reconstrói a edificação em três dimensões." },
+      { title: "Imagem em escala", text: "Uma medida real calibra o modelo e gera a imagem da fachada." },
+      { title: "Mapa de danos com IA", text: "A IA sugere, o contorno sai em um clique e o profissional decide." },
+      { title: "Laudo pronto", text: "Quantitativos, prioridades, orçamento, prancha e PDF do mesmo dado." },
     ],
-    note: "Um método auditável: a mesma foto, com os mesmos parâmetros, gera as mesmas sugestões de detecção, e cada número do laudo tem origem conhecida.",
-    cta: "Ver os fundamentos",
+    beforeLabel: "Antes",
+    afterLabel: "Com o ArchRay",
+    compare: [
+      ["Trena, croqui e fotos soltas", "Um vídeo gravado no celular"],
+      ["Hachura à mão, dano por dano", "IA sugere e o profissional revisa"],
+      ["Planilha sem margem de erro", "Medidas calculadas, com margem de erro"],
+      ["Laudo montado em vários programas", "Tudo em um só fluxo"],
+    ],
+    cta: "Ver a transformação",
+  },
+  transform: {
+    label: "A transformação",
+    title: "O mapa de danos antes e depois do ArchRay",
+    text: "O trabalho técnico continua sendo seu. O que muda é tudo que ficava em volta dele.",
+    before: "Antes",
+    after: "Com o ArchRay",
+    rows: [
+      ["Levantamento", "Trena, croqui e fotos soltas", "Um vídeo da fachada gravado no celular"],
+      ["Base de trabalho", "Desenho cadastral e foto ajustada no olho", "Modelo 3D, nuvem de pontos e imagem em escala"],
+      ["Marcação dos danos", "Hachura à mão no CAD, dano por dano", "Sugestões da IA e contorno em um clique, com revisão profissional"],
+      ["Medidas", "Planilha preenchida à mão, sem margem de erro", "Áreas e comprimentos calculados, com margem de erro"],
+      ["Decisão", "Prioridade e orçamento em arquivos separados", "GUT e orçamento ligados a cada dano do desenho"],
+      ["Entrega", "Laudo montado em editor de texto", "Laudo, prancha A3 e DXF gerados do mesmo dado"],
+      ["Acompanhamento", "Cada visita recomeça do zero", "Vistorias comparadas: o que surgiu, cresceu ou foi tratado"],
+    ],
   },
   mathLabel: "Fundamentos",
   math: {
+    captura: [
+      { tex: m`\min_{P,\,X}\sum_{i,j}\lVert\mathbf{x}_{ij}-\pi(P_i,X_j)\rVert^2`, note: "Ajuste de feixes: a fotogrametria busca as posições das câmeras P e os pontos 3D X que melhor explicam o que cada quadro vê. O processamento usa o OpenDroneMap, software aberto." },
+      { tex: m`s=\mathrm{Var}(\nabla^2 I)`, note: "Na gravação, cada janela de tempo guarda só o quadro de maior nitidez, medida pela variância do Laplaciano. Quadros repetidos ou tremidos ficam de fora." },
+    ],
     retificacao: [
       { tex: math.dlt, note: "Homografia estimada por DLT com normalização de Hartley: os cantos e os pontos de controle montam um sistema sobredeterminado, resolvido por mínimos quadrados." },
       { tex: math.lens, note: "Distorção radial da lente, com os coeficientes buscados por seção áurea e Nelder–Mead até que as linhas retas da foto fiquem retas." },
@@ -94,11 +122,12 @@ const pt: Science = {
   },
   ai: {
     label: "Inteligência artificial",
-    title: "Como a IA auxilia em cada etapa",
+    title: "A IA sugere. O profissional decide.",
     text:
-      "Chamar tudo de IA esconderia o que importa. Em um documento técnico, é preciso saber o que é modelo matemático explícito, o que é regra estatística e o que é rede neural. Por isso, cada etapa declara a sua natureza.",
+      "Nada de caixa-preta. Em um documento técnico, você precisa saber de onde vem cada resultado, então cada etapa mostra exatamente o que a máquina faz e quem dá a palavra final.",
     headers: ["Etapa", "Método", "Natureza", "Papel da automação", "Quem decide"],
     rows: [
+      { step: "Modelo 3D", method: "Fotogrametria com OpenDroneMap", nature: "Geometria 3D, com software aberto", role: "Reconstrói a edificação a partir dos quadros do vídeo", human: "O profissional informa uma medida real para a escala" },
       { step: "Retificação", method: "Homografia e mínimos quadrados", nature: "Geometria e estatística", role: "Calcula o plano e a incerteza", human: "O profissional marca os pontos e confere as medidas" },
       { step: "Detecção", method: "Motor cv-2: grafos, estatística robusta e Hessiana", nature: "Visão computacional clássica", role: "Sugere danos, cada um com justificativa e confiança", human: "O profissional aceita ou rejeita um a um" },
       { step: "Contorno", method: "SlimSAM e crescimento de região", nature: "Rede neural pública, de terceiros, executada no navegador", role: "Recorta o elemento a partir de um clique", human: "O profissional refina e confirma" },
@@ -110,11 +139,12 @@ const pt: Science = {
   },
   diff: {
     label: "Diferenciais",
-    title: "O que muda em relação às alternativas",
-    text: "A comparação é por categoria de ferramenta, não por produto. As características variam em cada caso; o quadro mostra o padrão mais comum.",
+    title: "Outras ferramentas resolvem uma parte. O ArchRay resolve o caminho inteiro.",
+    text: "Do campo à entrega, sem trocar de programa. O quadro compara por categoria de ferramenta e mostra o padrão mais comum.",
     headers: ["Aspecto", "Fluxo tradicional", "Ferramentas genéricas (CAD, fotogrametria, inspeção)", "ArchRay"],
     rows: [
-      ["Base métrica", "Desenho cadastral e foto ajustada no olho", "Exige levantamento dedicado (drone, laser) ou outro software", "Retificação a partir de foto e medidas, com precisão declarada"],
+      ["Captura", "Trena, croqui e fotos soltas", "Exige drone, laser ou outro software", "Vídeo no celular vira modelo 3D e nuvem de pontos"],
+      ["Base em escala", "Desenho cadastral e foto ajustada no olho", "Depende de um levantamento dedicado", "Imagem em escala, com precisão declarada"],
       ["Desenho dos danos", "Hachura manual no CAD", "Manual, sem legenda de patologias", "Biblioteca de danos, contorno por IA e detecção sugerida"],
       ["Quantitativos", "Extraídos à mão para planilha", "Possíveis, mas fora do contexto do laudo", "Automáticos, por classe e por área do imóvel"],
       ["Incerteza", "Não declarada", "Declarada no levantamento, não em cada dano", "Propagada até a medida de cada dano"],
@@ -123,37 +153,55 @@ const pt: Science = {
       ["Uso de IA", "Não se aplica", "Quando há, costuma ser opaco", "Sugere com justificativa, com aceite individual e motor registrado"],
       ["Série histórica", "Recomeça a cada visita", "Rara", "Comparação alinhada entre vistorias"],
     ],
-    note: "Um laser scanner mede melhor que uma foto, e há casos em que ele é indispensável. A questão é de adequação ao problema: precisão conhecida, no mesmo ambiente do mapa, do orçamento e do laudo.",
-  },
-  limits: {
-    label: "Limites declarados",
-    title: "O que o método não afirma",
-    items: [
-      ["Plano", "A homografia supõe uma superfície plana. Relevos fora do plano sofrem paralaxe, e fachadas com volumes distintos pedem uma vista para cada plano."],
-      ["Resolução", "O que tem dimensão abaixo do pixel não aparece. A qualidade da foto limita a detecção, e o sistema avisa quando há sombra, pouca resolução, área estourada ou escura."],
-      ["Detecção", "É hipótese, não diagnóstico. Em superfícies decoradas a confiança é menor e o aviso aparece na própria vista."],
-      ["Causa", "A imagem registra o sintoma. A investigação das causas, os ensaios e a análise estrutural seguem com o profissional responsável."],
-    ],
+    note: "Já usa laser ou drone? Importe a nuvem de pontos ou o modelo e siga no mesmo fluxo do ArchRay.",
   },
 };
 
 const enCopy: Science = {
   home: {
-    label: "Innovation",
-    title: "The damage map as a measurement problem",
+    label: "What ArchRay is",
+    title: "The damage map, reinvented from video to report",
     text:
-      "A conventional damage map is a drawing: it depends on the eye and the time of whoever draws it, and its error is never stated. ArchRay's innovation in Architecture and Engineering is to treat it as a measurement: each defect becomes a polygon in metric coordinates, with propagated uncertainty, a recorded origin and a human decision. Artificial intelligence does not give the verdict. It puts forward hypotheses, with reasons, for a professional to confirm or reject.",
-    items: [
-      { tag: "Geometry", title: "From the photo to the metric plane", tex: homography, text: "A homography estimated by least squares takes the perspective photo to a scaled plane, with the lens corrected and the error computed." },
-      { tag: "Statistics", title: "Damage measured against its own wall", tex: rawDeviation, text: "Each surface has its own noise. The deviation is measured in that unit, not against a fixed colour, which makes detection independent of the paint and the light in the photo." },
-      { tag: "Metrology", title: "Every measurement with a margin of error", tex: areaError, text: "The rectification precision propagates to the area and length of each damage, and the 95% margin of error goes into the report." },
-      { tag: "Decision", title: "The machine suggests, the professional signs", tex: m`\text{suggestion}\ \xrightarrow{\ \text{human review}\ }\ \text{damage}`, text: "Each suggestion carries its reason and is accepted one by one. The engine that produced it is recorded on the damage, and the report states the use of AI." },
+      "ArchRay is the platform that turns a facade video into a complete diagnosis. Instead of juggling tape measures, CAD, spreadsheets and word processors, you record on your phone and follow one flow: 3D model, point cloud, scaled image, AI damage map and report.",
+    steps: [
+      { title: "Record the facade", text: "Film on your phone. ArchRay picks the sharpest frames." },
+      { title: "3D model and point cloud", text: "Photogrammetry rebuilds the building in three dimensions." },
+      { title: "Scaled image", text: "One real measurement calibrates the model and generates the facade image." },
+      { title: "AI damage map", text: "AI suggests, outlines take one click and the professional decides." },
+      { title: "Report ready", text: "Quantities, priorities, budget, sheet and PDF from the same data." },
     ],
-    note: "An auditable method: the same photo, with the same parameters, yields the same detection suggestions, and every number in the report has a known origin.",
-    cta: "See the foundations",
+    beforeLabel: "Before",
+    afterLabel: "With ArchRay",
+    compare: [
+      ["Tape measure, sketches and loose photos", "One video recorded on a phone"],
+      ["Hatching by hand, damage by damage", "AI suggests and the professional reviews"],
+      ["Spreadsheets with no margin of error", "Computed measurements, with a margin of error"],
+      ["A report assembled across several programs", "Everything in one flow"],
+    ],
+    cta: "See the transformation",
+  },
+  transform: {
+    label: "The transformation",
+    title: "The damage map before and after ArchRay",
+    text: "The technical work is still yours. What changes is everything around it.",
+    before: "Before",
+    after: "With ArchRay",
+    rows: [
+      ["Survey", "Tape measure, sketches and loose photos", "One facade video recorded on a phone"],
+      ["Working base", "Survey drawing and a photo fitted by eye", "3D model, point cloud and scaled image"],
+      ["Marking damage", "Hatching by hand in CAD, damage by damage", "AI suggestions and one-click outlines, with professional review"],
+      ["Measurements", "Hand-filled spreadsheet with no margin of error", "Computed areas and lengths, with a margin of error"],
+      ["Decision", "Priority and budget in separate files", "GUT and budget tied to each damage on the drawing"],
+      ["Delivery", "Report assembled in a word processor", "Report, A3 sheet and DXF generated from the same data"],
+      ["Follow-up", "Every visit starts from zero", "Compared surveys: what appeared, grew or was treated"],
+    ],
   },
   mathLabel: "Foundations",
   math: {
+    captura: [
+      { tex: m`\min_{P,\,X}\sum_{i,j}\lVert\mathbf{x}_{ij}-\pi(P_i,X_j)\rVert^2`, note: "Bundle adjustment: photogrammetry looks for the camera positions P and 3D points X that best explain what each frame sees. Processing uses OpenDroneMap, open-source software." },
+      { tex: m`s=\mathrm{Var}(\nabla^2 I)`, note: "While recording, each time window keeps only the sharpest frame, measured by the variance of the Laplacian. Repeated or shaky frames are left out." },
+    ],
     retificacao: [
       { tex: en(math.dlt), note: "Homography estimated by DLT with Hartley normalisation: corners and control points form an overdetermined system, solved by least squares." },
       { tex: en(math.lens), note: "Radial lens distortion, with coefficients searched by golden-section and Nelder–Mead until the straight lines in the photo are straight." },
@@ -180,11 +228,12 @@ const enCopy: Science = {
   },
   ai: {
     label: "Artificial intelligence",
-    title: "How AI assists at each step",
+    title: "AI suggests. The professional decides.",
     text:
-      "Calling everything AI would hide what matters. In a technical document, you need to know what is an explicit mathematical model, what is a statistical rule and what is a neural network. So each step states its nature.",
+      "No black box. In a technical document you need to know where each result comes from, so every step shows exactly what the machine does and who has the final word.",
     headers: ["Step", "Method", "Nature", "Role of automation", "Who decides"],
     rows: [
+      { step: "3D model", method: "Photogrammetry with OpenDroneMap", nature: "3D geometry, with open-source software", role: "Rebuilds the building from the video frames", human: "The professional enters a real measurement for scale" },
       { step: "Rectification", method: "Homography and least squares", nature: "Geometry and statistics", role: "Computes the plane and the uncertainty", human: "The professional marks the points and checks the measurements" },
       { step: "Detection", method: "cv-2 engine: graphs, robust statistics and Hessian", nature: "Classical computer vision", role: "Suggests damage, each with a reason and a confidence", human: "The professional accepts or rejects one by one" },
       { step: "Outline", method: "SlimSAM and region growing", nature: "Public third-party neural network, run in the browser", role: "Cuts out the element from one click", human: "The professional refines and confirms" },
@@ -196,11 +245,12 @@ const enCopy: Science = {
   },
   diff: {
     label: "Differentiators",
-    title: "What changes compared with the alternatives",
-    text: "The comparison is by tool category, not by product. Features vary case by case; the table shows the most common pattern.",
+    title: "Other tools solve one part. ArchRay solves the whole path.",
+    text: "From the field to delivery, without switching programs. The table compares tool categories and shows the most common pattern.",
     headers: ["Aspect", "Traditional workflow", "Generic tools (CAD, photogrammetry, inspection)", "ArchRay"],
     rows: [
-      ["Metric base", "Survey drawing and a photo fitted by eye", "Requires a dedicated survey (drone, laser) or other software", "Rectification from a photo and measurements, with stated precision"],
+      ["Capture", "Tape measure, sketches and loose photos", "Requires a drone, laser or other software", "A phone video becomes a 3D model and point cloud"],
+      ["Scaled base", "Survey drawing and a photo fitted by eye", "Depends on a dedicated survey", "Scaled image, with stated precision"],
       ["Damage drawing", "Manual CAD hatching", "Manual, with no pathology legend", "Damage library, AI outline and suggested detection"],
       ["Quantities", "Extracted by hand to a spreadsheet", "Possible, but outside the report", "Automatic, by class and by area of the building"],
       ["Uncertainty", "Not stated", "Stated for the survey, not for each damage", "Propagated to the measurement of each damage"],
@@ -209,17 +259,7 @@ const enCopy: Science = {
       ["Use of AI", "Not applicable", "When present, usually opaque", "Suggests with reasons, individual acceptance and a recorded engine"],
       ["Time series", "Starts over at each visit", "Rare", "Aligned comparison between surveys"],
     ],
-    note: "A laser scanner measures better than a photo, and there are cases where it is indispensable. The point is fitness for the problem: known precision, in the same place as the map, the budget and the report.",
-  },
-  limits: {
-    label: "Stated limits",
-    title: "What the method does not claim",
-    items: [
-      ["Plane", "The homography assumes a flat surface. Reliefs outside the plane suffer parallax, and facades with distinct volumes need one view per plane."],
-      ["Resolution", "Anything smaller than a pixel does not appear. Photo quality limits detection, and the system warns about shadow, low resolution, blown-out or dark areas."],
-      ["Detection", "It is a hypothesis, not a diagnosis. On decorated surfaces confidence is lower and a warning appears on the view."],
-      ["Cause", "The image records the symptom. Investigating causes, testing and structural analysis stay with the responsible professional."],
-    ],
+    note: "Already using a laser or drone? Import the point cloud or model and continue in the same ArchRay flow.",
   },
 };
 

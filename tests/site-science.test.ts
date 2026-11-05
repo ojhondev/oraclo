@@ -9,7 +9,7 @@ describe("conteúdo técnico do site", () => {
     const s = SCIENCE[lang];
 
     it(`${lang}: todas as fórmulas compilam`, () => {
-      const all = [...s.home.items.map((i) => i.tex), ...Object.values(s.math).flat().map((e) => e.tex)];
+      const all = Object.values(s.math).flat().map((e) => e.tex);
       expect(all.length).toBeGreaterThan(10);
       for (const tex of all) expect(() => katex.renderToString(tex, { displayMode: true, throwOnError: true, strict: "ignore" })).not.toThrow();
     });

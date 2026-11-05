@@ -27,6 +27,8 @@ const pt = {
         label: "Tecnologia",
         items: [
           { href: "/tecnologia", label: "Nossa Tecnologia", hint: "Método, matemática e diferenciais" },
+          { href: "/tecnologia#transformacao", label: "Antes e depois" },
+          { href: "/tecnologia#captura", label: "Modelo 3D e nuvem de pontos" },
           { href: "/tecnologia#retificacao", label: "Retificação métrica" },
           { href: "/tecnologia#deteccao", label: "Detecção automática" },
           { href: "/tecnologia#contorno", label: "Contorno IA" },
@@ -132,15 +134,29 @@ const pt = {
   tech: {
     metaTitle: "Nossa Tecnologia",
     title: "Nossa Tecnologia",
+    headline: "Do vídeo da fachada ao laudo pronto.",
     statement:
-      "Um método para tratar o mapa de danos como medição: geometria projetiva para chegar ao plano em escala, estatística robusta para sugerir danos e propagação de incerteza até o laudo. A decisão fica com o profissional.",
-    frontsLabel: "Frentes do motor",
-    featuredLabel: "Em destaque",
-    readMore: "Ler mais",
+      "O ArchRay transforma um vídeo gravado no celular em modelo 3D, nuvem de pontos, imagem em escala, mapa de danos, orçamento e laudo. Tudo em um só fluxo, com cada número rastreável.",
     sectionsLabel: "Fundamentos técnicos",
+    sectionsTitle: "O que roda por trás de cada etapa",
+    sectionsHint: "Passe o mouse ou toque em um cartão para ver como funciona.",
+    moreLabel: "Ver detalhes",
+    closeLabel: "Fechar",
     postsLabel: "Publicações",
     postsCount: (n: number) => `${n} ${n === 1 ? "publicação" : "publicações"}`,
     items: [
+      {
+        id: "captura",
+        name: "Modelo 3D e nuvem de pontos",
+        status: "Novo",
+        illo: "pontos",
+        summary: "Um vídeo da fachada vira modelo 3D e nuvem de pontos, direto no ArchRay.",
+        bullets: [
+          "Gravação no próprio ArchRay, guardando só os quadros nítidos.",
+          "Fotogrametria com o OpenDroneMap, gerando malha com textura e nuvem de pontos.",
+          "Medição e geração de imagem em escala no visualizador 3D.",
+        ],
+      },
       {
         id: "retificacao",
         name: "Retificação métrica",
@@ -305,6 +321,8 @@ const en: Copy = {
         label: "Technology",
         items: [
           { href: "/tecnologia", label: "Our Technology", hint: "Method, mathematics and differentiators" },
+          { href: "/tecnologia#transformacao", label: "Before and after" },
+          { href: "/tecnologia#captura", label: "3D model and point cloud" },
           { href: "/tecnologia#retificacao", label: "Metric rectification" },
           { href: "/tecnologia#deteccao", label: "Automatic detection" },
           { href: "/tecnologia#contorno", label: "AI outline" },
@@ -410,15 +428,29 @@ const en: Copy = {
   tech: {
     metaTitle: "Our Technology",
     title: "Our Technology",
+    headline: "From a facade video to a finished report.",
     statement:
-      "A method for treating the damage map as a measurement: projective geometry to reach the scaled plane, robust statistics to suggest damage and uncertainty propagation all the way to the report. The decision stays with the professional.",
-    frontsLabel: "Engine components",
-    featuredLabel: "Featured",
-    readMore: "Read more",
+      "ArchRay turns a phone video into a 3D model, point cloud, scaled image, damage map, budget and report. All in one flow, with every number traceable.",
     sectionsLabel: "Technical foundations",
+    sectionsTitle: "What runs behind each step",
+    sectionsHint: "Hover over or tap a card to see how it works.",
+    moreLabel: "See details",
+    closeLabel: "Close",
     postsLabel: "Posts",
     postsCount: (n: number) => `${n} ${n === 1 ? "post" : "posts"}`,
     items: [
+      {
+        id: "captura",
+        name: "3D model and point cloud",
+        status: "New",
+        illo: "pontos",
+        summary: "A facade video becomes a 3D model and point cloud, right inside ArchRay.",
+        bullets: [
+          "Recording inside ArchRay, keeping only the sharp frames.",
+          "Photogrammetry with OpenDroneMap, producing a textured mesh and a point cloud.",
+          "Measurement and scaled image generation in the 3D viewer.",
+        ],
+      },
       {
         id: "retificacao",
         name: "Metric rectification",

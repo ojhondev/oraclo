@@ -5,7 +5,6 @@ import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
 import { SCIENCE } from "@/lib/site/science";
 import { Illo, type IlloName } from "@/components/site/illo";
-import { Formula } from "@/components/site/formula";
 
 // Servida em "/" para quem não está logado (reescrita em src/proxy.ts).
 export async function generateMetadata(): Promise<Metadata> {
@@ -118,12 +117,12 @@ export default async function SiteHome() {
         </ul>
       </section>
 
-      {/* inovação: o mapa de danos como medição, com a matemática à vista */}
-      <section className="site-ink mt-20 px-4 py-16 sm:mt-24 sm:px-6 sm:py-24 lg:px-8" aria-labelledby="inovacao">
+      {/* o que é o ArchRay: o caminho do vídeo ao laudo e o antes e depois */}
+      <section className="site-ink mt-20 px-4 py-16 sm:mt-24 sm:px-6 sm:py-24 lg:px-8" aria-labelledby="o-que-e">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div data-reveal>
             <p className="a-label">{sci.label}</p>
-            <h2 id="inovacao" className="mt-4 text-[32px] leading-[1.1] sm:text-[46px]">
+            <h2 id="o-que-e" className="mt-4 text-[32px] leading-[1.1] sm:text-[46px]">
               {sci.title}
             </h2>
           </div>
@@ -131,19 +130,34 @@ export default async function SiteHome() {
             {sci.text}
           </p>
         </div>
-        <ul className="mt-12 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {sci.items.map((it, i) => (
-            <li key={it.title} className="a-card flex min-w-0 flex-col p-6" data-reveal data-reveal-delay={i * 80}>
-              <p className="a-tag">{it.tag}</p>
-              <h3 className="a-title mt-3 text-[19px] leading-snug">{it.title}</h3>
-              <Formula tex={it.tex} className="my-5 min-h-[72px] content-center" />
-              <p className="mt-auto text-[14.5px] leading-6 text-muted-foreground">{it.text}</p>
+        <ol className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+          {sci.steps.map((step, i) => (
+            <li key={step.title} className="a-card flex min-w-0 flex-col p-5" data-reveal data-reveal-delay={i * 70}>
+              <p className="a-label">0{i + 1}</p>
+              <h3 className="a-title mt-3 text-[18px] leading-snug">{step.title}</h3>
+              <p className="mt-2 text-[14px] leading-6 text-muted-foreground">{step.text}</p>
             </li>
           ))}
-        </ul>
-        <div className="mt-10 flex flex-wrap items-center justify-between gap-5 border-t pt-6">
-          <p className="max-w-[72ch] text-[15px] leading-6 text-muted-foreground">{sci.note}</p>
-          <Link href="/tecnologia#fundamentos" className="a-btn-2 a-btn-sm">
+        </ol>
+        <div className="mt-14 grid gap-px overflow-hidden rounded-[8px] border md:grid-cols-2">
+          {[
+            { label: sci.beforeLabel, rows: sci.compare.map((c) => c[0]), after: false },
+            { label: sci.afterLabel, rows: sci.compare.map((c) => c[1]), after: true },
+          ].map((col) => (
+            <div key={col.label} className={col.after ? "bg-[var(--site-pill)] p-6 sm:p-8" : "p-6 sm:p-8"}>
+              <p className="a-label">{col.label}</p>
+              <ul className="mt-4 grid gap-3">
+                {col.rows.map((row) => (
+                  <li key={row} className={col.after ? "text-[18px] leading-snug font-medium" : "text-[18px] leading-snug text-muted-foreground"}>
+                    {row}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+        <div className="mt-8">
+          <Link href="/tecnologia#transformacao" className="a-btn-2 a-btn-sm">
             {sci.cta} <ArrowRight className="size-4" />
           </Link>
         </div>

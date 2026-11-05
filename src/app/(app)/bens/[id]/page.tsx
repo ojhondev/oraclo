@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { BetaBadge } from "@/components/beta-badge";
 import { EmptyState, PageBody, PageHeader } from "@/components/page-header";
 import { ConfirmButton } from "@/components/confirm-button";
-import { deleteCampaign, deleteElement } from "../actions";
+import { deleteCampaign, deleteElement, deleteSite } from "../actions";
 import { AddCampaignForm, AddElementForm, NewCaptureForm } from "./panels";
 import { ImportModelForm } from "./import-model";
 import { LaudoEditor } from "./laudo-editor";
@@ -84,6 +84,16 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
   const maxSev = Math.max(0, ...dx.bySeverity.map((r) => r.count));
   const maxEl = Math.max(0, ...dx.byElement.map((r) => r.cents));
   const firstVista = dx.vistas[0];
+  const deleteProject = user.role === "admin" && (
+    <div className="flex justify-end">
+      <ConfirmButton
+        action={deleteSite.bind(null, site.id)}
+        title={`Excluir "${site.name}"?`}
+        description="Áreas, vistorias, vistas, fotos, modelos e danos serão apagados, inclusive do armazenamento. Não dá para desfazer."
+        label="Excluir projeto"
+      />
+    </div>
+  );
 
   /** Ação do "próximo passo". */
   const stepAction: Record<typeof step.id, { label: string; href: string; hidden?: boolean }> = {
@@ -326,6 +336,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
                 </Section>
               </div>
             ) : null}
+            {deleteProject}
           </>
         )}
 

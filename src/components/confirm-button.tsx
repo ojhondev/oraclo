@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { toast } from "sonner";
 import { Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +52,8 @@ export function ConfirmButton({
             disabled={pending}
             onClick={() =>
               start(async () => {
-                await action();
+                const result = (await action()) as { error?: string } | undefined;
+                if (result?.error) toast.error(result.error);
                 setOpen(false);
               })
             }

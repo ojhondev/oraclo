@@ -2,7 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
+import { del, list } from "@vercel/blob";
 import { z } from "zod";
 import { db, schema } from "@/lib/db";
 import { editors, requireUser } from "@/lib/auth";
@@ -57,9 +58,28 @@ export async function updateSite(id: string, _: State, form: FormData): Promise<
   redirect(`/bens/${id}`);
 }
 
-export async function deleteSite(id: string) {
+/** Apaga os arquivos do projeto no armazenamento, que tem limite e não acompanha o banco sozinho. */
+async function deleteSiteFiles(orgId: string, siteId: string) {
+  let cursor: string | undefined;
+  do {
+    const page = await list({ prefix: `orgs/${orgId}/sites/${siteId}/`, cursor, limit: 500 });
+    if (page.blobs.length) await del(page.blobs.map((b) => b.url));
+    cursor = page.hasMore ? page.cursor : undefined;
+  } while (cursor);
+}
+
+export async function deleteSite(id: string): Promise<{ error?: string }> {
   const user = await requireUser(["admin"]);
   await getSite(user.orgId, id);
+  const [running] = await db
+    .select({ id: schema.processingJobs.id })
+    .from(schema.processingJobs)
+    .innerJoin(schema.captures, eq(schema.captures.id, schema.processingJobs.captureId))
+    .innerJoin(campaigns, eq(campaigns.id, schema.captures.campaignId))
+    .where(and(eq(campaigns.siteId, id), inArray(schema.processingJobs.status, ["na_fila", "rodando"])))
+    .limit(1);
+  if (running) return { error: "Este projeto tem um modelo 3D em processamento. Aguarde terminar para excluir." };
+  await deleteSiteFiles(user.orgId, id).catch((e) => console.error("Arquivos do projeto não apagados:", e));
   await db.delete(sites).where(eq(sites.id, id));
   revalidatePath("/");
   redirect("/");

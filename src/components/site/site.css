@@ -453,3 +453,9 @@ html:has(.site-theme.site-dark) {
 .site-theme .site-ink .site-logo {
   filter: invert(1);
 }
+
+/* fórmulas (KaTeX): herdam a cor do tema e rolam sozinhas no celular */
+.site-theme .a-formula { min-width: 0; max-width: 100%; overflow-x: auto; overflow-y: hidden; font-size: 15px; }
+@media (max-width: 639px) { .site-theme .a-formula { font-size: 13px; } }
+.site-theme .a-formula .katex-display { margin: 0; }
+.site-theme .a-formula-box { border-radius: 8px; background: var(--site-band); padding: 12px 16px; }

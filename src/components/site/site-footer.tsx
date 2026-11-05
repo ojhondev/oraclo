@@ -69,12 +69,9 @@ export function SiteFooter({ lang }: { lang: Lang }) {
         </p>
       </a>
 
-      <div className="mt-10 flex flex-wrap items-center justify-between gap-3 text-[12.5px] text-muted-foreground">
-        <span>© {new Date().getFullYear()} ArchRay · {en ? "a product of Estúdio Restaura" : "um produto Estúdio Restaura"}</span>
-        <span>
-          {en ? "Carmo da Horta case photos: Wikimedia Commons, credits in Cases." : "Fotos do caso Carmo da Horta: Wikimedia Commons, créditos em Casos."}
-        </span>
-      </div>
+      <p className="mt-10 text-[12.5px] text-muted-foreground">
+        © {new Date().getFullYear()} ArchRay · {en ? "a product of Estúdio Restaura" : "um produto Estúdio Restaura"}
+      </p>
     </footer>
   );
 }

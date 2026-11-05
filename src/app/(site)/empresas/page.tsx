@@ -6,116 +6,138 @@ import type { Lang } from "@/lib/site/lang";
 import { SectionHead, StoryCard } from "@/components/site/blocks";
 import { Illo, type IlloName } from "@/components/site/illo";
 
-type Segment = { id: string; illo: IlloName; title: string; who: string; pain: string; gain: string[] };
+type Segment = { id: string; illo: IlloName; title: string; also: string; who: string; pain: string; gain: string[]; example: { title: string; steps: string[] } };
 
 const T = {
   pt: {
     title: "Setores que atendemos",
     description:
-      "Diagnóstico de danos em edificações para arquitetura, engenharia, inspeção predial, construtoras, patrimônio, poder público, gestão de imóveis e perícias — com tecnologia própria do Estúdio Restaura.",
+      "Diagnóstico de danos em edificações para arquitetura, engenharia, construtoras, poder público, perícias e seguros, com tecnologia própria do Estúdio Restaura.",
     kicker: "Setores que atendemos",
     h1: "Diagnóstico de danos para quem decide a obra",
     lead:
       "De um escritório de arquitetura a uma carteira de prédios públicos: vistoriamos, mapeamos cada dano e entregamos quantitativos, orçamento e laudo prontos para a sua decisão.",
     cta: "Solicitar diagnóstico",
     cta2: "Conheça a tecnologia",
-    segmentsLabel: "Oito frentes",
+    segmentsLabel: "Cinco setores",
+    exampleLabel: "Exemplo de aplicação",
+    alsoLabel: "Inclui",
+    examplesNote: "Os exemplos ilustram o uso da ferramenta e não descrevem clientes reais. Para um caso real, veja Casos.",
     segments: [
       {
         id: "arquitetura",
         illo: "arco",
-        title: "Arquitetura e restauro",
-        who: "Escritórios de arquitetura, restauradores e ateliês",
-        pain: "O mapa de danos é a base do projeto de intervenção, mas leva dias entre CAD, planilha e editor de texto — e muda a cada visita.",
+        title: "Arquitetura",
+        also: "Restauro, ateliês e patrimônio histórico",
+        who: "Escritórios de arquitetura, restauradores, dioceses, museus e fundações",
+        pain: "O mapa de danos é a base do projeto de intervenção, mas leva dias entre CAD, planilha e editor de texto. Em imóveis protegidos, o estado de conservação ainda precisa ser comparável ao longo dos anos.",
         gain: [
-          "Fachada retificada a partir de foto, em escala",
+          "Fachada retificada a partir de foto, em escala, com precisão declarada",
           "Hachuras e legenda por tipo de dano, prontas para a prancha",
           "DXF em metros, com uma camada por tipo de dano",
+          "Proteção, órgão e processo registrados no projeto",
         ],
+        example: {
+          title: "Igreja tombada, antes do projeto de restauro",
+          steps: [
+            "A equipe fotografa as fachadas e toma medidas de conferência em campo.",
+            "Cada fachada é retificada, e a precisão fica gravada na vista.",
+            "Desplacamentos, eflorescências e biodeterioração são mapeados com sugestões revisadas pelo arquiteto.",
+            "A prancha A3 e o DXF seguem para o projeto, e o laudo de estado de conservação vai para o processo no órgão de preservação.",
+          ],
+        },
       },
       {
         id: "engenharia",
         illo: "fissura",
-        title: "Engenharia estrutural e patologia",
-        who: "Engenheiros, calculistas e consultores de patologia",
-        pain: "Fissuras, trincas e deformações precisam de registro preciso — posição, comprimento e evolução — para embasar a investigação e o projeto de reforço.",
+        title: "Engenharia",
+        also: "Patologia, engenharia estrutural, inspeção predial e condomínios",
+        who: "Engenheiros, consultores de patologia, inspetores, síndicos e administradoras",
+        pain: "Fissuras e deformações precisam de registro preciso de posição, comprimento e evolução. Na inspeção predial, também é preciso mostrar o que corrigir primeiro, com documentação clara para a assembleia.",
         gain: [
-          "Fissuras, trincas e rachaduras medidas em metros na vista em escala",
-          "Comparação entre vistorias para acompanhar a evolução de cada dano",
+          "Fissuras, trincas e rachaduras medidas em metros, com margem de erro",
+          "Comparação entre vistorias para acompanhar cada dano",
+          "Prioridade pela matriz GUT e fotos de campo pelo celular",
           "Registro visual de apoio: ensaios e análise estrutural seguem com o engenheiro",
         ],
-      },
-      {
-        id: "inspecao",
-        illo: "gut",
-        title: "Inspeção predial e condomínios",
-        who: "Inspetores, síndicos e administradoras",
-        pain: "É preciso saber o que corrigir primeiro, com documentação clara para a assembleia e para o histórico do prédio.",
-        gain: [
-          "Prioridade de cada dano pela matriz GUT",
-          "Fotos de campo pelo celular, organizadas por vistoria",
-          "Laudo em PDF com vistas, prioridades e recomendações",
-        ],
+        example: {
+          title: "Fissuras em fachada de condomínio, em monitoramento",
+          steps: [
+            "Na primeira vistoria, as fissuras são desenhadas e medidas na vista em escala.",
+            "Meses depois, a mesma fachada é fotografada e alinhada à anterior por pontos homólogos.",
+            "O ArchRay aponta o que surgiu, o que cresceu e o que ficou estável.",
+            "O engenheiro decide os ensaios, e a matriz GUT organiza o plano apresentado à assembleia.",
+          ],
+        },
       },
       {
         id: "construtoras",
         illo: "camadas",
-        title: "Construtoras e retrofit",
-        who: "Construtoras, incorporadoras e empresas de reforma",
-        pain: "Antes de orçar a obra é preciso quantificar: quantos m² de reboco, quantos metros de fissura, quantas esquadrias.",
+        title: "Construtoras",
+        also: "Retrofit, incorporadoras, gestão de imóveis e facilities",
+        who: "Construtoras, empresas de reforma, gestoras patrimoniais e redes com muitos imóveis",
+        pain: "Antes de orçar a obra é preciso quantificar quantos m² de reboco, quantos metros de fissura e quantas esquadrias. Quem mantém vários imóveis precisa planejar antes que o dano cresça.",
         gain: [
           "Quantitativos por tipo de dano, por área e por projeto",
           "Orçamento pela tabela de preços da sua empresa",
           "Vistoria de pós-obra comparada com a de antes",
+          "Histórico por imóvel para o plano de manutenção",
         ],
-      },
-      {
-        id: "patrimonio",
-        illo: "fachada",
-        title: "Patrimônio histórico",
-        who: "Dioceses, museus, fundações e órgãos de preservação",
-        pain: "Imóveis protegidos precisam de estado de conservação documentado e comparável ao longo dos anos.",
-        gain: [
-          "Projetos com proteção, órgão e processo registrados",
-          "Vistorias datadas e comparação entre elas",
-          "Laudo de estado de conservação pronto para arquivar",
-        ],
+        example: {
+          title: "Retrofit de edifício comercial, na fase de orçamento",
+          steps: [
+            "A construtora retifica as fachadas e mapeia os danos por área do edifício.",
+            "Os quantitativos saem do próprio desenho, por tipo de dano.",
+            "A tabela de preços da empresa gera o orçamento do tratamento, por área e por prioridade.",
+            "Ao fim da obra, uma nova vistoria é comparada com a inicial para documentar a entrega.",
+          ],
+        },
       },
       {
         id: "publico",
         illo: "grade",
-        title: "Poder público",
-        who: "Prefeituras, secretarias, escolas e prédios públicos",
-        pain: "Com muitos imóveis e pouca equipe, é preciso decidir onde investir primeiro — com um critério que se possa explicar.",
+        title: "Poder Público",
+        also: "Prefeituras, secretarias, escolas e órgãos de preservação",
+        who: "Gestores de prédios públicos e equipes técnicas de obras e patrimônio",
+        pain: "Com muitos imóveis e pouca equipe, é preciso decidir onde investir primeiro, com um critério que se possa explicar.",
         gain: [
           "O mesmo método de prioridade em todos os imóveis",
           "Orçamento estimado por imóvel para planejar o investimento",
           "Relatórios padronizados para toda a carteira",
+          "Vistorias datadas de imóveis protegidos",
         ],
-      },
-      {
-        id: "gestao",
-        illo: "comparar",
-        title: "Gestão de imóveis e facilities",
-        who: "Gestoras patrimoniais, indústrias, redes e varejo",
-        pain: "Manter vários imóveis exige acompanhar o estado de cada um e planejar a manutenção antes que o dano cresça.",
-        gain: [
-          "Histórico de vistorias por imóvel",
-          "Comparação que mostra o que surgiu, cresceu ou foi tratado",
-          "Prioridades e custos para o plano de manutenção",
-        ],
+        example: {
+          title: "Rede municipal de escolas, no planejamento anual",
+          steps: [
+            "A equipe técnica vistoria cada escola com o mesmo protocolo de fotos e medidas.",
+            "Todos os danos recebem a mesma classificação GUT, com critério documentado.",
+            "O orçamento estimado por imóvel mostra o investimento de cada intervenção.",
+            "Os laudos padronizados dão base ao plano de obras e ao histórico de cada prédio.",
+          ],
+        },
       },
       {
         id: "pericias",
         illo: "escala",
-        title: "Perícias, seguros e vistorias cautelares",
+        title: "Perícias e Seguros",
+        also: "Vistorias cautelares e sinistros",
         who: "Peritos, seguradoras, advogados e vizinhos de obra",
         pain: "Antes de uma obra vizinha ou depois de um sinistro, é preciso registrar com data e medida o estado em que o imóvel estava.",
         gain: [
           "Vistorias datadas, com fotos e vistas em escala",
           "Danos medidos e descritos, com a origem de cada registro",
           "Comparação entre o antes e o depois do evento",
+          "Motor e precisão registrados em cada medida",
         ],
+        example: {
+          title: "Vistoria cautelar antes de uma escavação vizinha",
+          steps: [
+            "Antes do início da obra, as fachadas são vistoriadas e os danos existentes são mapeados.",
+            "Durante ou depois da obra, uma nova vistoria é feita no mesmo imóvel.",
+            "As duas datas são alinhadas, e cada dano é classificado como novo, crescido ou estável.",
+            "O perito usa o registro datado e medido como apoio ao seu parecer.",
+          ],
+        },
       },
     ] satisfies Segment[],
     teamTitle: "Como trabalhamos com você",
@@ -136,82 +158,132 @@ const T = {
   en: {
     title: "Sectors we serve",
     description:
-      "Building damage diagnosis for architecture, engineering, building inspection, contractors, heritage, the public sector, property management and surveys — with Estúdio Restaura's in-house technology.",
+      "Building damage diagnosis for architecture, engineering, contractors, the public sector, surveys and insurance, with Estúdio Restaura's in-house technology.",
     kicker: "Sectors we serve",
     h1: "Damage diagnosis for those who decide the works",
     lead:
       "From an architecture practice to a portfolio of public buildings: we survey, map every damage and deliver quantities, a budget and a report ready for your decision.",
     cta: "Request a diagnosis",
     cta2: "Explore the technology",
-    segmentsLabel: "Eight fronts",
+    segmentsLabel: "Five sectors",
+    exampleLabel: "Application example",
+    alsoLabel: "Includes",
+    examplesNote: "These examples illustrate how the tool is used and do not describe real clients. For a real case, see Cases.",
     segments: [
       {
         id: "arquitetura",
         illo: "arco",
-        title: "Architecture and restoration",
-        who: "Architecture practices, restorers and studios",
-        pain: "The damage map is the basis of the intervention design, but it takes days across CAD, spreadsheets and word processors — and changes after every visit.",
-        gain: ["Rectified facades from photos, to scale", "Hatching and a legend per damage type, ready for the drawing", "DXF in metres, with one layer per damage type"],
+        title: "Architecture",
+        also: "Restoration, studios and heritage",
+        who: "Architecture practices, restorers, dioceses, museums and foundations",
+        pain: "The damage map is the basis of the intervention design, but it takes days across CAD, spreadsheets and word processors. Protected buildings also need a condition record that can be compared over the years.",
+        gain: [
+          "Rectified facades from photos, to scale, with stated precision",
+          "Hatching and a legend per damage type, ready for the drawing",
+          "DXF in metres, with one layer per damage type",
+          "Protection status, agency and case number recorded on the project",
+        ],
+        example: {
+          title: "Listed church, ahead of the restoration design",
+          steps: [
+            "The team photographs the facades and takes check measurements on site.",
+            "Each facade is rectified, and the precision is stored with the view.",
+            "Spalling, efflorescence and biodeterioration are mapped, with suggestions reviewed by the architect.",
+            "The A3 sheet and DXF go to the design, and the condition report goes to the preservation agency's file.",
+          ],
+        },
       },
       {
         id: "engenharia",
         illo: "fissura",
-        title: "Structural engineering and pathology",
-        who: "Engineers, structural designers and pathology consultants",
-        pain: "Cracks and deformations need precise records — position, length and evolution — to support the investigation and the strengthening design.",
+        title: "Engineering",
+        also: "Pathology, structural engineering, building inspection and condominiums",
+        who: "Engineers, pathology consultants, inspectors and building managers",
+        pain: "Cracks and deformations need precise records of position, length and evolution. Building inspection also has to show what to fix first, with clear documentation for the owners' meeting.",
         gain: [
-          "Fine, medium and wide cracks measured in metres on the scaled view",
-          "Comparison between surveys to follow each damage over time",
+          "Cracks measured in metres, with a margin of error",
+          "Comparison between surveys to follow each damage",
+          "GUT-matrix priority and field photos by phone",
           "Visual supporting record: tests and structural analysis stay with the engineer",
         ],
-      },
-      {
-        id: "inspecao",
-        illo: "gut",
-        title: "Building inspection and condominiums",
-        who: "Inspectors, building managers and management companies",
-        pain: "You need to know what to fix first, with clear documentation for the owners' meeting and the building's history.",
-        gain: ["GUT-matrix priority on every damage", "Field photos by phone, organised by survey", "PDF report with views, priorities and recommendations"],
+        example: {
+          title: "Cracks on a condominium facade, under monitoring",
+          steps: [
+            "On the first survey, cracks are drawn and measured on the scaled view.",
+            "Months later, the same facade is photographed and aligned to the earlier one by matching points.",
+            "ArchRay shows what appeared, what grew and what stayed stable.",
+            "The engineer decides on testing, and the GUT matrix organises the plan presented to the owners.",
+          ],
+        },
       },
       {
         id: "construtoras",
         illo: "camadas",
-        title: "Contractors and retrofit",
-        who: "Contractors, developers and refurbishment firms",
-        pain: "Before pricing the works you need quantities: how many m² of render, how many metres of cracks, how many windows.",
-        gain: ["Quantities by damage type, by area and by project", "Budget from your company's price table", "Post-works survey compared with the one before"],
-      },
-      {
-        id: "patrimonio",
-        illo: "fachada",
-        title: "Heritage",
-        who: "Dioceses, museums, foundations and preservation agencies",
-        pain: "Protected buildings need a documented state of conservation that can be compared over the years.",
-        gain: ["Projects with protection status, agency and case number recorded", "Dated surveys and comparison between them", "Condition report ready to file"],
+        title: "Contractors",
+        also: "Retrofit, developers, property and facilities management",
+        who: "Contractors, refurbishment firms, asset managers and multi-site chains",
+        pain: "Before pricing the works you need quantities: how many m² of render, how many metres of cracks, how many windows. Whoever maintains many buildings needs to plan before damage grows.",
+        gain: [
+          "Quantities by damage type, by area and by project",
+          "Budget from your company's price table",
+          "Post-works survey compared with the one before",
+          "History per building for the maintenance plan",
+        ],
+        example: {
+          title: "Office building retrofit, at the pricing stage",
+          steps: [
+            "The contractor rectifies the facades and maps damage by area of the building.",
+            "Quantities come straight from the drawing, by damage type.",
+            "The company's price table generates the treatment budget, by area and priority.",
+            "When the works finish, a new survey is compared with the first to document the handover.",
+          ],
+        },
       },
       {
         id: "publico",
         illo: "grade",
-        title: "Public sector",
-        who: "City halls, departments, schools and public buildings",
-        pain: "With many buildings and a small team, you need to decide where to invest first — with criteria you can explain.",
-        gain: ["The same priority method across every building", "Estimated budget per building to plan investment", "Standardised reports for the whole portfolio"],
-      },
-      {
-        id: "gestao",
-        illo: "comparar",
-        title: "Property and facilities management",
-        who: "Asset managers, industry, chains and retail",
-        pain: "Looking after many buildings means tracking each one's condition and planning maintenance before damage grows.",
-        gain: ["Survey history per building", "Comparison showing what appeared, grew or was treated", "Priorities and costs for the maintenance plan"],
+        title: "Public Sector",
+        also: "City halls, departments, schools and preservation agencies",
+        who: "Managers of public buildings and technical teams for works and heritage",
+        pain: "With many buildings and a small team, you need to decide where to invest first, with criteria you can explain.",
+        gain: [
+          "The same priority method across every building",
+          "Estimated budget per building to plan investment",
+          "Standardised reports for the whole portfolio",
+          "Dated surveys of protected buildings",
+        ],
+        example: {
+          title: "Municipal school network, in annual planning",
+          steps: [
+            "The technical team surveys each school with the same photo and measurement protocol.",
+            "All damage receives the same GUT classification, with documented criteria.",
+            "The estimated budget per building shows the investment for each intervention.",
+            "Standardised reports support the works plan and each building's history.",
+          ],
+        },
       },
       {
         id: "pericias",
         illo: "escala",
-        title: "Expert surveys, insurance and pre-works surveys",
+        title: "Surveys and Insurance",
+        also: "Pre-works surveys and claims",
         who: "Experts, insurers, lawyers and neighbours of works",
         pain: "Before neighbouring works or after an incident, you need a dated, measured record of the building's condition.",
-        gain: ["Dated surveys, with photos and scaled views", "Damage measured and described, with the origin of each record", "Comparison between before and after the event"],
+        gain: [
+          "Dated surveys, with photos and scaled views",
+          "Damage measured and described, with the origin of each record",
+          "Comparison between before and after the event",
+          "Engine and precision recorded on each measurement",
+        ],
+        example: {
+          title: "Pre-works survey ahead of a neighbouring excavation",
+          steps: [
+            "Before the works start, the facades are surveyed and existing damage is mapped.",
+            "During or after the works, a new survey is made on the same building.",
+            "The two dates are aligned, and each damage is classed as new, grown or stable.",
+            "The expert uses the dated, measured record to support their opinion.",
+          ],
+        },
       },
     ] satisfies Segment[],
     teamTitle: "How we work with you",
@@ -236,7 +308,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: t.title, description: t.description };
 }
 
-/** Setores atendidos, no padrão das páginas internas da Anthropic: título, grade de setores, método e casos. */
+/** Setores atendidos: título, cinco setores com exemplo de aplicação, método e casos. */
 export default async function EmpresasPage() {
   const lang = await getLang();
   const t = T[lang];
@@ -273,17 +345,20 @@ export default async function EmpresasPage() {
         </div>
       </nav>
 
-      {/* grade de setores: cartão bege com ilustração, dor e entregas */}
-      <section className="grid gap-4 px-4 pt-8 sm:px-6 md:grid-cols-2 lg:px-8">
+      {/* setores em largura total: ilustração, dor e entregas, e um exemplo de aplicação */}
+      <section className="grid gap-4 px-4 pt-8 sm:px-6 lg:px-8">
         {t.segments.map((s, i) => (
-          <article key={s.id} id={s.id} className="a-card grid scroll-mt-24 overflow-hidden sm:grid-cols-[180px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)]" data-reveal data-reveal-delay={(i % 2) * 80}>
-            <div className="aspect-[16/9] sm:aspect-auto">
+          <article key={s.id} id={s.id} className="a-card grid scroll-mt-24 overflow-hidden md:grid-cols-[180px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]" data-reveal>
+            <div className="aspect-[16/9] md:aspect-auto">
               <Illo name={s.illo} />
             </div>
             <div className="flex min-w-0 flex-col p-6 sm:p-7">
               <p className="a-label">0{i + 1}</p>
-              <h2 className="mt-3 text-[22px] leading-tight sm:text-[24px]">{s.title}</h2>
-              <p className="mt-1 text-[13.5px] text-muted-foreground">{s.who}</p>
+              <h2 className="mt-3 text-[26px] leading-tight sm:text-[30px]">{s.title}</h2>
+              <p className="mt-2 text-[13.5px] leading-5 text-muted-foreground">
+                <span className="font-medium text-foreground">{t.alsoLabel}:</span> {s.also}
+              </p>
+              <p className="mt-1 text-[13.5px] leading-5 text-muted-foreground">{s.who}</p>
               <p className="mt-4 text-[15px] leading-6">{s.pain}</p>
               <ul className="mt-4 border-t text-[14px] leading-6">
                 {s.gain.map((g) => (
@@ -294,8 +369,26 @@ export default async function EmpresasPage() {
                 ))}
               </ul>
             </div>
+            <div className="min-w-0 border-t p-6 sm:p-7 md:col-span-2 xl:col-span-1 xl:border-t-0 xl:border-l">
+              <p className="a-tag">{t.exampleLabel}</p>
+              <h3 className="a-title mt-3 text-[19px] leading-snug">{s.example.title}</h3>
+              <ol className="mt-4 grid gap-3 text-[14.5px] leading-6">
+                {s.example.steps.map((step, n) => (
+                  <li key={step} className="flex gap-3">
+                    <span className="a-label mt-[3px] shrink-0">{n + 1}</span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
           </article>
         ))}
+        <p className="pt-2 text-[13.5px] leading-5 text-muted-foreground">
+          {t.examplesNote}{" "}
+          <Link href="/historias" className="underline underline-offset-4 hover:text-foreground">
+            {t.stories}
+          </Link>
+        </p>
       </section>
 
       {/* como trabalhamos: colunas com linha fina no topo */}

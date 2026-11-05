@@ -46,7 +46,7 @@ export default async function CompanyPage() {
       <section className="grid gap-10 px-4 pt-20 sm:px-6 sm:pt-28 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16 lg:px-8" aria-labelledby="fundador">
         <div data-reveal="fade">
           <div className="relative aspect-square max-w-[560px] overflow-hidden rounded-2xl bg-[var(--site-band)]">
-            <Image src="/site/jhonatan-ribeiro.webp" alt={t.founder.photoAlt} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
+            <Image src="/site/jhonatan-ribeiro-obra.webp" alt={t.founder.photoAlt} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover" />
           </div>
         </div>
         <div className="min-w-0 self-center">

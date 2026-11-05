@@ -477,3 +477,8 @@ html:has(.site-theme.site-dark) {
 @media (prefers-reduced-motion: reduce) {
   .site-theme .a-sway, .site-theme .a-pan, .site-theme .a-frame-in, .site-theme .a-scene-in, .site-theme .a-fill, .site-theme .a-draw { animation: none; }
 }
+
+/* títulos fluidos: crescem com a tela, de --a (celular, 360 px) a --b (monitor grande, 1600 px) */
+.site-theme .a-fluid {
+  font-size: clamp(calc(var(--a) * 0.84px), calc(var(--a) * 1px + (var(--b) - var(--a)) * ((100vw - 360px) / 1240)), calc(var(--b) * 1px));
+}

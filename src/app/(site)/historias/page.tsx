@@ -28,7 +28,7 @@ export default async function HistoriasPage() {
   return (
     <div className="px-4 pt-12 pb-8 sm:px-6 sm:pt-16 lg:px-8">
       <p className="a-label">{t.title}</p>
-      <h1 className="mt-5 max-w-[1100px] text-[30px] leading-[1.15] sm:text-[44px]">{t.lead}</h1>
+      <h1 className="mt-5 max-w-[1100px] a-fluid [--a:30] [--b:44] leading-[1.15]">{t.lead}</h1>
       {first && (
         <div className="mt-14 border-t pt-8">
           <StoryCard story={first} large lang={lang} />

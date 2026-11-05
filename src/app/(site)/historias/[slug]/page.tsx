@@ -108,7 +108,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
           <span className="font-medium">{story.segment}</span>
           <span className="ml-2 text-muted-foreground">{fmtStoryDate(story.date, lang)}</span>
         </p>
-        <h1 className="site-fade-in mt-3 max-w-[22ch] text-[36px] leading-[1.04] font-medium tracking-[-0.04em] text-balance sm:text-[64px]" style={{ "--d": "120ms" } as React.CSSProperties}>
+        <h1 className="site-fade-in mt-3 max-w-[22ch] a-fluid [--a:36] [--b:64] leading-[1.04] font-medium tracking-[-0.04em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
           {story.title}
         </h1>
         <p className="site-fade-in mt-5 max-w-2xl text-[17px] leading-8 text-muted-foreground sm:text-[19px]" style={{ "--d": "240ms" } as React.CSSProperties}>
@@ -132,7 +132,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
         ].map(([k, v]) => (
           <div key={k} className="bg-background px-4 py-6 sm:px-6 lg:px-8" data-reveal>
             <dt className="text-[13px] text-muted-foreground">{k}</dt>
-            <dd className="mt-1 text-[26px] font-medium tracking-[-0.02em] tabular-nums sm:text-[32px]">{v}</dd>
+            <dd className="mt-1 a-fluid [--a:26] [--b:32] font-medium tracking-[-0.02em] tabular-nums">{v}</dd>
           </div>
         ))}
       </dl>

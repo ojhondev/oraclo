@@ -319,7 +319,7 @@ export default async function EmpresasPage() {
       <section className="grid gap-8 px-4 pt-12 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-2 lg:gap-16 lg:px-8">
         <div>
           <p className="a-label">{t.kicker}</p>
-          <h1 className="mt-5 text-[40px] leading-[1.05] sm:text-[58px]">{t.h1}</h1>
+          <h1 className="mt-5 a-fluid [--a:40] [--b:58] leading-[1.05]">{t.h1}</h1>
         </div>
         <div className="lg:pt-10">
           <p className="a-serif text-[21px] leading-[1.45] sm:text-[24px]">{t.lead}</p>
@@ -354,7 +354,7 @@ export default async function EmpresasPage() {
             </div>
             <div className="flex min-w-0 flex-col p-6 sm:p-7">
               <p className="a-label">0{i + 1}</p>
-              <h2 className="mt-3 text-[26px] leading-tight sm:text-[30px]">{s.title}</h2>
+              <h2 className="mt-3 a-fluid [--a:26] [--b:30] leading-tight">{s.title}</h2>
               <p className="mt-2 text-[13.5px] leading-5 text-muted-foreground">
                 <span className="font-medium text-foreground">{t.alsoLabel}:</span> {s.also}
               </p>
@@ -393,7 +393,7 @@ export default async function EmpresasPage() {
 
       {/* como trabalhamos: colunas com linha fina no topo */}
       <section className="px-4 pt-20 sm:px-6 sm:pt-28 lg:px-8">
-        <h2 className="text-[30px] leading-tight sm:text-[40px]">{t.teamTitle}</h2>
+        <h2 className="a-fluid [--a:30] [--b:40] leading-tight">{t.teamTitle}</h2>
         <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
           {t.team.map(([title, text], i) => (
             <li key={title} className="border-t pt-4" data-reveal data-reveal-delay={(i % 3) * 80}>
@@ -418,7 +418,7 @@ export default async function EmpresasPage() {
 
       <section className="px-4 pt-24 sm:px-6 lg:px-8">
         <div className="a-card px-6 py-20 text-center">
-          <h2 className="a-serif mx-auto max-w-[22ch] text-[32px] leading-[1.15] sm:text-[46px]">{t.finalTitle}</h2>
+          <h2 className="a-serif mx-auto max-w-[22ch] a-fluid [--a:32] [--b:46] leading-[1.15]">{t.finalTitle}</h2>
           <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-muted-foreground">{t.finalText}</p>
           <Link href="/contato" className="a-btn mt-8">
             {t.finalCta}

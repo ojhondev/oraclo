@@ -16,7 +16,7 @@ export default async function CommitmentsPage() {
     <>
       <section className="px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-24 lg:px-8">
         <p className="a-label">{t.metaTitle}</p>
-        <h1 className="mt-5 max-w-[1100px] text-[30px] leading-[1.15] sm:text-[44px]">{t.statement}</h1>
+        <h1 className="mt-5 max-w-[1100px] a-fluid [--a:30] [--b:44] leading-[1.15]">{t.statement}</h1>
       </section>
       <section className="grid gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:px-8">
         {t.items.map((it, i) => (

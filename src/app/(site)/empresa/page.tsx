@@ -20,7 +20,7 @@ export default async function CompanyPage() {
     <>
       {/* título em duas colunas: negrito à esquerda, serifa e botão à direita */}
       <section className="grid gap-8 px-4 pt-14 pb-16 sm:px-6 sm:pt-20 lg:grid-cols-2 lg:gap-16 lg:px-8">
-        <h1 className="text-[40px] leading-[1.05] sm:text-[60px]">{t.title}</h1>
+        <h1 className="a-fluid [--a:40] [--b:60] leading-[1.05]">{t.title}</h1>
         <div className="lg:pt-3">
           <p className="a-serif text-[21px] leading-[1.45] sm:text-[24px]">{t.lead}</p>
           <Link href="/contato" className="a-btn a-btn-sm mt-6">
@@ -51,7 +51,7 @@ export default async function CompanyPage() {
         </div>
         <div className="min-w-0 self-center">
           <p className="a-label">{t.founder.label}</p>
-          <h2 id="fundador" className="mt-4 text-[32px] leading-tight sm:text-[44px]">
+          <h2 id="fundador" className="mt-4 a-fluid [--a:32] [--b:44] leading-tight">
             {t.founder.title}
           </h2>
           <div className="a-serif mt-6 grid max-w-[60ch] gap-5 text-[19px] leading-[1.6] sm:text-[20px]">
@@ -70,7 +70,7 @@ export default async function CompanyPage() {
       <section className="px-4 pt-20 sm:px-6 sm:pt-28 lg:px-8">
         <div className="rounded-2xl bg-[var(--site-band)] p-6 sm:p-10">
           <div className="max-w-md">
-            <h2 className="text-[28px] leading-tight sm:text-[34px]">{t.teamTitle}</h2>
+            <h2 className="a-fluid [--a:28] [--b:34] leading-tight">{t.teamTitle}</h2>
             <p className="mt-3 text-[15.5px] leading-7 text-muted-foreground">{t.teamText}</p>
           </div>
           <ol className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -95,7 +95,7 @@ export default async function CompanyPage() {
       {/* valores numerados */}
       <section className="grid gap-10 px-4 pt-20 sm:px-6 sm:pt-28 lg:grid-cols-[1fr_1.4fr] lg:gap-16 lg:px-8">
         <div>
-          <h2 className="text-[30px] leading-tight sm:text-[40px]">{t.valuesTitle}</h2>
+          <h2 className="a-fluid [--a:30] [--b:40] leading-tight">{t.valuesTitle}</h2>
           <p className="mt-4 max-w-md text-[16px] leading-7 text-muted-foreground">{t.valuesText}</p>
         </div>
         <ol className="border-t">
@@ -114,7 +114,7 @@ export default async function CompanyPage() {
       {/* chamada final */}
       <section className="px-4 pt-24 sm:px-6 lg:px-8">
         <div className="a-card px-6 py-20 text-center">
-          <h2 className="a-serif mx-auto max-w-[22ch] text-[32px] leading-[1.15] sm:text-[46px]">{t.finalTitle}</h2>
+          <h2 className="a-serif mx-auto max-w-[22ch] a-fluid [--a:32] [--b:46] leading-[1.15]">{t.finalTitle}</h2>
           <Link href="/contato" className="a-btn mt-8">
             {t.finalCta}
           </Link>

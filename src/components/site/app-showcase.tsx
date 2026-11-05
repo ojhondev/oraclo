@@ -345,7 +345,7 @@ export function AppShowcase({ lang }: { lang: Lang }) {
     <section className="px-4 pb-20 sm:px-6 sm:pb-28 lg:px-8" aria-labelledby="showcase">
       <div className="text-center">
         <p className="a-label">{t.kicker}</p>
-        <h2 id="showcase" className="mt-3 text-[32px] leading-[1.1] sm:text-[46px]">
+        <h2 id="showcase" className="mt-3 a-fluid [--a:32] [--b:46] leading-[1.1]">
           <em className="a-serif italic">{t.titleA}</em> {t.titleB}
         </h2>
       </div>

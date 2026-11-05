@@ -47,7 +47,7 @@ export default async function ContatoPage() {
       <div className="grid gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-20">
         <div>
           <p className="site-fade-in text-[14px] font-medium text-muted-foreground">{t.kicker}</p>
-          <h1 className="site-fade-in mt-4 max-w-[16ch] text-[40px] leading-[1.04] font-medium tracking-[-0.04em] text-balance sm:text-[60px]" style={{ "--d": "120ms" } as React.CSSProperties}>
+          <h1 className="site-fade-in mt-4 max-w-[16ch] a-fluid [--a:40] [--b:60] leading-[1.04] font-medium tracking-[-0.04em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
             {t.h1}
           </h1>
           <p className="site-fade-in mt-6 max-w-[46ch] text-[17px] leading-7 text-muted-foreground" style={{ "--d": "240ms" } as React.CSSProperties}>

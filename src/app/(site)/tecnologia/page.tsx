@@ -25,7 +25,7 @@ export default async function TechPage() {
     <>
       <section className="px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-24 lg:px-8">
         <p className="a-label">{t.title}</p>
-        <h1 className="mt-4 max-w-[16ch] text-[44px] leading-[1.03] sm:text-[72px]">{t.headline}</h1>
+        <h1 className="mt-4 max-w-[16ch] a-fluid [--a:44] [--b:72] leading-[1.03]">{t.headline}</h1>
         <p className="a-serif mt-6 max-w-[58ch] text-[20px] leading-[1.45] text-muted-foreground sm:text-[24px]">{t.statement}</p>
       </section>
 
@@ -34,7 +34,7 @@ export default async function TechPage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div>
             <p className="a-label">{sci.transform.label}</p>
-            <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[46px]">{sci.transform.title}</h2>
+            <h2 className="mt-4 a-fluid [--a:32] [--b:46] leading-[1.1]">{sci.transform.title}</h2>
           </div>
           <p className="a-serif self-end text-[19px] leading-[1.5] sm:text-[22px]">{sci.transform.text}</p>
         </div>
@@ -57,7 +57,7 @@ export default async function TechPage() {
       {/* fundamentos: cartões que passam na horizontal e se expandem */}
       <section id="fundamentos" className="scroll-mt-20 px-4 pt-20 sm:px-6 sm:pt-28 lg:px-8">
         <p className="a-label">{t.sectionsLabel}</p>
-        <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[46px]">{t.sectionsTitle}</h2>
+        <h2 className="mt-4 a-fluid [--a:32] [--b:46] leading-[1.1]">{t.sectionsTitle}</h2>
         <p className="mt-3 text-[15px] text-muted-foreground">{t.sectionsHint}</p>
         <div className="mt-8">
           <TechCarousel
@@ -104,7 +104,7 @@ export default async function TechPage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div>
             <p className="a-label">{sci.ai.label}</p>
-            <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[46px]">{sci.ai.title}</h2>
+            <h2 className="mt-4 a-fluid [--a:32] [--b:46] leading-[1.1]">{sci.ai.title}</h2>
           </div>
           <p className="a-serif self-end text-[19px] leading-[1.5] sm:text-[22px]">{sci.ai.text}</p>
         </div>
@@ -137,7 +137,7 @@ export default async function TechPage() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div>
             <p className="a-label">{sci.diff.label}</p>
-            <h2 className="mt-4 text-[32px] leading-[1.1] sm:text-[46px]">{sci.diff.title}</h2>
+            <h2 className="mt-4 a-fluid [--a:32] [--b:46] leading-[1.1]">{sci.diff.title}</h2>
           </div>
           <p className="a-serif self-end text-[19px] leading-[1.5] sm:text-[22px]">{sci.diff.text}</p>
         </div>

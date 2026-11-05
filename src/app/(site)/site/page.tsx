@@ -39,7 +39,7 @@ export default async function SiteHome() {
     <>
       {/* manifesto: abertura em negrito sem serifa e continuação em serifa, no mesmo parágrafo */}
       <section className="px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-20 lg:px-8">
-        <h1 className="a-serif text-[27px] leading-[1.22] tracking-[-0.02em] sm:text-[38px] xl:text-[48px]">
+        <h1 className="a-serif a-fluid [--a:27] [--b:48] leading-[1.22] tracking-[-0.02em]">
           <span className="a-lead">{t.lead}</span> <span className="text-foreground/85">{t.manifesto}</span>
         </h1>
       </section>
@@ -79,7 +79,7 @@ export default async function SiteHome() {
           ))}
         </div>
         <div className="relative mx-auto max-w-[600px] px-6 py-16 text-center md:py-44">
-          <h2 id="destaque" className="text-[38px] leading-[1.06] sm:text-[54px]" data-reveal>
+          <h2 id="destaque" className="a-fluid [--a:38] [--b:54] leading-[1.06]" data-reveal>
             {t.featureTitle}
           </h2>
           <p className="mx-auto mt-5 max-w-[46ch] text-[16px] leading-[1.6] text-muted-foreground sm:text-[17px]" data-reveal data-reveal-delay={100}>
@@ -126,7 +126,7 @@ export default async function SiteHome() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div data-reveal>
             <p className="a-label">{sci.label}</p>
-            <h2 id="o-que-e" className="mt-4 text-[32px] leading-[1.1] sm:text-[46px]">
+            <h2 id="o-que-e" className="mt-4 a-fluid [--a:32] [--b:46] leading-[1.1]">
               {sci.title}
             </h2>
           </div>

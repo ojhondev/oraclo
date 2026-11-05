@@ -75,7 +75,7 @@ export default async function DocsPage() {
       {/* abertura */}
       <header className="mx-auto max-w-[900px] pt-20 text-center sm:pt-28">
         <p className="site-fade-in text-[14px] font-medium text-muted-foreground">{t.title}</p>
-        <h1 className="site-fade-in mt-5 text-[40px] leading-[1.04] font-medium tracking-[-0.04em] text-balance sm:text-[68px]" style={{ "--d": "120ms" } as React.CSSProperties}>
+        <h1 className="site-fade-in mt-5 a-fluid [--a:40] [--b:68] leading-[1.04] font-medium tracking-[-0.04em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
           {t.h1(STEPS.length)}
         </h1>
         <p className="site-fade-in mx-auto mt-6 max-w-[620px] text-[17px] leading-7 text-balance text-muted-foreground" style={{ "--d": "240ms" } as React.CSSProperties}>
@@ -116,7 +116,7 @@ export default async function DocsPage() {
                   <span className="grid size-7 place-items-center rounded-full bg-foreground text-[12.5px] text-background tabular-nums">{i + 1}</span>
                   {t.step(i + 1, STEPS.length)}
                 </p>
-                <h2 className="mt-4 text-[28px] leading-[1.15] font-medium tracking-[-0.02em] text-balance sm:text-[36px]">{s.title}</h2>
+                <h2 className="mt-4 a-fluid [--a:28] [--b:36] leading-[1.15] font-medium tracking-[-0.02em] text-balance">{s.title}</h2>
                 <p className="mt-3 text-[17px] leading-7 text-muted-foreground">{s.lead}</p>
 
                 <ol className="mt-7 grid gap-3.5">
@@ -166,7 +166,7 @@ export default async function DocsPage() {
           ))}
 
           <section id="glossario" className="scroll-mt-24 border-t py-14">
-            <h2 className="text-[28px] font-medium tracking-[-0.02em] sm:text-[36px]" data-reveal>
+            <h2 className="a-fluid [--a:28] [--b:36] font-medium tracking-[-0.02em]" data-reveal>
               {t.glossary}
             </h2>
             <dl className="mt-8 grid gap-x-10 gap-y-6 sm:grid-cols-2" data-reveal>
@@ -180,7 +180,7 @@ export default async function DocsPage() {
           </section>
 
           <section id="perguntas" className="scroll-mt-24 border-t py-14">
-            <h2 className="text-[28px] font-medium tracking-[-0.02em] sm:text-[36px]" data-reveal>
+            <h2 className="a-fluid [--a:28] [--b:36] font-medium tracking-[-0.02em]" data-reveal>
               {t.faq}
             </h2>
             <div className="mt-8 grid max-w-[760px]" data-reveal>
@@ -197,7 +197,7 @@ export default async function DocsPage() {
           </section>
 
           <section className="mt-6 rounded-3xl border bg-card px-6 py-12 text-center sm:px-12" data-reveal>
-            <h2 className="text-[26px] leading-tight font-medium tracking-[-0.02em] text-balance sm:text-[34px]">{t.readyTitle}</h2>
+            <h2 className="a-fluid [--a:26] [--b:34] leading-tight font-medium tracking-[-0.02em] text-balance">{t.readyTitle}</h2>
             <p className="mx-auto mt-3 max-w-[520px] text-[16px] leading-7 text-muted-foreground">
               {t.readyText}
             </p>

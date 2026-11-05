@@ -36,7 +36,6 @@ export function SiteMotion({ rootId }: { rootId: string }) {
     // com "reduzir movimento" ainda há fades (o CSS tira deslocamentos e zoom); só a paralaxe é desligada
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    const items = [...root.querySelectorAll<HTMLElement>("[data-reveal]")];
     // o que já está visível na primeira pintura aparece logo, sem "piscar"
     const io = new IntersectionObserver(
       (entries) => {
@@ -49,18 +48,24 @@ export function SiteMotion({ rootId }: { rootId: string }) {
       },
       { rootMargin: "0px 0px -8% 0px", threshold: 0.12 },
     );
-    for (const el of items) {
-      const d = el.dataset.revealDelay;
-      if (d) el.style.setProperty("--reveal-delay", `${d}ms`);
-      io.observe(el);
-    }
+    const watched = new WeakSet<HTMLElement>();
+    const watch = () => {
+      for (const el of root.querySelectorAll<HTMLElement>("[data-reveal]")) {
+        if (watched.has(el)) continue;
+        watched.add(el);
+        const d = el.dataset.revealDelay;
+        if (d) el.style.setProperty("--reveal-delay", `${d}ms`);
+        io.observe(el);
+      }
+    };
+    watch();
     root.classList.add("motion-ready");
     // reforço do IntersectionObserver (que pode não disparar em abas ocultas ou sem pintura):
     // revela pela posição, após carregar e ao rolar
     const sweep = () => {
       const vh = window.innerHeight || document.documentElement.clientHeight;
       if (!vh) return;
-      for (const el of items) {
+      for (const el of root.querySelectorAll<HTMLElement>("[data-reveal]")) {
         if (el.classList.contains("is-in")) continue;
         const r = el.getBoundingClientRect();
         if (r.top < vh * 0.94 && r.bottom > 0) {
@@ -74,6 +79,14 @@ export function SiteMotion({ rootId }: { rootId: string }) {
       if (!sweepTimer) sweepTimer = window.setTimeout(() => ((sweepTimer = 0), sweep()), 120);
     };
     const firstSweep = window.setTimeout(sweep, 400);
+    // trocar o idioma recria parte da página sem mudar de rota: os novos elementos também precisam
+    // ser revelados, e o React pode reescrever a classe da raiz
+    const changes = new MutationObserver(() => {
+      root.classList.add("motion-ready");
+      watch();
+      onSweep();
+    });
+    changes.observe(root, { childList: true, subtree: true });
     window.addEventListener("scroll", onSweep, { passive: true });
     window.addEventListener("resize", onSweep);
 
@@ -114,6 +127,7 @@ export function SiteMotion({ rootId }: { rootId: string }) {
     }
     return () => {
       io.disconnect();
+      changes.disconnect();
       clearTimeout(firstSweep);
       clearTimeout(sweepTimer);
       window.removeEventListener("scroll", onSweep);

@@ -460,3 +460,20 @@ html:has(.site-theme.site-dark) {
 .site-theme .a-formula .katex-display { margin: 0; }
 .site-theme .a-card .a-formula-box { background: rgb(128 128 128 / 0.1); }
 .site-theme .a-formula-box { border-radius: 8px; background: var(--site-band); padding: 12px 16px; }
+
+/* simulação do app na Home */
+@keyframes a-sway { from { transform: rotateY(-26deg) rotateX(6deg); } to { transform: rotateY(26deg) rotateX(6deg); } }
+@keyframes a-pan { from { object-position: 8% 50%; } to { object-position: 72% 50%; } }
+@keyframes a-frame-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@keyframes a-scene-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes a-fill { from { width: 6%; } to { width: 88%; } }
+@keyframes a-draw { from { opacity: 0; } to { opacity: 1; } }
+.site-theme .a-sway { animation: a-sway 7s ease-in-out infinite alternate; }
+.site-theme .a-pan { animation: a-pan 9s ease-in-out infinite alternate; }
+.site-theme .a-frame-in { animation: a-frame-in 0.5s ease-out both; }
+.site-theme .a-scene-in { animation: a-scene-in 0.35s ease-out both; }
+.site-theme .a-fill { animation: a-fill 6s ease-out both; }
+.site-theme .a-draw { animation: a-draw 0.6s ease-out both; }
+@media (prefers-reduced-motion: reduce) {
+  .site-theme .a-sway, .site-theme .a-pan, .site-theme .a-frame-in, .site-theme .a-scene-in, .site-theme .a-fill, .site-theme .a-draw { animation: none; }
+}

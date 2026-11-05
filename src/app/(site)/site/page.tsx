@@ -4,6 +4,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
 import { SCIENCE } from "@/lib/site/science";
+import { AppShowcase } from "@/components/site/app-showcase";
 import { Illo, type IlloName } from "@/components/site/illo";
 
 // Servida em "/" para quem não está logado (reescrita em src/proxy.ts).
@@ -42,6 +43,9 @@ export default async function SiteHome() {
           <span className="a-lead">{t.lead}</span> <span className="text-foreground/85">{t.manifesto}</span>
         </h1>
       </section>
+
+      {/* simulação do app em abas */}
+      <AppShowcase lang={lang} />
 
       {/* destaque com colagem de ilustrações */}
       <section className="relative overflow-hidden bg-[var(--site-band)]" aria-labelledby="destaque">

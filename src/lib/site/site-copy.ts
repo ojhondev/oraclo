@@ -79,7 +79,7 @@ const pt = {
     metaTitle: "ArchRay — Laudo com Mapa de Danos com IA assistida",
     metaDescription:
       "O ArchRay converte fotos de fachada em desenho técnico em escala, mede cada patologia e entrega orçamento e laudo. Tecnologia própria do Estúdio Restaura.",
-    lead: "Laudo com Mapa de Danos com IA assistida.",
+    lead: "Nuvem de Pontos, 3D, Mapa de Danos com IA e laudo pronto em minutos.",
     manifesto:
       "Vistoriamos, retificamos e mapeamos cada dano de fachadas com tecnologia própria — e entregamos quantitativos, orçamento do tratamento e laudo com prioridades, prontos para decidir, aprovar e começar a obra.",
     featureTitle: "Reinventamos o mapa de danos",
@@ -229,7 +229,7 @@ const pt = {
   company: {
     metaTitle: "Empresa",
     title: "Diagnóstico de edificações com tecnologia própria",
-    lead:
+    lead: "Point cloud, 3D, AI damage map and a finished report in minutes.",
       "O ArchRay é o braço de diagnóstico do Estúdio Restaura: arquitetos de restauro que construíram as ferramentas de que precisavam para medir, orçar e documentar danos com rigor.",
     cta: "Fale com a gente",
     founder: {

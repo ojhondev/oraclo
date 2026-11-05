@@ -229,7 +229,7 @@ const pt = {
   company: {
     metaTitle: "Empresa",
     title: "Diagnóstico de edificações com tecnologia própria",
-    lead: "Point cloud, 3D, AI damage map and a finished report in minutes.",
+    lead:
       "O ArchRay é o braço de diagnóstico do Estúdio Restaura: arquitetos de restauro que construíram as ferramentas de que precisavam para medir, orçar e documentar danos com rigor.",
     cta: "Fale com a gente",
     founder: {
@@ -373,7 +373,7 @@ const en: Copy = {
     metaTitle: "ArchRay — Condition reports with AI-assisted damage mapping",
     metaDescription:
       "ArchRay turns facade photos into scaled technical drawings, measures every defect and delivers the budget and the report. In-house technology by Estúdio Restaura.",
-    lead: "Condition reports with AI-assisted damage mapping.",
+    lead: "Point cloud, 3D, AI damage map and a finished report in minutes.",
     manifesto:
       "We survey, rectify and map every damage on facades with in-house technology — and deliver quantities, a treatment budget and a prioritised report, ready to decide, approve and start the works.",
     featureTitle: "We reinvented the damage map",

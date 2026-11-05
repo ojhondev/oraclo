@@ -112,7 +112,7 @@ export async function quickCapture(siteId: string) {
 }
 
 /** Põe a captura na fila do motor. */
-export async function requestModel(siteId: string, captureId: string): Promise<{ error?: string }> {
+export async function requestModel(siteId: string, captureId: string, quality: "rapido" | "alta" = "rapido"): Promise<{ error?: string }> {
   const { capture } = await guard(siteId, captureId);
   if (capture.fileCount < MIN_FRAMES) return { error: `São necessários pelo menos ${MIN_FRAMES} quadros.` };
   const [running] = await db
@@ -121,7 +121,7 @@ export async function requestModel(siteId: string, captureId: string): Promise<{
     .where(and(eq(processingJobs.captureId, captureId), inArray(processingJobs.status, ["na_fila", "rodando"])))
     .limit(1);
   if (running) return { error: "Esta captura já está na fila." };
-  await db.insert(processingJobs).values({ captureId });
+  await db.insert(processingJobs).values({ captureId, quality: quality === "alta" ? "alta" : "rapido" });
   await db.update(captures).set({ status: "na_fila", submittedAt: new Date() }).where(eq(captures.id, captureId));
   refresh(siteId, captureId);
   return {};

@@ -72,9 +72,9 @@ export function ModelPanel({
     };
   }, [active, captureId, router, siteId]);
 
-  const send = () =>
+  const send = (quality: "rapido" | "alta") =>
     start(async () => {
-      const r = await requestModel(siteId, captureId);
+      const r = await requestModel(siteId, captureId, quality);
       if (r.error) toast.error(r.error);
       else router.refresh();
     });
@@ -101,8 +101,8 @@ export function ModelPanel({
           </div>
           <p className="text-[12.5px] text-muted-foreground">
             {online === false
-              ? "O computador do motor está desligado ou com o programa fechado. O processamento começa quando ele voltar."
-              : "Pode fechar esta página. Uma captura real leva horas, e o resultado aparece aqui."}
+              ? "O computador do motor está desligado ou com o programa fechado. O processamento continua quando ele voltar."
+              : `${job.status === "rodando" && job.log ? `${job.log}. ` : ""}Pode fechar esta página: o resultado aparece aqui.`}
           </p>
         </div>
       )}
@@ -151,8 +151,11 @@ export function ModelPanel({
 
       {canCapture && !active && (
         <div className="grid gap-1.5">
-          <Button size="lg" className="h-12" disabled={blocked || busy} onClick={send}>
+          <Button size="lg" className="h-12" disabled={blocked || busy} onClick={() => send("rapido")}>
             {busy ? <Loader2 className="animate-spin" /> : job ? <RotateCw /> : <Box />} {job ? "Gerar de novo" : "Gerar modelo 3D"}
+          </Button>
+          <Button variant="ghost" disabled={blocked || busy} onClick={() => send("alta")}>
+            Gerar em alta qualidade (bem mais lento)
           </Button>
           {blocked && (
             <p className="text-[12.5px] text-muted-foreground">

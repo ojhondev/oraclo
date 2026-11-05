@@ -190,6 +190,8 @@ export const processingJobs = pgTable("processing_jobs", {
   captureId: uuid("capture_id").notNull().references(() => captures.id, { onDelete: "cascade" }),
   stage: jobStageEnum("stage").notNull().default("triagem"),
   status: jobStatusEnum("status").notNull().default("na_fila"),
+  /** "rapido" (padrão) ou "alta": a alta leva bem mais tempo e gera uma nuvem mais densa. */
+  quality: text("quality").notNull().default("rapido"),
   progress: integer("progress").notNull().default(0),
   gpuSeconds: integer("gpu_seconds").notNull().default(0),
   costCents: integer("cost_cents").notNull().default(0),

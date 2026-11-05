@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { lasPointCount, odmArgs, odmCommand, photosUsed, stageFromLine } from "../scripts/motor-comum.mjs";
+import { lasPointCount, odmArgs, odmCommand, photosUsed, qualityOf, stageFromLine, stepDetail } from "../scripts/motor-comum.mjs";
 import { judgeFrame, meanDiff, tooFast } from "@/lib/video-frames";
 
 describe("motor 3D", () => {
   it("traduz as etapas do ODM e ignora o resto do log", () => {
-    expect(stageFromLine("[INFO]    Running opensfm stage")).toEqual({ stage: "alinhamento", progress: 10 });
+    expect(stageFromLine("[INFO]    Running opensfm stage")).toEqual({ odm: "opensfm", stage: "alinhamento", progress: 10 });
     expect(stageFromLine("[INFO]    Running odm_meshing stage")?.stage).toBe("malha");
     expect(stageFromLine("[INFO]    Finished opensfm stage")).toBeNull();
     expect(stageFromLine("Running estrela stage")).toBeNull();
@@ -16,6 +16,23 @@ describe("motor 3D", () => {
     expect(args.at(-1)).toBe("abc");
     expect(args).not.toContain("--skip-3dmodel");
     expect(odmCommand("A:\\ODM", args)).toContain("cd /d A:\\ODM& winrun.bat --project-path A:\\p");
+  });
+
+  it("o modo rápido compara só vizinhos e reduz a nuvem; o de alta qualidade não", () => {
+    const fast = odmArgs("abc", "A:\\p", "rapido");
+    expect(fast).toEqual(expect.arrayContaining(["--matcher-order", "--pc-skip-geometric"]));
+    expect(fast[fast.indexOf("--pc-quality") + 1]).toBe("low");
+    const high = odmArgs("abc", "A:\\p", "alta");
+    expect(high).not.toContain("--matcher-order");
+    expect(high[high.indexOf("--pc-quality") + 1]).toBe("medium");
+    expect(qualityOf("desconhecida")).toBe(qualityOf("rapido"));
+  });
+
+  it("mostra o andamento dentro da etapa, sem passar do total", () => {
+    const base = { features: 0, matches: 0, depths: 0, total: 56 };
+    expect(stepDetail("opensfm", { ...base, features: 28 })).toEqual({ progress: 18, text: "Analisando a imagem 28 de 56" });
+    expect(stepDetail("openmvs", { ...base, depths: 84 })).toEqual({ progress: 58, text: "Calculando a imagem 56 de 56" });
+    expect(stepDetail("odm_meshing", base)).toBeNull();
   });
 
   it("lê a quantidade de pontos nas versões 1.2 e 1.4 do LAS", () => {

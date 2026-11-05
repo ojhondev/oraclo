@@ -12,6 +12,8 @@ export const MAX_FRAMES = 240;
 /** Abaixo disso a fotogrametria não tem material para reconstruir uma fachada. */
 export const MIN_FRAMES = 20;
 const JPEG_QUALITY = 0.85;
+/** Maior lado guardado: reduz o envio, o armazenamento e o processamento. */
+const MAX_SIDE = 2560;
 /** Diferença média (0–255) abaixo da qual a imagem é a mesma: o celular está parado. */
 const STILL_DIFF = 1.5;
 /** Janelas seguidas descartadas por tremor antes de aceitar a melhor disponível, para não abrir buraco. */
@@ -71,11 +73,14 @@ export class FrameSelector {
   offer(source: CanvasImageSource, w: number, h: number) {
     const s = measureSharpness(source, w, h);
     if (this.filled && (s ?? 0) <= (this.best ?? 0)) return;
-    if (this.canvas.width !== w || this.canvas.height !== h) {
-      this.canvas.width = w;
-      this.canvas.height = h;
+    const k = Math.min(1, MAX_SIDE / Math.max(w, h));
+    const cw = Math.round(w * k);
+    const ch = Math.round(h * k);
+    if (this.canvas.width !== cw || this.canvas.height !== ch) {
+      this.canvas.width = cw;
+      this.canvas.height = ch;
     }
-    this.canvas.getContext("2d")?.drawImage(source, 0, 0, w, h);
+    this.canvas.getContext("2d")?.drawImage(source, 0, 0, cw, ch);
     this.best = s;
     this.filled = true;
     this.thumb = grayThumb(source);

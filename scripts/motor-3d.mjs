@@ -2,14 +2,13 @@
 // OpenDroneMap e devolve modelo 3D e nuvem de pontos à plataforma.  Uso: npm run motor
 //   MOTOR_UMA_VEZ=1   processa o que houver na fila e encerra (para testes)
 import { spawn, spawnSync } from "node:child_process";
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, statSync } from "node:fs";
+import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
 import { neon } from "@neondatabase/serverless";
 import { put } from "@vercel/blob";
+import sharp from "sharp";
 import { loadEnv } from "./treino-comum.mjs";
-import { odmArgs, odmCommand, photosUsed, readLasCount, stageFromLine } from "./motor-comum.mjs";
+import { odmArgs, odmCommand, photosUsed, qualityOf, readLasCount, stageFromLine, stepDetail } from "./motor-comum.mjs";
 
 const env = loadEnv();
 const sql = neon(env.DATABASE_URL);
@@ -35,18 +34,21 @@ async function claim() {
   return rows[0] ?? null;
 }
 
-async function download(captureId, dir) {
+/** Baixa os quadros na ordem da gravação: o nome do arquivo é o que diz ao ODM quais são vizinhos. */
+async function download(captureId, dir, maxSide) {
   mkdirSync(dir, { recursive: true });
-  const files = await sql`select id, url from capture_files where capture_id = ${captureId} and url is not null`;
+  const files = await sql`select id, url from capture_files where capture_id = ${captureId} and url is not null order by coalesce(taken_at, created_at), created_at, id`;
   let done = 0;
   for (let i = 0; i < files.length; i += 4) {
     await Promise.all(
-      files.slice(i, i + 4).map(async (f) => {
-        const dest = join(dir, `${f.id}.jpg`);
+      files.slice(i, i + 4).map(async (f, k) => {
+        const dest = join(dir, `${String(i + k + 1).padStart(5, "0")}.jpg`);
         if (existsSync(dest) && statSync(dest).size > 0) return;
         const res = await fetch(f.url);
         if (!res.ok) throw new Error(`Falha ao baixar um quadro (${res.status}).`);
-        await pipeline(Readable.fromWeb(res.body), createWriteStream(dest));
+        const buf = Buffer.from(await res.arrayBuffer());
+        const img = sharp(buf).withMetadata();
+        await (maxSide ? img.resize({ width: maxSide, height: maxSide, fit: "inside", withoutEnlargement: true }) : img).jpeg({ quality: 90 }).toFile(dest);
       }),
     );
     done += Math.min(4, files.length - i);
@@ -55,10 +57,32 @@ async function download(captureId, dir) {
   return files.length;
 }
 
-function runOdm(job, project) {
+const countFiles = (dir, re) => {
+  try {
+    return readdirSync(dir).filter((f) => re.test(f)).length;
+  } catch {
+    return 0;
+  }
+};
+
+function runOdm(job, project, total) {
   return new Promise((resolve, reject) => {
     const file = createWriteStream(join(PROJECTS, `${project}.log`), { flags: "a" });
-    const cmd = odmCommand(ODM_DIR, odmArgs(project, PROJECTS));
+    const cmd = odmCommand(ODM_DIR, odmArgs(project, PROJECTS, job.quality));
+    let odmStage = null;
+    let shown = "";
+    const sfm = join(PROJECTS, project, "opensfm");
+    const ticker = setInterval(() => {
+      const d = stepDetail(odmStage, {
+        features: countFiles(join(sfm, "features"), /\.npz$/),
+        matches: countFiles(join(sfm, "matches"), /\.pkl\.gz$/),
+        depths: countFiles(join(sfm, "undistorted", "openmvs", "depthmaps"), /^depth\d+\.dmap$/),
+        total,
+      });
+      if (!d || d.text === shown) return;
+      shown = d.text;
+      sql`update processing_jobs set progress = ${d.progress}, log = ${d.text} where id = ${job.id}`.catch((e) => log("aviso:", e.message));
+    }, 20_000);
     child = spawn("cmd.exe", ["/d", "/s", "/c", cmd], { windowsVerbatimArguments: true, stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
     const tail = [];
     let buffer = "";
@@ -73,7 +97,8 @@ function runOdm(job, project) {
         const s = stageFromLine(line);
         if (s) {
           log(line.trim());
-          sql`update processing_jobs set stage = ${s.stage}, progress = ${s.progress} where id = ${job.id}`.catch((e) => log("aviso:", e.message));
+          odmStage = s.odm;
+          sql`update processing_jobs set stage = ${s.stage}, progress = ${s.progress}, log = null where id = ${job.id}`.catch((e) => log("aviso:", e.message));
         }
       }
     };
@@ -81,6 +106,7 @@ function runOdm(job, project) {
     child.stderr.on("data", onData);
     child.on("error", reject);
     child.on("close", (code) => {
+      clearInterval(ticker);
       child = null;
       file.end();
       if (code === 0) resolve();
@@ -90,9 +116,10 @@ function runOdm(job, project) {
 }
 
 async function publish(job, capture, dir) {
+  const suffix = qualityOf(job.quality).suffix;
   const results = [
-    { file: join(dir, "odm_georeferencing", "odm_georeferenced_model.las"), name: "nuvem-de-pontos.las", kind: "nuvem", format: "las", upAxis: "z" },
-    { file: join(dir, "odm_texturing", "odm_textured_model_geo.glb"), name: "modelo-3d.glb", kind: "malha", format: "glb", upAxis: "z" },
+    { file: join(dir, "odm_georeferencing", "odm_georeferenced_model.las"), name: `nuvem-de-pontos${suffix}.las`, kind: "nuvem", format: "las", upAxis: "z" },
+    { file: join(dir, "odm_texturing", "odm_textured_model_geo.glb"), name: `modelo-3d${suffix}.glb`, kind: "malha", format: "glb", upAxis: "z" },
   ].filter((r) => existsSync(r.file));
   if (!results.some((r) => r.kind === "nuvem")) throw new Error("O motor terminou sem gerar a nuvem de pontos. Grave de novo mais devagar, com mais sobreposição.");
   for (const r of results) {
@@ -126,10 +153,12 @@ async function processJob(job) {
     where c.id = ${job.capture_id}`;
   if (!capture) throw new Error("Captura não encontrada.");
   await sql`update captures set status = 'processando' where id = ${capture.id}`;
-  const dir = join(PROJECTS, capture.id);
-  log("baixando os quadros");
-  const total = await download(capture.id, join(dir, "images"));
-  await runOdm(job, capture.id);
+  // uma pasta por trabalho: reprocessar com outra qualidade não reaproveita etapas da anterior
+  const project = `${capture.id}-${job.id.slice(0, 8)}`;
+  const dir = join(PROJECTS, project);
+  log(`baixando os quadros (${job.quality})`);
+  const total = await download(capture.id, join(dir, "images"), qualityOf(job.quality).maxSide);
+  await runOdm(job, project, total);
   await sql`update processing_jobs set stage = 'otimizacao', progress = 95 where id = ${job.id}`;
   await publish(job, capture, dir);
   await quality(job, capture.id, dir, total);

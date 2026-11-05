@@ -22,15 +22,34 @@ export const ODM_STAGES = {
 export function stageFromLine(line) {
   const m = line.match(/Running (\w+) stage/);
   const hit = m && ODM_STAGES[m[1]];
-  return hit ? { stage: hit[0], progress: hit[1] } : null;
+  return hit ? { odm: m[1], stage: hit[0], progress: hit[1] } : null;
+}
+
+/** Qualidade do processamento. No rápido, cada imagem só é comparada com as vizinhas da sequência. */
+export const QUALITIES = {
+  rapido: { maxSide: 2560, suffix: "-rapido", args: ["--feature-quality", "high", "--pc-quality", "low", "--pc-skip-geometric", "--matcher-order", "12", "--mesh-size", "120000"] },
+  alta: { maxSide: null, suffix: "", args: ["--feature-quality", "high", "--pc-quality", "medium"] },
+};
+
+export const qualityOf = (q) => QUALITIES[q] ?? QUALITIES.rapido;
+
+/** Detalhe do andamento dentro de uma etapa, a partir dos arquivos que o ODM já gravou. */
+export function stepDetail(odmStage, { features, matches, depths, total }) {
+  if (!total) return null;
+  const part = (n) => Math.min(1, n / total);
+  if (odmStage === "opensfm") {
+    if (matches > 0) return { progress: Math.round(25 + 15 * part(matches)), text: `Comparando a imagem ${Math.min(matches, total)} de ${total}` };
+    if (features > 0) return { progress: Math.round(10 + 15 * part(features)), text: `Analisando a imagem ${Math.min(features, total)} de ${total}` };
+  }
+  if (odmStage === "openmvs" && depths > 0) return { progress: Math.round(40 + 18 * part(depths)), text: `Calculando a imagem ${Math.min(depths, total)} de ${total}` };
+  return null;
 }
 
 /** Argumentos do ODM: modelo 3D real (fachada não é terreno), nuvem em LAS e GLB texturizado, tudo em CPU. */
-export function odmArgs(project, projectsDir) {
+export function odmArgs(project, projectsDir, quality = "rapido") {
   return [
     "--project-path", projectsDir,
-    "--feature-quality", "high",
-    "--pc-quality", "medium",
+    ...qualityOf(quality).args,
     "--pc-las",
     "--use-3dmesh",
     "--gltf",

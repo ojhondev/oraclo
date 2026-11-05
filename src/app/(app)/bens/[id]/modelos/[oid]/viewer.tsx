@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import { upload } from "@vercel/blob/client";
 import { toast } from "sonner";
@@ -119,19 +120,24 @@ export function ModelViewer({
     // carrega o arquivo com progresso
     (async () => {
       try {
-        const res = await fetch(output.url);
-        if (!res.ok || !res.body) throw new Error(`Não foi possível baixar o modelo (${res.status}).`);
-        const len = Number(res.headers.get("content-length")) || 0;
-        const reader = res.body.getReader();
-        const chunks: Uint8Array[] = [];
-        let got = 0;
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          chunks.push(value);
-          got += value.length;
-          if (len) setProgress(Math.round((got / len) * 90));
-        }
+        const download = async (cache: RequestCache) => {
+          const res = await fetch(output.url, { cache });
+          if (!res.ok || !res.body) throw new Error(`Não foi possível baixar o modelo (${res.status}).`);
+          const len = Number(res.headers.get("content-length")) || 0;
+          const reader = res.body.getReader();
+          const parts: Uint8Array[] = [];
+          let total = 0;
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            parts.push(value);
+            total += value.length;
+            if (len) setProgress(Math.round((total / len) * 90));
+          }
+          return { parts, total };
+        };
+        // com o disco cheio, o navegador derruba o download ao gravar no cache: tenta de novo sem ele
+        const { parts: chunks, total: got } = await download("default").catch(() => download("no-store"));
         const buf = new Uint8Array(got);
         let o = 0;
         for (const c of chunks) {
@@ -142,7 +148,10 @@ export function ModelViewer({
         await new Promise((r) => setTimeout(r, 30));
 
         if (output.format === "glb") {
-          const gltf = await new GLTFLoader().parseAsync(buf.buffer, "");
+          // os modelos do motor vêm com a malha comprimida em Draco; o decodificador fica em public/draco
+          const draco = new DRACOLoader().setDecoderPath("/draco/");
+          const gltf = await new GLTFLoader().setDRACOLoader(draco).parseAsync(buf.buffer, "");
+          draco.dispose();
           // fotogrametria já traz a luz na textura: materiais sem iluminação
           gltf.scene.traverse((obj) => {
             const m = obj as THREE.Mesh;

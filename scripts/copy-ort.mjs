@@ -25,3 +25,9 @@ for (const f of files) {
   copyFileSync(from, to);
 }
 console.log(`onnxruntime-web → ${dst} (${files.length} arquivos)`);
+
+// decodificador Draco, usado para abrir os modelos GLB gerados pelo motor 3D
+const dracoSrc = join("node_modules", "three", "examples", "jsm", "libs", "draco", "gltf");
+const dracoDst = join("public", "draco");
+mkdirSync(dracoDst, { recursive: true });
+for (const f of ["draco_decoder.js", "draco_decoder.wasm", "draco_wasm_wrapper.js"]) copyFileSync(join(dracoSrc, f), join(dracoDst, f));

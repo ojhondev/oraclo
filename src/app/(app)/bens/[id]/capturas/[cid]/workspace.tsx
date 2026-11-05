@@ -68,6 +68,10 @@ export function CaptureWorkspace({
     const t = setTimeout(() => router.refresh(), 2500);
     return () => clearTimeout(t);
   }, [up.uploaded, router]);
+  // a câmera abre uma vez só: recarregar a página não deve reabri-la
+  useEffect(() => {
+    if (autoRecord) window.history.replaceState(null, "", window.location.pathname);
+  }, [autoRecord]);
   const hiResRef = useRef<HTMLInputElement>(null);
   const galleryRef = useRef<HTMLInputElement>(null);
 

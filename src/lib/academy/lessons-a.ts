@@ -99,7 +99,7 @@ export const LESSONS_A: AcademyLesson[] = [
       { p: "O ArchRay abre sem a barra do navegador, como um aplicativo, quando você o adiciona à tela inicial:" },
       { list: ["**iPhone (Safari)**: toque em Compartilhar e em Adicionar à Tela de Início.", "**Android (Chrome)**: abra o menu de três pontos e toque em Instalar app ou Adicionar à tela inicial."] },
       { h: "Navegação" },
-      { p: "A barra de abas fica embaixo: **Projetos**, **Mapas**, o botão **+** (novo projeto), **Academy** e **Mais**. Em **Mais** estão Danos e preços, Modelo 3D, Equipe, Meu perfil, os projetos recentes, a aparência e Sair. A busca e a Ajuda ficam no topo." },
+      { p: "A barra de abas fica embaixo: **Projetos**, **Mapas**, o botão **Capturar** (filmar uma fachada), **Academy** e **Mais**. Em **Mais** estão Novo projeto, Danos e preços, Modelo 3D, Equipe, Meu perfil, os projetos recentes, a aparência e Sair. A busca e a Ajuda ficam no topo." },
       { img: { src: "celular-mais", alt: "Menu Mais no celular" } },
       { h: "Desenhar com o dedo" },
       { steps: ["Na vista, toque em **Danos** e escolha o tipo. A gaveta fecha sozinha.", "Toque na imagem para marcar cada ponto.", "Use os botões que aparecem: **Desfazer** tira o último ponto, **Cancelar** descarta e **Concluir** salva o dano.", "Toque em um dano para abrir o painel dele, com gravidade, urgência, tendência, causa e recomendação."] },

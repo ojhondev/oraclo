@@ -11,6 +11,7 @@
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
+    "motor": "node scripts/motor-3d.mjs",
     "db:push": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs push --force",
     "db:studio": "node --env-file=.env.local node_modules/drizzle-kit/bin.cjs studio"
   },

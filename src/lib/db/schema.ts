@@ -200,6 +200,12 @@ export const processingJobs = pgTable("processing_jobs", {
   createdAt: createdAt(),
 });
 
+/** Sinal de vida do programa do motor no computador do Estúdio: mostra se a fila está sendo atendida. */
+export const motorHeartbeat = pgTable("motor_heartbeat", {
+  id: text("id").primaryKey(),
+  lastSeen: timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const outputKindEnum = pgEnum("output_kind", ["nuvem", "malha", "splat", "ortofoto", "dxf", "pdf"]);
 
 /** Produto gerado ou importado (nuvem E57/LAS/COPC, malha GLB, DXF, PDF…). */

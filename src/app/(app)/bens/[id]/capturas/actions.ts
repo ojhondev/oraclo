@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { and, eq, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { z } from "zod";
 import { db, schema } from "@/lib/db";
@@ -11,8 +11,9 @@ import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite } from "@/lib/sites";
 import { getCapture, IMPORT_DEVICE } from "@/lib/captures";
 import { formatOf, type OutputMeta } from "@/lib/model-formats";
+import { MIN_FRAMES } from "@/lib/video-frames";
 
-const { captures, captureFiles, campaigns, sites } = schema;
+const { captures, captureFiles, campaigns, sites, processingJobs, motorHeartbeat } = schema;
 
 async function guard(siteId: string, captureId: string, roles = capturers) {
   const user = await requireUser(roles);
@@ -76,6 +77,64 @@ export async function startCapture(siteId: string, campaignId: string, form: For
   await db.update(sites).set({ updatedAt: new Date() }).where(eq(sites.id, siteId));
   refresh(siteId);
   redirect(`/bens/${siteId}/capturas/${c!.id}`);
+}
+
+/**
+ * Atalho de campo: abre uma captura em vídeo no projeto, na vistoria de hoje (criada se não existir),
+ * e já entra na câmera.
+ */
+export async function quickCapture(siteId: string) {
+  const user = await requireUser(capturers);
+  await getSite(user.orgId, siteId);
+  const today = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(new Date());
+  const [existing] = await db
+    .select({ id: campaigns.id })
+    .from(campaigns)
+    .where(and(eq(campaigns.siteId, siteId), eq(campaigns.date, today)))
+    .orderBy(desc(campaigns.createdAt))
+    .limit(1);
+  const campaignId =
+    existing?.id ??
+    (
+      await db
+        .insert(campaigns)
+        .values({ siteId, name: `Vistoria de ${today.split("-").reverse().join("/")}`, date: today, createdBy: user.id })
+        .returning({ id: campaigns.id })
+    )[0]!.id;
+  const ua = (await headers()).get("user-agent") ?? "";
+  const [c] = await db
+    .insert(captures)
+    .values({ campaignId, mode: "video", status: "rascunho", device: deviceFrom(ua), createdBy: user.id })
+    .returning({ id: captures.id });
+  await db.update(sites).set({ updatedAt: new Date() }).where(eq(sites.id, siteId));
+  refresh(siteId);
+  redirect(`/bens/${siteId}/capturas/${c!.id}?gravar=1`);
+}
+
+/** Põe a captura na fila do motor. */
+export async function requestModel(siteId: string, captureId: string): Promise<{ error?: string }> {
+  const { capture } = await guard(siteId, captureId);
+  if (capture.fileCount < MIN_FRAMES) return { error: `São necessários pelo menos ${MIN_FRAMES} quadros.` };
+  const [running] = await db
+    .select({ id: processingJobs.id })
+    .from(processingJobs)
+    .where(and(eq(processingJobs.captureId, captureId), inArray(processingJobs.status, ["na_fila", "rodando"])))
+    .limit(1);
+  if (running) return { error: "Esta captura já está na fila." };
+  await db.insert(processingJobs).values({ captureId });
+  await db.update(captures).set({ status: "na_fila", submittedAt: new Date() }).where(eq(captures.id, captureId));
+  refresh(siteId, captureId);
+  return {};
+}
+
+/** Situação do processamento, consultada pela tela enquanto o motor trabalha. */
+export async function modelStatus(siteId: string, captureId: string) {
+  const user = await requireUser();
+  await getSite(user.orgId, siteId);
+  await getCapture(siteId, captureId);
+  const [job] = await db.select().from(processingJobs).where(eq(processingJobs.captureId, captureId)).orderBy(desc(processingJobs.createdAt)).limit(1);
+  const [beat] = await db.select().from(motorHeartbeat).limit(1);
+  return { job: job ?? null, motorOnline: !!beat && Date.now() - beat.lastSeen.getTime() < 2 * 60_000 };
 }
 
 export async function saveNotes(siteId: string, captureId: string, notes: string) {

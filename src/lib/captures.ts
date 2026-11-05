@@ -3,7 +3,7 @@ import { and, asc, desc, eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { db, schema } from "@/lib/db";
 
-const { captures, campaigns, elements, captureFiles, outputs } = schema;
+const { captures, campaigns, elements, captureFiles, outputs, processingJobs, qualityReports } = schema;
 
 /** Marca das capturas feitas enviando fotos que já existiam (em vez da câmera do celular). */
 export const IMPORT_DEVICE = "Importação de fotos";
@@ -27,9 +27,11 @@ export async function getCapture(siteId: string, captureId: string) {
 
 export async function getCaptureDetail(siteId: string, captureId: string) {
   const base = await getCapture(siteId, captureId);
-  const [files, results] = await Promise.all([
+  const [files, results, [job], [report]] = await Promise.all([
     db.select().from(captureFiles).where(eq(captureFiles.captureId, captureId)).orderBy(asc(captureFiles.createdAt)),
     db.select().from(outputs).where(eq(outputs.captureId, captureId)).orderBy(desc(outputs.createdAt)),
+    db.select().from(processingJobs).where(eq(processingJobs.captureId, captureId)).orderBy(desc(processingJobs.createdAt)).limit(1),
+    db.select().from(qualityReports).where(eq(qualityReports.captureId, captureId)).orderBy(desc(qualityReports.createdAt)).limit(1),
   ]);
-  return { ...base, files, results };
+  return { ...base, files, results, job: job ?? null, report: report ?? null };
 }

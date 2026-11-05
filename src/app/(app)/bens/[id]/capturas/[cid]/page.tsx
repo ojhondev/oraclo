@@ -10,11 +10,13 @@ import { CaptureResults } from "./results";
 
 export const metadata: Metadata = { title: "Fotos de campo" };
 
-export default async function CapturePage({ params }: PageProps<"/bens/[id]/capturas/[cid]">) {
+export default async function CapturePage({ params, searchParams }: PageProps<"/bens/[id]/capturas/[cid]">) {
   const { id, cid } = await params;
+  const { gravar } = await searchParams;
   const user = await requireUser();
   const site = await getSite(user.orgId, id);
-  const { capture, campaign, elementName, files, results } = await getCaptureDetail(id, cid);
+  const { capture, campaign, elementName, files, results, job, report } = await getCaptureDetail(id, cid);
+  const video = capture.mode === "video";
 
   return (
     <div className="px-4 pt-5 pb-16 sm:px-8 lg:px-10">
@@ -25,13 +27,13 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
         <p className="label">
           {campaign.name} · {fmtDate(campaign.date)}
         </p>
-        <h1 className="h-display text-[24px] sm:text-[28px]">{elementName ?? (capture.mode === "laser" ? "Modelo 3D" : "Fotos de campo")}</h1>
+        <h1 className="h-display text-[24px] sm:text-[28px]">{elementName ?? (capture.mode === "laser" ? "Modelo 3D" : video ? "Captura em vídeo" : "Fotos de campo")}</h1>
         <p className="text-[13px] text-muted-foreground">
           {capture.mode === "laser"
             ? "Modelo 3D importado (laser, drone ou outro software)"
             : capture.device === IMPORT_DEVICE
               ? `Fotos enviadas do computador · ${capture.fileCount} fotos · ${fmtBytes(capture.totalBytes)}`
-              : `${capture.device ?? "Celular"} · ${capture.fileCount} fotos · ${fmtBytes(capture.totalBytes)}`}
+              : `${capture.device ?? "Celular"} · ${capture.fileCount} ${video ? "quadros" : "fotos"} · ${fmtBytes(capture.totalBytes)}`}
         </p>
       </div>
       {capture.mode !== "laser" && (
@@ -40,6 +42,10 @@ export default async function CapturePage({ params }: PageProps<"/bens/[id]/capt
           orgId={user.orgId}
           capture={capture}
           files={files.map((f) => ({ id: f.id, url: f.url, sharpness: f.sharpness, pass: f.pass, width: f.width, height: f.height, bytes: f.bytes }))}
+          job={job}
+          report={report}
+          results={results}
+          autoRecord={gravar === "1"}
           canCapture={capturers.includes(user.role)}
           canEdit={editors.includes(user.role)}
         />

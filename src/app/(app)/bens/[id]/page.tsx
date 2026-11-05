@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Box, Camera, FileText, GitCompareArrows, ImagePlus, MapPin, Pencil, ShieldCheck } from "lucide-react";
+import { ArrowRight, Box, Camera, FileText, GitCompareArrows, ImagePlus, MapPin, Pencil, ShieldCheck, Video } from "lucide-react";
 import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite, getSiteDetail } from "@/lib/sites";
 import { loadDiagnosis } from "@/lib/diagnosis";
@@ -25,7 +25,7 @@ import { AddCampaignForm, AddElementForm, NewCaptureForm } from "./panels";
 import { ImportModelForm } from "./import-model";
 import { LaudoEditor } from "./laudo-editor";
 import { Bar, Kpi, PriorityBar, Section, TabBar, parseTab, tabHref, type TabId } from "./project-ui";
-import { startCapture } from "./capturas/actions";
+import { quickCapture, startCapture } from "./capturas/actions";
 
 export async function generateMetadata({ params }: PageProps<"/bens/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -183,6 +183,13 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
         }
         actions={
           <div className="flex flex-wrap gap-2" data-tour="project-actions">
+            {canCapture && (
+              <form action={quickCapture.bind(null, site.id)}>
+                <Button type="submit" variant="outline">
+                  <Video /> Capturar
+                </Button>
+              </form>
+            )}
             {canEdit && (
               <Button variant="outline" asChild>
                 <Link href={`/bens/${site.id}/ortofotos/nova${qs}`} data-tour="nova-vista">

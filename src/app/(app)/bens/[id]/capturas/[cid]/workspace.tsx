@@ -3,29 +3,39 @@
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Camera, CloudOff, CloudUpload, ImagePlus, Images, Loader2, RotateCw, Trash2 } from "lucide-react";
+import { Camera, CloudOff, CloudUpload, FileVideo, ImagePlus, Images, Loader2, RotateCw, Trash2, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ConfirmButton } from "@/components/confirm-button";
 import { fmtBytes } from "@/lib/format";
 import { isBlurry, measureSharpness } from "@/lib/capture-queue";
+import { framesFromVideo, type Frame } from "@/lib/video-frames";
 import type { schema } from "@/lib/db";
 import { deleteCapture, deleteFile, saveNotes } from "../actions";
 import { GuidedCamera, type Shot } from "./camera";
+import { ModelPanel } from "./model-panel";
+import { VideoCamera } from "./video-camera";
 import { useUploader } from "./use-uploader";
 
 type Capture = typeof schema.captures.$inferSelect;
+type Output = typeof schema.outputs.$inferSelect;
+type Job = typeof schema.processingJobs.$inferSelect;
+type Report = typeof schema.qualityReports.$inferSelect;
 type FileRow = Pick<typeof schema.captureFiles.$inferSelect, "id" | "url" | "sharpness" | "pass" | "width" | "height" | "bytes">;
 
 /**
- * Fotos de campo de uma vistoria: câmera do celular (com aviso de foto tremida), foto em
- * alta resolução ou galeria. As fotos ficam no aparelho e sobem em segundo plano.
+ * Captura de uma vistoria: vídeo da fachada (vira quadros para o modelo 3D), câmera do celular,
+ * foto em alta resolução ou galeria. Tudo fica no aparelho e sobe em segundo plano.
  */
 export function CaptureWorkspace({
   siteId,
   orgId,
   capture,
   files,
+  job,
+  report,
+  results,
+  autoRecord,
   canCapture,
   canEdit,
 }: {
@@ -33,11 +43,18 @@ export function CaptureWorkspace({
   orgId: string;
   capture: Capture;
   files: FileRow[];
+  job: Job | null;
+  report: Report | null;
+  results: Output[];
+  autoRecord: boolean;
   canCapture: boolean;
   canEdit: boolean;
 }) {
   const up = useUploader({ siteId, orgId, captureId: capture.id });
   const [camera, setCamera] = useState(false);
+  const [recorder, setRecorder] = useState(autoRecord && canCapture);
+  const [extracting, setExtracting] = useState<number | null>(null);
+  const videoFileRef = useRef<HTMLInputElement>(null);
   const [session, setSession] = useState<number[]>([]);
   const [, start] = useTransition();
   const router = useRouter();
@@ -63,6 +80,22 @@ export function CaptureWorkspace({
   async function addShot(s: Shot) {
     await up.add({ blob: s.blob, name: s.name, type: s.type, width: s.width, height: s.height, sharpness: s.sharpness, pass: 1, takenAt: new Date().toISOString() });
     if (s.sharpness != null) setSession((x) => [...x, s.sharpness!].slice(-20));
+  }
+
+  const addFrame = (f: Frame) =>
+    up.add({ blob: f.blob, name: f.name, type: f.type, width: f.width, height: f.height, sharpness: f.sharpness, pass: 1, takenAt: new Date().toISOString() });
+
+  async function addVideo(file: File | undefined) {
+    if (!file) return;
+    setExtracting(0);
+    try {
+      const n = await framesFromVideo(file, addFrame, setExtracting);
+      toast.success(`${n} quadros nítidos adicionados à fila de envio.`);
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setExtracting(null);
+    }
   }
 
   async function addFiles(list: FileList | null) {
@@ -94,7 +127,7 @@ export function CaptureWorkspace({
       {/* status do envio — sempre visível */}
       <div className="sticky top-14 z-20 -mx-1 rounded-2xl border bg-card/95 px-4 py-3 backdrop-blur lg:top-2">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[13.5px]">
-          <span className="font-medium tabular-nums">{total} fotos</span>
+          <span className="font-medium tabular-nums">{total} {capture.mode === "video" ? "quadros" : "fotos"}</span>
           <span className="text-muted-foreground tabular-nums">{uploaded} enviadas</span>
           {up.pending > 0 && (
             <span className="flex items-center gap-1.5 tabular-nums">
@@ -120,6 +153,26 @@ export function CaptureWorkspace({
         )}
       </div>
 
+      <ModelPanel siteId={siteId} captureId={capture.id} count={uploaded} pending={up.pending} job={job} report={report} results={results} canCapture={canCapture} />
+
+      {canCapture && (
+        <section className="rounded-2xl border bg-card p-4 sm:p-5">
+          <h2 className="text-[16px] font-medium">Filmar a fachada</h2>
+          <p className="mb-3 text-[13px] text-muted-foreground">
+            Grave andando devagar de ponta a ponta. O ArchRay guarda os quadros mais nítidos para gerar o modelo 3D. Não use zoom.
+          </p>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button size="lg" className="h-12" onClick={() => setRecorder(true)}>
+              <Video /> Gravar
+            </Button>
+            <Button size="lg" variant="outline" className="h-12" disabled={extracting != null} onClick={() => videoFileRef.current?.click()}>
+              {extracting != null ? <Loader2 className="animate-spin" /> : <FileVideo />} {extracting != null ? `Extraindo quadros ${extracting}%` : "Vídeo da galeria"}
+            </Button>
+          </div>
+          <input ref={videoFileRef} type="file" accept="video/*" className="sr-only" onChange={(e) => { void addVideo(e.target.files?.[0]); e.target.value = ""; }} />
+        </section>
+      )}
+
       {canCapture && (
         <section className="rounded-2xl border bg-card p-4 sm:p-5">
           <h2 className="text-[16px] font-medium">Fotos de campo</h2>
@@ -134,7 +187,7 @@ export function CaptureWorkspace({
               void addFiles(e.dataTransfer.files);
             }}
           >
-            <Button size="lg" className="h-12" onClick={() => setCamera(true)}>
+            <Button size="lg" variant="outline" className="h-12" onClick={() => setCamera(true)}>
               <Camera /> Câmera
             </Button>
             <Button size="lg" variant="outline" className="h-12" onClick={() => hiResRef.current?.click()}>
@@ -164,7 +217,7 @@ export function CaptureWorkspace({
 
       {files.length > 0 && (
         <section className="rounded-2xl border bg-card p-4 sm:p-5">
-          <h2 className="mb-3 text-[16px] font-medium">Fotos enviadas ({files.length})</h2>
+          <h2 className="mb-3 text-[16px] font-medium">{capture.mode === "video" ? "Quadros enviados" : "Fotos enviadas"} ({files.length})</h2>
           <ul className="grid grid-cols-4 gap-1.5 sm:grid-cols-6">
             {files.map((f) => {
               const blurry = isBlurry(f.sharpness, recent);
@@ -204,6 +257,7 @@ export function CaptureWorkspace({
         </div>
       )}
 
+      {recorder && <VideoCamera total={total} pending={up.pending} onFrame={addFrame} onClose={() => setRecorder(false)} />}
       {camera && <GuidedCamera total={total} pending={up.pending} recent={recent} onShot={addShot} onClose={() => setCamera(false)} />}
       {!camera && up.pending > 0 && !up.online && (
         <p className="flex items-center justify-center gap-2 text-[12.5px] text-muted-foreground">

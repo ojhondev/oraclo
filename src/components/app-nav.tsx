@@ -13,6 +13,7 @@ import {
   Menu,
   PanelLeft,
   Plus,
+  Video,
   Search,
   Sparkles,
   GraduationCap,
@@ -40,6 +41,7 @@ import type { Recent } from "@/lib/recent";
 
 const ITEMS: { href: string; label: string; icon: React.ElementType; match: (p: string) => boolean; beta?: boolean }[] = [
   { href: "/", label: "Projetos", icon: Building2, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/ortofotos/") && !p.includes("/modelos/")) },
+  { href: "/capturar", label: "Capturar", icon: Video, match: (p: string) => p.startsWith("/capturar") },
   { href: "/mapas", label: "Mapas de danos", icon: ImageIcon, match: (p: string) => p.startsWith("/mapas") || p.includes("/ortofotos/") },
   { href: "/modelos", label: "Modelo 3D", icon: Box, beta: true, match: (p: string) => p.startsWith("/modelos") || p.includes("/modelos/") },
   { href: "/biblioteca", label: "Danos e preços", icon: Layers, match: (p: string) => p.startsWith("/biblioteca") },
@@ -362,6 +364,7 @@ export function MobileTabBar({ user, recent }: { user: SessionUser; recent: Rece
     </Link>
   );
   const extra = [
+    { href: "/bens/novo", label: "Novo projeto", icon: Plus },
     { href: "/biblioteca", label: "Danos e preços", icon: Layers },
     { href: "/modelos", label: "Modelo 3D", icon: Box },
     { href: "/equipe", label: "Equipe", icon: Users },
@@ -376,9 +379,9 @@ export function MobileTabBar({ user, recent }: { user: SessionUser; recent: Rece
       <nav aria-label="Navegação principal" className="fixed inset-x-0 bottom-0 z-40 border-t bg-background/95 pb-[env(safe-area-inset-bottom)] backdrop-blur lg:hidden print:hidden">
         <div className="grid h-[3.75rem] grid-cols-5">
           {tabs.slice(0, 2).map(tab)}
-          <Link href="/bens/novo" aria-label="Novo projeto" className={tabClass}>
-            <span className={cn("grid size-11 place-items-center rounded-full bg-foreground text-background shadow-sm", pathname === "/bens/novo" && "bg-brand")}>
-              <Plus className="size-6" />
+          <Link href="/capturar" aria-label="Capturar" className={tabClass}>
+            <span className={cn("grid size-11 place-items-center rounded-full bg-foreground text-background shadow-sm", pathname === "/capturar" && "bg-brand")}>
+              <Video className="size-6" />
             </span>
           </Link>
           {tab(tabs[2]!)}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { CloudUpload, Loader2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { isBlurry, measureSharpness } from "@/lib/capture-queue";
+import { useCameraStream } from "./use-camera-stream";
 
 export type Shot = { blob: Blob; type: string; name: string; width: number; height: number; sharpness: number | null };
 
@@ -29,55 +30,18 @@ export function GuidedCamera({
   onShot: (s: Shot) => Promise<void>;
   onClose: () => void;
 }) {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const { videoRef, streamRef, ready, res, error, setError } = useCameraStream();
   const capRef = useRef<ImageCaptureLike | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState(false);
   const [live, setLive] = useState<number | null>(null);
   const [last, setLast] = useState<{ url: string; blurry: boolean } | null>(null);
-  const [res, setRes] = useState<string>("");
 
   useEffect(() => {
-    let cancelled = false;
-    let wake: { release: () => Promise<void> } | null = null;
-    (async () => {
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) throw new Error("Este navegador não dá acesso à câmera. Use o modo \"Foto em alta resolução\".");
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: { facingMode: { ideal: "environment" }, width: { ideal: 4096 }, height: { ideal: 3072 } },
-        });
-        if (cancelled) return stream.getTracks().forEach((t) => t.stop());
-        streamRef.current = stream;
-        const track = stream.getVideoTracks()[0]!;
-        const IC = (window as unknown as { ImageCapture?: ImageCaptureCtor }).ImageCapture;
-        if (IC) capRef.current = new IC(track);
-        const v = videoRef.current!;
-        v.srcObject = stream;
-        await v.play();
-        setRes(`${v.videoWidth}×${v.videoHeight}`);
-        setReady(true);
-        try {
-          wake = await (navigator as unknown as { wakeLock?: { request: (t: string) => Promise<typeof wake> } }).wakeLock?.request("screen") ?? null;
-        } catch {}
-      } catch (e) {
-        const err = e as DOMException;
-        setError(
-          err.name === "NotAllowedError"
-            ? "Permissão da câmera negada. Libere a câmera para este site nas configurações do navegador."
-            : err.message || "Não foi possível abrir a câmera.",
-        );
-      }
-    })();
-    return () => {
-      cancelled = true;
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      void wake?.release().catch(() => {});
-    };
-  }, []);
+    const track = streamRef.current?.getVideoTracks()[0];
+    const IC = (window as unknown as { ImageCapture?: ImageCaptureCtor }).ImageCapture;
+    if (ready && track && IC) capRef.current = new IC(track);
+  }, [ready, streamRef]);
 
   // nitidez ao vivo da imagem da câmera (indicador antes de fotografar)
   useEffect(() => {
@@ -87,7 +51,7 @@ export function GuidedCamera({
       if (v && v.videoWidth) setLive(measureSharpness(v, v.videoWidth, v.videoHeight));
     }, 700);
     return () => clearInterval(id);
-  }, [ready]);
+  }, [ready, videoRef]);
 
   const shoot = useCallback(async () => {
     const v = videoRef.current;
@@ -134,7 +98,7 @@ export function GuidedCamera({
     } finally {
       setBusy(false);
     }
-  }, [busy, onShot, recent]);
+  }, [busy, onShot, recent, setError, videoRef]);
 
   const liveBlurry = isBlurry(live, recent);
 

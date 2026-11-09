@@ -11,6 +11,7 @@ import { put as blobPut } from "@vercel/blob";
 import { AwsClient } from "aws4fetch";
 import sharp from "sharp";
 import { loadEnv } from "./treino-comum.mjs";
+import { detectMarkers, scaleFromDetections } from "./escala.mjs";
 import { levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, readLasCount, repairLasBounds, stageFromLine, stepDetail } from "./motor-comum.mjs";
 
 const env = loadEnv();
@@ -176,6 +177,43 @@ function levelOf(dir) {
   }
 }
 
+/** Escala real pelo marcador ArchRay, se ele aparecer nos quadros. */
+async function autoScale(dir) {
+  try {
+    const rec = JSON.parse(readFileSync(join(dir, "opensfm", "reconstruction.json"), "utf8"));
+    const biggest = rec.reduce((a, b) => (Object.keys(b.shots).length > Object.keys(a.shots).length ? b : a));
+    const names = Object.keys(biggest.shots).sort();
+    const detections = [];
+    let seen = 0;
+    for (const name of names) {
+      const file = join(dir, "images", name);
+      if (!existsSync(file)) continue;
+      const raw = await sharp(file).metadata();
+      // dimensões já com a orientação da foto aplicada (como a fotogrametria enxerga)
+      const meta = (raw.orientation ?? 1) >= 5 ? { width: raw.height, height: raw.width } : raw;
+      // marcador pequeno de longe precisa de resolução: detecta em até 3200 px e devolve na escala da imagem
+      const k = Math.min(1, 3200 / Math.max(meta.width, meta.height));
+      const { data, info } = await sharp(file).rotate().resize({ width: Math.round(meta.width * k), withoutEnlargement: true }).ensureAlpha().raw().toBuffer({ resolveWithObject: true });
+      const markers = detectMarkers(info.width, info.height, new Uint8ClampedArray(data.buffer, data.byteOffset, data.length)).map((m) => ({
+        id: m.id,
+        corners: m.corners.map(([x, y]) => [x / k, y / k]),
+      }));
+      if (markers.length) seen++;
+      detections.push({ image: name, width: meta.width, height: meta.height, markers });
+    }
+    const s = scaleFromDetections(detections, biggest);
+    if (!s) {
+      log(`escala: marcador não encontrado (${seen} quadros com marcador)`);
+      return null;
+    }
+    log(`escala: 1 unidade = ${s.factor.toFixed(4)} m · ${s.markers} marcadores em ${s.images} quadros · divergência ${s.spread == null ? "—" : (s.spread * 100).toFixed(1) + "%"}${s.doubtful ? " (duvidosa)" : ""}`);
+    return s;
+  } catch (e) {
+    log("aviso: escala automática falhou:", e.message);
+    return null;
+  }
+}
+
 async function publish(job, capture, dir) {
   const suffix = qualityOf(job.quality).suffix;
   const results = [
@@ -185,6 +223,12 @@ async function publish(job, capture, dir) {
   if (!results.some((r) => r.kind === "nuvem")) throw new Error("O motor terminou sem gerar a nuvem de pontos. Grave de novo mais devagar, com mais sobreposição.");
   const level = levelOf(dir);
   if (level) log(`nivelamento: modelo inclinado ${level.tilt}°`);
+  log("procurando o marcador de escala");
+  await sql`update processing_jobs set stage = 'escala' where id = ${job.id}`;
+  const auto = await autoScale(dir);
+  const scale = auto
+    ? { factor: auto.factor, meters: auto.meters, a: auto.a, b: auto.b, at: new Date().toISOString(), source: "marcador", spread: auto.spread, markers: auto.markers, images: auto.images, doubtful: auto.doubtful }
+    : null;
   const cloud = results.find((r) => r.kind === "nuvem");
   log("preparando a nuvem em níveis de detalhe");
   const potree = await publishOctree(job, capture, cloud.file, dir);
@@ -194,7 +238,7 @@ async function publish(job, capture, dir) {
     const path = `orgs/${capture.org_id}/sites/${capture.site_id}/capturas/${capture.id}/resultado/${r.name}`;
     const blob = await upload(path, r.file, { random: true });
     const points = r.format === "las" ? readLasCount(r.file) : null;
-    const meta = { viewable: true, upAxis: r.upAxis, source: "motor", level: level?.quaternion ?? null, ...(r.kind === "nuvem" && potree ? { potree, points } : {}) };
+    const meta = { viewable: true, upAxis: r.upAxis, source: "motor", level: level?.quaternion ?? null, ...(scale ? { scale } : {}), ...(r.kind === "nuvem" && potree ? { potree, points } : {}) };
     await sql`insert into outputs (site_id, capture_id, kind, format, name, storage_key, url, bytes, point_count, meta)
       values (${capture.site_id}, ${capture.id}, ${r.kind}, ${r.format}, ${r.name}, ${blob.pathname}, ${blob.url}, ${bytes}, ${points}, ${JSON.stringify(meta)}::jsonb)`;
   }

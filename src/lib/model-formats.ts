@@ -34,6 +34,14 @@ export type ModelScale = {
   a: [number, number, number];
   b: [number, number, number];
   at: string;
+  /** "marcador" = calculada sozinha pelo motor; ausente = medida com trena na calibração manual. */
+  source?: "marcador" | "manual";
+  /** Divergência entre as medidas independentes do marcador (0,01 = 1%). */
+  spread?: number | null;
+  markers?: number;
+  images?: number;
+  /** Divergência alta ou só um marcador visto: conferir com trena. */
+  doubtful?: boolean;
 };
 
 export type OutputMeta = {

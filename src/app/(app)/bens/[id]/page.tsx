@@ -35,6 +35,14 @@ export async function generateMetadata({ params }: PageProps<"/bens/[id]">): Pro
   return { title: site.name };
 }
 
+/** Situação da escala de um modelo ou nuvem, em poucas palavras. */
+function scaleLabel(meta: OutputMeta | null) {
+  const s = meta?.scale;
+  if (s?.source === "marcador") return s.doubtful ? "escala duvidosa (conferir)" : "escala pelo marcador";
+  if (s) return "escala calibrada";
+  return meta?.source === "motor" ? "⚠ sem escala" : "escala do arquivo";
+}
+
 export default async function SitePage({ params, searchParams }: PageProps<"/bens/[id]">) {
   const { id } = await params;
   const sp = await searchParams;
@@ -583,14 +591,13 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
               ) : (
                 <ul className="grid divide-y rounded-lg border">
                   {meshes.map((o) => {
-                    const scale = (o.meta as OutputMeta | null)?.scale;
                     return (
                       <li key={o.id} className="flex min-w-0 items-center gap-3 px-3 py-2.5 text-[13.5px]">
                         <Box className="size-4 shrink-0 text-muted-foreground" />
                         <span className="min-w-0 flex-1">
                           <span className="block truncate">{o.name}</span>
                           <span className="text-[12px] text-muted-foreground">
-                            {o.format.toUpperCase()} · {fmtBytes(o.bytes)} · {scale ? "escala calibrada" : "sem calibração"}
+                            {o.format.toUpperCase()} · {fmtBytes(o.bytes)} · {scaleLabel(o.meta as OutputMeta | null)}
                           </span>
                         </span>
                         <Button size="sm" variant="outline" asChild>
@@ -653,7 +660,7 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
                         <span className="block truncate">{o.name}</span>
                         <span className="text-[12px] text-muted-foreground">
                           {points ? `${points.toLocaleString("pt-BR")} pontos · ` : ""}
-                          {fmtBytes(o.bytes)} · {fmtDate(o.createdAt.toISOString().slice(0, 10))}
+                          {fmtBytes(o.bytes)} · {scaleLabel(meta)} · {fmtDate(o.createdAt.toISOString().slice(0, 10))}
                         </span>
                       </span>
                       {ready ? (

@@ -26,6 +26,7 @@
     "date-fns": "^4.4.0",
     "drizzle-orm": "^0.45.4",
     "fflate": "^0.8.3",
+    "js-aruco2": "^2.0.0",
     "katex": "^0.19.1",
     "lucide-react": "^1.56.0",
     "next": "^16.4.2",

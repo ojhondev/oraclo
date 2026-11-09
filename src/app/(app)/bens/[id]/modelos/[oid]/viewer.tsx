@@ -105,6 +105,17 @@ export function ModelViewer({
   const [savingScale, setSavingScale] = useState(false);
   /** Metros por unidade do modelo: 1 enquanto não calibrado (o ArchRay presume metros). */
   const k = scale?.factor ?? 1;
+  // fotogrametria sem marcador sai em escala arbitrária: não dá para presumir metros
+  const fromMotor = output.meta?.source === "motor";
+  const scaleState: { tone: "ok" | "warn" | "neutral"; label: string } = scale
+    ? scale.source === "marcador"
+      ? scale.doubtful
+        ? { tone: "warn", label: "Escala duvidosa: confira com trena" }
+        : { tone: "ok", label: `Escala pelo marcador${scale.spread != null ? ` · ±${(scale.spread * 100).toFixed(1).replace(".", ",")}%` : ""}` }
+      : { tone: "neutral", label: "Escala calibrada com trena" }
+    : fromMotor
+      ? { tone: "warn", label: "Sem escala: medidas não valem" }
+      : { tone: "neutral", label: "Escala do arquivo (metros)" };
   const [form, setForm] = useState({ name: "", elementId: "", mm: "", front: "1,5", back: "1,5" });
   const toolRef = useRef(tool);
   toolRef.current = tool;
@@ -738,6 +749,18 @@ export function ModelViewer({
               </span>
             </div>
           )}
+          {progress == null && !heavy && (
+            <button
+              onClick={() => setTool("medir")}
+              className={cn(
+                "absolute top-3 left-3 z-10 flex max-w-[calc(100%-1.5rem)] items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium",
+                scaleState.tone === "ok" ? "bg-emerald-600 text-white" : scaleState.tone === "warn" ? "bg-amber-400 text-black" : "bg-black/65 text-white",
+              )}
+              title="Ver ou ajustar a escala"
+            >
+              <Ruler className="size-3.5 shrink-0" /> <span className="truncate">{scaleState.label}</span>
+            </button>
+          )}
           {heavy && (
             <div className="absolute inset-0 grid place-items-center p-4">
               <div className="grid max-w-md gap-3 rounded-2xl border bg-background p-5 text-[14px] shadow-lg">
@@ -820,9 +843,20 @@ export function ModelViewer({
               )}
               <div className="grid gap-2 rounded-xl border p-3">
                 <p className="font-medium">Escala do modelo</p>
-                {scale ? (
+                {scale?.source === "marcador" ? (
+                  <p className="text-muted-foreground">
+                    Calculada sozinha pelo marcador ArchRay ({scale.markers} {scale.markers === 1 ? "quadrado" : "quadrados"} em {scale.images} quadros
+                    {scale.spread != null && <>, medidas independentes divergindo {nf(scale.spread * 100, 1)}%</>}).{" "}
+                    {scale.doubtful ? "A divergência está alta: confira medindo algo com trena e recalibre se precisar." : "Para conferir, meça algo conhecido com a ferramenta acima."}
+                  </p>
+                ) : scale ? (
                   <p className="text-muted-foreground">
                     Calibrado: {nf(scale.meters, 3)} m medidos entre dois pontos (fator {scale.factor.toPrecision(5)}). As medidas, áreas e ortofotos já usam essa escala.
+                  </p>
+                ) : fromMotor ? (
+                  <p className="rounded-lg bg-amber-100 p-2.5 text-amber-950 dark:bg-amber-400/15 dark:text-amber-200">
+                    <b>Sem escala.</b> O marcador não apareceu na gravação, então o modelo tem tamanho arbitrário: medidas, áreas e orçamento não valem. Meça
+                    algo de tamanho conhecido (um vão de porta, por exemplo), clique nos dois pontos e informe a medida real.
                   </p>
                 ) : (
                   <p className="text-muted-foreground">
@@ -852,6 +886,11 @@ export function ModelViewer({
           )}
           {tool === "ortofoto" && (
             <div className="grid gap-4 text-[13.5px]">
+              {fromMotor && !scale && (
+                <p className="rounded-lg bg-amber-100 p-2.5 text-amber-950 dark:bg-amber-400/15 dark:text-amber-200">
+                  Modelo sem escala: a ortofoto sai sem medidas e você define a escala depois, no mapa de danos. Ou calibre antes em <b>Medir</b>.
+                </p>
+              )}
               <ol className="grid gap-1.5">
                 {["Canto inferior esquerdo da fachada", "Canto inferior direito", "Um ponto na altura do topo"].map((s, i) => (
                   <li key={s} className={cn("flex items-center gap-2", orthoPts.length > i ? "text-foreground" : "text-muted-foreground")}>

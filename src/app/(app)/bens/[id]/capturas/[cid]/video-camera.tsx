@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ArrowUpRight, CircleHelp, CloudSun, CloudUpload, CornerUpRight, Gauge, MoveHorizontal, Square, X } from "lucide-react";
+import { ArrowUpRight, CircleHelp, CloudSun, CloudUpload, CornerUpRight, Gauge, MoveHorizontal, QrCode, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { FRAME_WINDOW_MS, FrameSelector, MAX_FRAMES, tooFast, type Frame, type FrameVerdict } from "@/lib/video-frames";
 import { coach, COACH_STEPS, TARGET_FRAMES, type Look } from "@/lib/capture-coach";
@@ -11,8 +11,15 @@ const SAMPLE_MS = 200;
 const GUIDE_KEY = "archray-guia-captura";
 const mmss = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
-/** Os 5 passos de uma boa captura, mostrados antes de gravar. */
-const GUIDE = [
+/** Os passos de uma boa captura, mostrados antes de gravar. */
+const GUIDE: { icon: typeof QrCode; title: string; text: string; href?: string; link?: string }[] = [
+  {
+    icon: QrCode,
+    title: "Prenda o marcador de escala",
+    text: "Folha A4 impressa em tamanho real, lisa na parede perto da base. Com ela o ArchRay mede a fachada sozinho; sem ela, você precisará medir com trena.",
+    href: "/marcador",
+    link: "Imprimir o marcador",
+  },
   { icon: MoveHorizontal, title: "Ande de lado, não gire", text: "Caminhe paralelo à fachada, sempre apontando para ela. Girar parado não gera profundidade." },
   { icon: ArrowUpRight, title: "Duas passadas", text: "Primeiro com a câmera reta, na altura do peito. Depois mais afastado, mirando a parte alta e o beiral." },
   { icon: CornerUpRight, title: "Quinas em arco", text: "Vire as esquinas devagar, em curva, para emendar uma fachada na outra." },
@@ -180,6 +187,11 @@ export function VideoCamera({ total, pending, onFrame, onClose }: { total: numbe
                       {i + 1}. {g.title}
                     </span>
                     <span className="block text-[13px] leading-snug text-white/75">{g.text}</span>
+                    {g.href && (
+                      <a href={g.href} target="_blank" rel="noreferrer" className="mt-1 inline-block text-[13px] font-medium text-white underline underline-offset-4">
+                        {g.link}
+                      </a>
+                    )}
                   </span>
                 </li>
               ))}

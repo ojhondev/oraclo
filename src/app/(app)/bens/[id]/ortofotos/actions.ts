@@ -79,10 +79,13 @@ export async function createOrthophoto(siteId: string, input: z.input<typeof cre
   }
   if (data.outputId) {
     const [out] = await db
-      .select({ id: schema.outputs.id })
+      .select({ id: schema.outputs.id, meta: schema.outputs.meta })
       .from(schema.outputs)
       .where(and(eq(schema.outputs.id, data.outputId), eq(schema.outputs.siteId, siteId)));
     if (!out) data.outputId = null;
+    // modelo de fotogrametria sem escala: o mm/pixel seria inventado; a ortofoto nasce sem escala
+    const meta = out?.meta as { source?: string; scale?: unknown } | null | undefined;
+    if (meta?.source === "motor" && !meta.scale) data.mmPerPixel = null;
   }
   if (data.campaignId) {
     const [c] = await db

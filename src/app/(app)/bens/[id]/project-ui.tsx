@@ -12,6 +12,7 @@ export const TABS = [
   { id: "areas", label: "Áreas" },
   { id: "laudo", label: "Laudo" },
   { id: "modelo3d", label: "Modelo 3D", beta: true },
+  { id: "nuvem", label: "Nuvem de pontos", beta: true },
   { id: "ficha", label: "Ficha" },
 ] as const;
 export type TabId = (typeof TABS)[number]["id"];

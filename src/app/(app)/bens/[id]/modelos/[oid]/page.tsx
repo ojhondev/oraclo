@@ -35,7 +35,7 @@ export default async function ModelPage({ params }: PageProps<"/bens/[id]/modelo
     <ModelViewer
       siteId={id}
       orgId={user.orgId}
-      output={{ id: output.id, name: output.name, url: output.url, format: output.format, meta: (output.meta ?? null) as OutputMeta | null }}
+      output={{ id: output.id, name: output.name, url: output.url, format: output.format, bytes: output.bytes, meta: (output.meta ?? null) as OutputMeta | null }}
       layers={siblings}
       elements={elements}
       canEdit={editors.includes(user.role)}

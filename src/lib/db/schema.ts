@@ -12,6 +12,7 @@ import {
   jsonb,
   uniqueIndex,
   index,
+  type AnyPgColumn,
 } from "drizzle-orm/pg-core";
 import type { LaudoDraft } from "@/lib/laudo-text";
 
@@ -192,6 +193,8 @@ export const processingJobs = pgTable("processing_jobs", {
   status: jobStatusEnum("status").notNull().default("na_fila"),
   /** "rapido" (padrão) ou "alta": a alta leva bem mais tempo e gera uma nuvem mais densa. */
   quality: text("quality").notNull().default("rapido"),
+  /** Quando preenchido, o trabalho só prepara essa nuvem para o navegador (sem reprocessar a captura). */
+  outputId: uuid("output_id").references((): AnyPgColumn => outputs.id, { onDelete: "cascade" }),
   progress: integer("progress").notNull().default(0),
   gpuSeconds: integer("gpu_seconds").notNull().default(0),
   costCents: integer("cost_cents").notNull().default(0),

@@ -1,5 +1,5 @@
 // Partes puras do motor 3D (sem rede nem processo), testadas em tests/motor.test.ts.
-import { closeSync, openSync, readSync } from "node:fs";
+import { closeSync, openSync, readSync, writeSync } from "node:fs";
 
 /** Etapa do ODM → etapa mostrada no ArchRay e progresso ao iniciá-la (%). */
 export const ODM_STAGES = {
@@ -84,6 +84,60 @@ export function readLasCount(file) {
     const b = Buffer.alloc(375);
     const n = readSync(fd, b, 0, 375, 0);
     return lasPointCount(b.subarray(0, n));
+  } finally {
+    closeSync(fd);
+  }
+}
+
+/**
+ * Recalcula os limites (min/max) gravados no cabeçalho de um LAS a partir dos próprios pontos.
+ * Arquivos de outros programas às vezes trazem limites arredondados e o conversor recusa o arquivo.
+ * Só para LAS sem compressão; devolve true quando precisou corrigir.
+ */
+export function repairLasBounds(file) {
+  const fd = openSync(file, "r+");
+  try {
+    const h = Buffer.alloc(375);
+    readSync(fd, h, 0, 375, 0);
+    if (h.toString("latin1", 0, 4) !== "LASF") return false;
+    const format = h.readUInt8(104);
+    if (format & 0x80) return false; // LAZ (comprimido)
+    const offset = h.readUInt32LE(96);
+    const recLen = h.readUInt16LE(105);
+    const count = lasPointCount(h);
+    if (!count || recLen < 12) return false;
+    const scale = [h.readDoubleLE(131), h.readDoubleLE(139), h.readDoubleLE(147)];
+    const off = [h.readDoubleLE(155), h.readDoubleLE(163), h.readDoubleLE(171)];
+    const lo = [Infinity, Infinity, Infinity];
+    const hi = [-Infinity, -Infinity, -Infinity];
+    const per = Math.max(1, Math.floor((8 << 20) / recLen));
+    const buf = Buffer.alloc(per * recLen);
+    for (let done = 0; done < count; ) {
+      const n = Math.min(per, count - done);
+      const got = readSync(fd, buf, 0, n * recLen, offset + done * recLen);
+      const pts = Math.floor(got / recLen);
+      if (!pts) break;
+      for (let i = 0; i < pts; i++) {
+        const p = i * recLen;
+        for (let k = 0; k < 3; k++) {
+          const v = buf.readInt32LE(p + k * 4);
+          if (v < lo[k]) lo[k] = v;
+          if (v > hi[k]) hi[k] = v;
+        }
+      }
+      done += pts;
+    }
+    if (!Number.isFinite(lo[0])) return false;
+    const out = Buffer.alloc(48);
+    for (let k = 0; k < 3; k++) {
+      // meia unidade de folga para o arredondamento não deixar pontos de fora
+      out.writeDoubleLE(off[k] + (hi[k] + 0.5) * scale[k], k * 16);
+      out.writeDoubleLE(off[k] + (lo[k] - 0.5) * scale[k], k * 16 + 8);
+    }
+    const before = h.subarray(179, 227);
+    if (before.equals(out)) return false;
+    writeSync(fd, out, 0, 48, 179);
+    return true;
   } finally {
     closeSync(fd);
   }

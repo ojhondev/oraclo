@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { lasPointCount, levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, stageFromLine, stepDetail } from "../scripts/motor-comum.mjs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { lasPointCount, levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, repairLasBounds, stageFromLine, stepDetail } from "../scripts/motor-comum.mjs";
 import { judgeFrame, meanDiff, tooFast } from "@/lib/video-frames";
 
 describe("motor 3D", () => {
@@ -106,5 +107,32 @@ describe("quadros do vídeo", () => {
 
   it("mede a diferença média entre miniaturas", () => {
     expect(meanDiff(new Uint8ClampedArray([10, 20]), new Uint8ClampedArray([20, 20]))).toBe(5);
+  });
+});
+
+describe("limites do LAS", () => {
+  it("recalcula min/max do cabeçalho a partir dos pontos", () => {
+    const h = Buffer.alloc(227 + 2 * 20);
+    h.write("LASF", 0, "latin1");
+    h[24] = 1;
+    h[25] = 2;
+    h.writeUInt16LE(227, 94);
+    h.writeUInt32LE(227, 96);
+    h.writeUInt8(0, 104);
+    h.writeUInt16LE(20, 105);
+    h.writeUInt32LE(2, 107);
+    for (const o of [131, 139, 147]) h.writeDoubleLE(0.001, o);
+    const pts = [[1000, 2000, 3000], [-500, 4000, 2500]];
+    pts.forEach((p, i) => p.forEach((v, k) => h.writeInt32LE(v, 227 + i * 20 + k * 4)));
+    mkdirSync(".cache", { recursive: true });
+    const file = ".cache/teste-limites.las";
+    writeFileSync(file, h);
+    expect(repairLasBounds(file)).toBe(true);
+    const b = readFileSync(file);
+    expect(b.readDoubleLE(179)).toBeCloseTo(1.0005, 6); // max X
+    expect(b.readDoubleLE(187)).toBeCloseTo(-0.5005, 6); // min X
+    expect(b.readDoubleLE(195)).toBeCloseTo(4.0005, 6); // max Y
+    expect(b.readDoubleLE(219)).toBeCloseTo(2.4995, 6); // min Z
+    expect(repairLasBounds(file)).toBe(false);
   });
 });

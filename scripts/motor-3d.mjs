@@ -2,13 +2,15 @@
 // OpenDroneMap e devolve modelo 3D e nuvem de pontos à plataforma.  Uso: npm run motor
 //   MOTOR_UMA_VEZ=1   processa o que houver na fila e encerra (para testes)
 import { spawn, spawnSync } from "node:child_process";
-import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, statSync } from "node:fs";
+import { createReadStream, createWriteStream, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync } from "node:fs";
 import { join } from "node:path";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import { neon } from "@neondatabase/serverless";
 import { put } from "@vercel/blob";
 import sharp from "sharp";
 import { loadEnv } from "./treino-comum.mjs";
-import { levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, readLasCount, stageFromLine, stepDetail } from "./motor-comum.mjs";
+import { levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, readLasCount, repairLasBounds, stageFromLine, stepDetail } from "./motor-comum.mjs";
 
 const env = loadEnv();
 const sql = neon(env.DATABASE_URL);
@@ -120,9 +122,15 @@ function runOdm(job, project, total) {
 async function publishOctree(job, capture, las, dir) {
   if (!existsSync(CONVERTER)) return null;
   const out = join(dir, "potree");
+  try {
+    if (repairLasBounds(las)) log("limites do arquivo corrigidos");
+  } catch (e) {
+    log("aviso: não foi possível conferir os limites:", e.message);
+  }
   const run = spawnSync(CONVERTER, [las, "-o", out, "--overwrite", "--encoding", "BROTLI"], { windowsHide: true });
   if (run.status !== 0) {
-    log("aviso: conversão da nuvem falhou:", String(run.stderr).slice(0, 200));
+    const why = (String(run.stdout) + String(run.stderr)).match(/ERROR[^\n]*\n?[^\n]*/)?.[0] ?? String(run.stderr).slice(0, 200);
+    log("aviso: conversão da nuvem falhou:", why);
     return null;
   }
   const prefix = `orgs/${capture.org_id}/sites/${capture.site_id}/capturas/${capture.id}/resultado/potree-${job.id.slice(0, 8)}`;
@@ -181,7 +189,44 @@ async function quality(job, captureId, dir, total) {
   }
 }
 
+/** Prepara para o navegador uma nuvem que já existe (antiga ou importada): só a conversão em níveis. */
+async function optimizeOutput(job) {
+  const [o] = await sql`select o.id, o.url, o.format, o.meta, o.capture_id, o.site_id, s.org_id from outputs o join sites s on s.id = o.site_id where o.id = ${job.output_id}`;
+  if (!o?.url) throw new Error("Nuvem não encontrada.");
+  const dir = join(PROJECTS, `otimizar-${job.id.slice(0, 8)}`);
+  mkdirSync(dir, { recursive: true });
+  const las = join(dir, `nuvem.${o.format === "laz" ? "laz" : "las"}`);
+  log("baixando a nuvem para otimizar");
+  await sql`update processing_jobs set stage = 'otimizacao', progress = 10 where id = ${job.id}`;
+  const res = await fetch(o.url);
+  if (!res.ok || !res.body) throw new Error(`Não foi possível baixar a nuvem (${res.status}).`);
+  await pipeline(Readable.fromWeb(res.body), createWriteStream(las));
+  await sql`update processing_jobs set progress = 40 where id = ${job.id}`;
+  log("preparando a nuvem em níveis de detalhe");
+  const potree = await publishOctree(job, { org_id: o.org_id, site_id: o.site_id, id: o.capture_id }, las, dir);
+  if (!potree) throw new Error("Não foi possível preparar a nuvem. Confira se o PotreeConverter está instalado no computador do motor.");
+  const points = readLasCount(las);
+  // nivelamento: aproveita a reconstrução do ODM, se a pasta da captura ainda estiver neste computador
+  let level = o.meta?.level ?? null;
+  if (!level && o.capture_id && existsSync(PROJECTS)) {
+    const proj = readdirSync(PROJECTS)
+      .filter((n) => n.startsWith(o.capture_id))
+      .map((n) => join(PROJECTS, n))
+      .find((d) => existsSync(join(d, "opensfm", "reconstruction.json")));
+    if (proj) level = levelOf(proj)?.quaternion ?? null;
+  }
+  await sql`update outputs set point_count = ${points}, meta = coalesce(meta, '{}'::jsonb) || ${JSON.stringify({ potree, points, ...(level ? { level } : {}) })}::jsonb where id = ${o.id}`;
+  if (level && o.capture_id) {
+    await sql`update outputs set meta = coalesce(meta, '{}'::jsonb) || ${JSON.stringify({ level })}::jsonb
+      where capture_id = ${o.capture_id} and (meta->'level' is null or meta->'level' = 'null'::jsonb)`;
+  }
+  rmSync(dir, { recursive: true, force: true });
+  await sql`update processing_jobs set status = 'concluido', stage = 'concluido', progress = 100, finished_at = now() where id = ${job.id}`;
+  log(`nuvem otimizada: ${points?.toLocaleString("pt-BR")} pontos`);
+}
+
 async function processJob(job) {
+  if (job.output_id) return optimizeOutput(job);
   const [capture] = await sql`
     select c.id, c.campaign_id, k.site_id, s.org_id
     from captures c join campaigns k on k.id = c.campaign_id join sites s on s.id = k.site_id
@@ -228,7 +273,7 @@ for (;;) {
     log("falhou:", e.message);
     if (job) {
       await sql`update processing_jobs set status = 'falhou', error = ${String(e.message).slice(0, 500)}, finished_at = now() where id = ${job.id}`;
-      await sql`update captures set status = 'falhou' where id = ${job.capture_id}`;
+      if (!job.output_id) await sql`update captures set status = 'falhou' where id = ${job.capture_id}`;
     }
   }
   clearInterval(beat);

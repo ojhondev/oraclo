@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, Box, Camera, FileText, GitCompareArrows, ImagePlus, MapPin, Pencil, ShieldCheck, Video } from "lucide-react";
+import { ArrowRight, Box, Camera, Download, Orbit, FileText, GitCompareArrows, ImagePlus, MapPin, Pencil, ShieldCheck, Video } from "lucide-react";
 import { capturers, editors, requireUser } from "@/lib/auth";
 import { getSite, getSiteDetail } from "@/lib/sites";
 import { loadDiagnosis } from "@/lib/diagnosis";
@@ -10,7 +10,7 @@ import { nextStep, STEP_LABELS } from "@/lib/next-step";
 import { getLaudoDraft } from "@/lib/laudo-draft";
 import { laudoDefaults, resolveLaudo } from "@/lib/laudo-text";
 import { db, schema } from "@/lib/db";
-import { eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import type { OutputMeta } from "@/lib/model-formats";
 import { elementKinds, protectionLevels, purposes, severities, siteKinds, vistaKinds } from "@/lib/labels";
 import { fmtBytes, fmtDate, todayISO } from "@/lib/format";
@@ -26,6 +26,7 @@ import { ImportModelForm } from "./import-model";
 import { LaudoEditor } from "./laudo-editor";
 import { Bar, Kpi, PriorityBar, Section, TabBar, parseTab, tabHref, type TabId } from "./project-ui";
 import { quickCapture, startCapture } from "./capturas/actions";
+import { OptimizeCloud } from "./modelos/optimize-cloud";
 
 export async function generateMetadata({ params }: PageProps<"/bens/[id]">): Promise<Metadata> {
   const { id } = await params;
@@ -61,6 +62,20 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
   const elementName = Object.fromEntries(elements.map((e) => [e.id, e.name]));
   const qs = dx.campaign ? `?vistoria=${dx.campaign.id}` : "";
   const models = outputs.filter((o) => (o.meta as OutputMeta | null)?.viewable);
+  const clouds = outputs.filter((o) => o.kind === "nuvem");
+  const meshes = models.filter((o) => o.kind !== "nuvem");
+  // nuvens que o motor já está otimizando (para a aba mostrar o andamento)
+  const optimizing =
+    tab === "nuvem" && clouds.length
+      ? new Set(
+          (
+            await db
+              .select({ outputId: schema.processingJobs.outputId })
+              .from(schema.processingJobs)
+              .where(and(inArray(schema.processingJobs.outputId, clouds.map((c) => c.id)), inArray(schema.processingJobs.status, ["na_fila", "rodando"])))
+          ).map((j) => j.outputId),
+        )
+      : new Set<string | null>();
   const vistoriaId = dx.campaign?.id ?? null;
   const captureCount = campaigns.reduce((n, c) => n + c.captures.filter((k) => k.mode !== "laser").length, 0);
   const lastCapture = campaigns.flatMap((c) => c.captures).filter((k) => k.mode !== "laser").at(-1);
@@ -560,14 +575,14 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
           <>
             <Section
               title="Modelo 3D"
-              description="Módulo em teste. Importe um modelo 3D pronto (GLB, nuvem de pontos), calibre a escala com uma medida real e gere vistas em escala das paredes para o mapa de danos."
+              description="Módulo em teste. A malha 3D com textura gerada pela captura em vídeo (ou importada). Calibre a escala com uma medida real e gere vistas em escala das paredes. As nuvens de pontos ficam na aba Nuvem de pontos."
               action={<BetaBadge />}
             >
-              {models.length === 0 ? (
-                <p className="text-[13px] text-muted-foreground">Nenhum modelo importado neste projeto.</p>
+              {meshes.length === 0 ? (
+                <p className="text-[13px] text-muted-foreground">Nenhum modelo 3D neste projeto.</p>
               ) : (
                 <ul className="grid divide-y rounded-lg border">
-                  {models.map((o) => {
+                  {meshes.map((o) => {
                     const scale = (o.meta as OutputMeta | null)?.scale;
                     return (
                       <li key={o.id} className="flex min-w-0 items-center gap-3 px-3 py-2.5 text-[13.5px]">
@@ -606,6 +621,62 @@ export default async function SitePage({ params, searchParams }: PageProps<"/ben
               </Section>
             )}
           </>
+        )}
+
+        {/* ───────── Nuvem de pontos (beta) ───────── */}
+        {tab === "nuvem" && (
+          <Section
+            title="Nuvem de pontos"
+            description="Milhões de pontos medidos da fachada. Nuvens otimizadas abrem na hora e carregam só o que aparece na tela; as demais precisam ser otimizadas uma vez pelo motor."
+            action={<BetaBadge />}
+          >
+            {clouds.length === 0 ? (
+              <p className="text-[13px] text-muted-foreground">
+                Nenhuma nuvem neste projeto ainda. Grave um vídeo em <b className="font-medium text-foreground">Capturar</b> e gere o modelo 3D, ou importe um
+                arquivo LAS na aba{" "}
+                <Link href={link("modelo3d")} className="font-medium underline-offset-4 hover:underline">
+                  Modelo 3D
+                </Link>
+                .
+              </p>
+            ) : (
+              <ul className="grid divide-y rounded-lg border">
+                {clouds.map((o) => {
+                  const meta = o.meta as OutputMeta | null;
+                  const ready = !!meta?.potree;
+                  const viewable = !!meta?.viewable;
+                  const points = o.pointCount ?? meta?.points ?? null;
+                  return (
+                    <li key={o.id} className="flex min-w-0 flex-wrap items-center gap-3 px-3 py-3 text-[13.5px]">
+                      <Orbit className="size-4 shrink-0 text-muted-foreground" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate">{o.name}</span>
+                        <span className="text-[12px] text-muted-foreground">
+                          {points ? `${points.toLocaleString("pt-BR")} pontos · ` : ""}
+                          {fmtBytes(o.bytes)} · {fmtDate(o.createdAt.toISOString().slice(0, 10))}
+                        </span>
+                      </span>
+                      {ready ? (
+                        <Badge variant="secondary">Otimizada</Badge>
+                      ) : ["las", "laz"].includes(o.format) ? (
+                        <OptimizeCloud siteId={site.id} outputId={o.id} canEdit={canEdit} queued={optimizing.has(o.id)} />
+                      ) : null}
+                      <Button size="sm" variant="ghost" asChild>
+                        <a href={o.url ?? "#"} download aria-label="Baixar o arquivo original">
+                          <Download />
+                        </a>
+                      </Button>
+                      {viewable && (ready || o.bytes <= 60 * 1024 * 1024) && (
+                        <Button size="sm" variant="outline" asChild>
+                          <Link href={`/bens/${site.id}/modelos/${o.id}`}>Abrir</Link>
+                        </Button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </Section>
         )}
 
         {/* ───────── Ficha ───────── */}

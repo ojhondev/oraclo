@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
 import { del } from "@vercel/blob";
 import { z } from "zod";
 import { db, schema } from "@/lib/db";
@@ -118,7 +118,7 @@ export async function requestModel(siteId: string, captureId: string, quality: "
   const [running] = await db
     .select({ id: processingJobs.id })
     .from(processingJobs)
-    .where(and(eq(processingJobs.captureId, captureId), inArray(processingJobs.status, ["na_fila", "rodando"])))
+    .where(and(eq(processingJobs.captureId, captureId), isNull(processingJobs.outputId), inArray(processingJobs.status, ["na_fila", "rodando"])))
     .limit(1);
   if (running) return { error: "Esta captura já está na fila." };
   await db.insert(processingJobs).values({ captureId, quality: quality === "alta" ? "alta" : "rapido" });
@@ -132,7 +132,7 @@ export async function modelStatus(siteId: string, captureId: string) {
   const user = await requireUser();
   await getSite(user.orgId, siteId);
   await getCapture(siteId, captureId);
-  const [job] = await db.select().from(processingJobs).where(eq(processingJobs.captureId, captureId)).orderBy(desc(processingJobs.createdAt)).limit(1);
+  const [job] = await db.select().from(processingJobs).where(and(eq(processingJobs.captureId, captureId), isNull(processingJobs.outputId))).orderBy(desc(processingJobs.createdAt)).limit(1);
   const [beat] = await db.select().from(motorHeartbeat).limit(1);
   return { job: job ?? null, motorOnline: !!beat && Date.now() - beat.lastSeen.getTime() < 2 * 60_000 };
 }

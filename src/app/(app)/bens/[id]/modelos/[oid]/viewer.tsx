@@ -14,12 +14,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleSelect } from "@/components/form";
 import { parsePointCloud, type PointCloud } from "@/lib/pointcloud";
+import { OptimizeCloud } from "../optimize-cloud";
 import type { ModelScale, OutputMeta } from "@/lib/model-formats";
 import { createOrthophoto } from "../../ortofotos/actions";
 import { clearModelScale, saveModelScale } from "./actions";
 
 type Tool = "orbitar" | "medir" | "ortofoto";
-type Output = { id: string; name: string; url: string; format: string; meta: OutputMeta | null };
+type Output = { id: string; name: string; url: string; format: string; bytes: number; meta: OutputMeta | null };
+
+/** Acima disso, uma nuvem sem níveis de detalhe trava o navegador: pedimos para otimizar antes de abrir. */
+const HEAVY_BYTES = 60 * 1024 * 1024;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 type View = "frente" | "lado" | "topo" | "perspectiva";
 type Pot = {
   potree: import("potree-core").Potree;
@@ -80,6 +85,10 @@ export function ModelViewer({
     grid: THREE.GridHelper | null;
     box: THREE.Box3 | null;
     size: number;
+    /** Avisa o laço de desenho que algo mudou (redesenha na hora em vez de esperar). */
+    wake: () => void;
+    /** Enquanto a ortofoto escolhe o detalhe da nuvem, a câmera da tela não mexe nos níveis. */
+    lodPaused: boolean;
   } | null>(null);
   const [progress, setProgress] = useState<number | null>(0);
   const [error, setError] = useState<string | null>(null);
@@ -101,6 +110,7 @@ export function ModelViewer({
   toolRef.current = tool;
 
   const upAxis = output.meta?.upAxis ?? (output.format === "glb" ? "y" : "z");
+  const heavy = !output.meta?.potree && output.format !== "glb" && output.bytes > HEAVY_BYTES;
 
   /** Leva a câmera a uma vista pronta, olhando para o centro do modelo. */
   function goTo(view: View) {
@@ -117,7 +127,8 @@ export function ModelViewer({
   useEffect(() => {
     const wrap = wrapRef.current!;
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // nuvens pesam por pixel: acima de 1,5× a diferença não aparece e o custo dobra
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, output.meta?.potree ? 1.5 : 2));
     renderer.setSize(wrap.clientWidth, wrap.clientHeight);
     // cores de nuvem já estão em sRGB (passam direto); texturas de malha GLB pedem saída sRGB
     renderer.outputColorSpace = output.format === "glb" ? THREE.SRGBColorSpace : THREE.LinearSRGBColorSpace;
@@ -140,14 +151,49 @@ export function ModelViewer({
     // marcações ficam numa cena à parte, desenhada por cima da nuvem
     const overlayScene = new THREE.Scene();
     overlayScene.add(overlay);
-    three.current = { renderer, scene, camera, controls, root, overlay, points: null, pot: null, grid: null, box: null, size: 1 };
+    let active = performance.now();
+    const wake = () => (active = performance.now());
+    controls.addEventListener("change", wake);
+    three.current = { renderer, scene, camera, controls, root, overlay, points: null, pot: null, grid: null, box: null, size: 1, wake, lodPaused: false };
     // só em desenvolvimento: permite testes automatizados apontarem para pontos do modelo
-    if (process.env.NODE_ENV !== "production") (window as unknown as { __oracloViewer?: unknown }).__oracloViewer = three.current;
+    if (process.env.NODE_ENV !== "production") Object.assign(window, { __oracloViewer: three.current, __THREE: THREE });
 
     let raf = 0;
+    let lastIdle = 0;
+    let prev = performance.now();
+    let slow = 0;
+    let fast = 0;
+    let budgetMax = 0;
     const loop = () => {
+      raf = requestAnimationFrame(loop);
+      const now = performance.now();
+      const dt = now - prev;
+      prev = now;
+      // a ortofoto está usando a nuvem com a câmera dela: a tela espera
+      if (three.current?.lodPaused) return;
       controls.update();
       const pot = three.current?.pot;
+      const loading = !!pot && pot.pco.pcoGeometry.numNodesLoading > 0;
+      const moving = now - active < 1200;
+      // parado e sem nada chegando: redesenha poucas vezes por segundo e poupa o computador
+      if (!moving && !loading) {
+        if (now - lastIdle < 500) return;
+        lastIdle = now;
+      } else if (pot && moving && budgetMax) {
+        // ajusta quantos pontos desenhar ao que este computador aguenta
+        if (dt > 55) {
+          if (++slow > 12) {
+            pot.potree.pointBudget = Math.max(300_000, Math.round(pot.potree.pointBudget * 0.75));
+            slow = 0;
+          }
+        } else slow = 0;
+        if (dt < 22) {
+          if (++fast > 90 && pot.potree.pointBudget < budgetMax) {
+            pot.potree.pointBudget = Math.min(budgetMax, Math.round(pot.potree.pointBudget * 1.2));
+            fast = 0;
+          }
+        } else fast = 0;
+      }
       if (pot) {
         pot.potree.updatePointClouds([pot.pco], camera, renderer);
         pot.renderer.render({ renderer, scene, camera, pointClouds: [pot.pco] });
@@ -158,10 +204,10 @@ export function ModelViewer({
         renderer.render(overlayScene, camera);
         renderer.autoClear = true;
       }
-      raf = requestAnimationFrame(loop);
     };
     loop();
     const ro = new ResizeObserver(() => {
+      wake();
       renderer.setSize(wrap.clientWidth, wrap.clientHeight);
       camera.aspect = wrap.clientWidth / Math.max(1, wrap.clientHeight);
       camera.updateProjectionMatrix();
@@ -188,12 +234,19 @@ export function ModelViewer({
     // carrega o arquivo com progresso
     (async () => {
       try {
+        if (heavy) {
+          // arquivo grande sem níveis de detalhe: não baixa (travaria a aba); a tela oferece otimizar
+          setProgress(null);
+          return;
+        }
         if (output.meta?.potree) {
           // nuvem em níveis de detalhe: baixa por partes, só o que aparece na tela
           const lib = await import("potree-core");
           const potree = new lib.Potree();
           const memory = (navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8;
-          potree.pointBudget = window.innerWidth < 768 ? 700_000 : memory <= 4 ? 1_200_000 : 2_500_000;
+          // começa modesto e sobe sozinho se o computador der conta (ver o laço de desenho)
+          budgetMax = window.innerWidth < 768 ? 800_000 : memory <= 4 ? 1_500_000 : 3_000_000;
+          potree.pointBudget = Math.round(budgetMax / 2);
           const base = output.meta.potree;
           // o armazenamento recusa o content-type que a biblioteca envia: pedimos só o intervalo de bytes
           const pco = await potree.loadPointCloud("metadata.json", {
@@ -322,15 +375,18 @@ export function ModelViewer({
     const t = three.current;
     if (t?.points) (t.points.material as THREE.PointsMaterial).size = pointSize;
     if (t?.pot) t.pot.pco.material.size = pointSize / 2;
+    t?.wake();
   }, [pointSize]);
 
   useEffect(() => {
     three.current?.pot?.renderer.setEDL({ enabled: edl, strength: 0.7, radius: 1.3 });
+    three.current?.wake();
   }, [edl, progress]);
 
   useEffect(() => {
     const grid = three.current?.grid;
     if (grid) grid.visible = showGrid;
+    three.current?.wake();
   }, [showGrid, progress]);
 
   /* ── marcadores (medição e ortofoto) ── */
@@ -338,6 +394,7 @@ export function ModelViewer({
     const t = three.current;
     if (!t) return;
     t.overlay.clear();
+    t.wake();
     const r = t.size / 400;
     const dot = (p: THREE.Vector3, color: number) => {
       const m = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 12), new THREE.MeshBasicMaterial({ color, depthTest: false }));
@@ -410,23 +467,72 @@ export function ModelViewer({
     else setOrthoPts((m) => (m.length >= 3 ? [p] : [...m, p]));
   }, [pointAt]);
 
-  /** A ortofoto precisa de todos os pontos, não só dos visíveis: baixa a nuvem completa quando é preciso. */
-  async function ensureFullCloud() {
+  /**
+   * Para a ortofoto, a nuvem em níveis carrega o detalhe da área escolhida com a câmera da
+   * própria ortofoto (até um teto de pontos), em vez de baixar o arquivo inteiro.
+   */
+  async function loadDetailFor(cam: THREE.OrthographicCamera, frame: NonNullable<ReturnType<typeof orthoFrame>>, front: number, back: number) {
     const t = three.current;
-    if (!t?.pot || t.points) return;
-    setGen("Baixando a nuvem completa…");
-    const res = await fetch(output.url);
-    if (!res.ok) throw new Error("Não foi possível baixar a nuvem.");
-    const pc: PointCloud = parsePointCloud(output.format, await res.arrayBuffer());
+    const pot = t?.pot;
+    if (!t || !pot) return { points: null, restore: () => {} };
+    const old = { budget: pot.potree.pointBudget, minPx: pot.pco.minNodePixelSize };
+    const memory = (navigator as unknown as { deviceMemory?: number }).deviceMemory ?? 8;
+    t.lodPaused = true;
+    pot.potree.pointBudget = memory <= 4 ? 3_000_000 : 6_000_000;
+    pot.pco.minNodePixelSize = 1;
+    let calm = 0;
+    for (let i = 0; i < 900 && calm < 4; i++) {
+      pot.potree.updatePointClouds([pot.pco], cam, t.renderer);
+      await sleep(120);
+      calm = pot.pco.pcoGeometry.numNodesLoading === 0 ? calm + 1 : 0;
+      if (i % 4 === 0) setGen(`Carregando detalhes… ${pot.pco.numVisiblePoints.toLocaleString("pt-BR")} pontos`);
+    }
+    pot.potree.updatePointClouds([pot.pco], cam, t.renderer);
+
+    // junta numa nuvem comum só os pontos carregados que caem dentro da área (o desenho comum é confiável na ortográfica)
+    setGen("Montando a área…");
+    await sleep(0);
+    const w = new THREE.Vector3();
+    const keep: number[] = [];
+    const cols: number[] = [];
+    for (const node of pot.pco.visibleNodes) {
+      const geo = (node.sceneNode as THREE.Points).geometry;
+      const pos = geo?.attributes.position as THREE.BufferAttribute | undefined;
+      if (!pos) continue;
+      const rgba = geo.attributes.rgba as THREE.BufferAttribute | undefined;
+      const m = node.sceneNode.matrixWorld;
+      for (let i = 0; i < pos.count; i++) {
+        w.fromBufferAttribute(pos, i).applyMatrix4(m).sub(frame.a);
+        const du = w.dot(frame.u), dv = w.dot(frame.v), dn = w.dot(frame.n);
+        if (du < 0 || du > frame.width || dv < 0 || dv > frame.height || dn > front || dn < -back) continue;
+        keep.push(w.x, w.y, w.z);
+        if (rgba) {
+          const arr = rgba.array as Uint8Array;
+          cols.push(arr[i * 4]!, arr[i * 4 + 1]!, arr[i * 4 + 2]!);
+        } else cols.push(180, 180, 180);
+      }
+    }
     const geo = new THREE.BufferGeometry();
-    geo.setAttribute("position", new THREE.BufferAttribute(pc.positions, 3));
-    if (pc.colors) geo.setAttribute("color", new THREE.BufferAttribute(pc.colors, 3, true));
-    const pts = new THREE.Points(geo, new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, vertexColors: !!pc.colors }));
-    pts.position.set(...pc.origin);
-    pts.visible = false;
-    t.root.add(pts);
-    t.root.updateMatrixWorld(true);
-    t.points = pts;
+    geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(keep), 3));
+    geo.setAttribute("color", new THREE.BufferAttribute(new Uint8Array(cols), 3, true));
+    const points = new THREE.Points(geo, new THREE.PointsMaterial({ size: 2, sizeAttenuation: false, vertexColors: true }));
+    points.position.copy(frame.a); // coordenadas relativas ao canto: sem perder precisão
+    t.scene.add(points);
+    points.updateMatrixWorld(true);
+    pot.pco.visible = false;
+    return {
+      points,
+      restore: () => {
+        t.scene.remove(points);
+        geo.dispose();
+        (points.material as THREE.Material).dispose();
+        pot.pco.visible = true;
+        pot.potree.pointBudget = old.budget;
+        pot.pco.minNodePixelSize = old.minPx;
+        t.lodPaused = false;
+        t.wake();
+      },
+    };
   }
 
   const frame = orthoPts.length === 3 ? orthoFrame(orthoPts) : null;
@@ -445,11 +551,6 @@ export function ModelViewer({
     if (Math.max(pxW, pxH) > 16000 || pxW * pxH > 150_000_000) return toast.error("Imagem grande demais. Aumente o mm/pixel.");
     setGen("Renderizando…");
     try {
-      await ensureFullCloud();
-      if (t.pot) {
-        t.pot.pco.visible = false;
-        t.points!.visible = true;
-      }
       if (t.grid) t.grid.visible = false;
       const gl = t.renderer.getContext();
       const maxTex = Math.min(4096, gl.getParameter(gl.MAX_TEXTURE_SIZE) as number);
@@ -459,9 +560,12 @@ export function ModelViewer({
       cam.up.copy(frame.v);
       cam.lookAt(center);
       cam.updateMatrixWorld(true);
+      const detail = await loadDetailFor(cam, frame, front, back);
+      const restoreLod = detail.restore;
+      if (t.points && detail.points) t.points.visible = false;
 
       // pontos: tamanho em pixels que fecha os buracos na resolução escolhida
-      const pts = t.points;
+      const pts = detail.points ?? t.points;
       const oldSize = pts ? (pts.material as THREE.PointsMaterial).size : 0;
       if (pts) {
         const pos = pts.geometry.attributes.position as THREE.BufferAttribute;
@@ -506,10 +610,7 @@ export function ModelViewer({
       t.scene.background = oldBg;
       t.overlay.visible = true;
       if (pts) (pts.material as THREE.PointsMaterial).size = oldSize;
-      if (t.pot) {
-        t.pot.pco.visible = true;
-        t.points!.visible = false;
-      }
+      restoreLod();
       if (t.grid) t.grid.visible = showGrid;
 
       setGen("Enviando…");
@@ -635,6 +736,21 @@ export function ModelViewer({
               <span className="flex items-center gap-2 rounded-full bg-black/70 px-4 py-2">
                 <Loader2 className="size-4 animate-spin" /> Carregando modelo… {progress}%
               </span>
+            </div>
+          )}
+          {heavy && (
+            <div className="absolute inset-0 grid place-items-center p-4">
+              <div className="grid max-w-md gap-3 rounded-2xl border bg-background p-5 text-[14px] shadow-lg">
+                <p className="text-[16px] font-medium">Esta nuvem precisa ser otimizada antes de abrir</p>
+                <p className="text-muted-foreground">
+                  O arquivo tem {Math.round(output.bytes / 1024 / 1024)} MB. Aberto inteiro, ele trava o navegador. Otimizada, a nuvem abre
+                  na hora e carrega só o que aparece na tela, como num mapa.
+                </p>
+                <OptimizeCloud siteId={siteId} outputId={output.id} canEdit={canEdit} size="default" onReady={() => window.location.reload()} />
+                <a href={output.url} download className="text-[13px] text-muted-foreground underline-offset-4 hover:underline">
+                  Ou baixe o arquivo original ({output.format.toUpperCase()})
+                </a>
+              </div>
             </div>
           )}
           {error && (

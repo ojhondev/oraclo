@@ -1,12 +1,18 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { fmtPostDate, getPosts } from "@/lib/updates";
+import { fmtPostDate, getArticles, getPosts } from "@/lib/updates";
 import { getLang } from "@/lib/site/get-lang";
 import { Cover, PostCard } from "../post-card";
 
 export async function generateMetadata(): Promise<Metadata> {
   const en = (await getLang()) === "en";
-  return { title: "Index", description: en ? "News and improvements on the ArchRay platform." : "Novidades e melhorias da plataforma ArchRay." };
+  return {
+    title: en ? "Index: news and guides" : "Index: novidades e guias técnicos",
+    description: en
+      ? "News on the ArchRay platform and technical guides on damage mapping, façade inspection, photogrammetry and heritage conservation."
+      : "Novidades do ArchRay e guias técnicos sobre mapa de danos, inspeção de fachadas, manifestações patológicas, fotogrametria e restauro.",
+    alternates: { canonical: "/index" },
+  };
 }
 
 /** Index na estrutura da redação da Anthropic: "Últimas" e grade editorial em três colunas com o destaque no centro. */
@@ -79,6 +85,9 @@ export default async function IndexPage() {
         </div>
       )}
 
+      {/* guias técnicos (artigos), por tema */}
+      <GuideSections />
+
       {/* todas as publicações, em lista */}
       <div className="mt-20 flex items-baseline justify-between border-y py-3">
         <h2 className="text-[13.5px] font-bold">{en ? "All posts" : "Todas as publicações"}</h2>
@@ -97,5 +106,37 @@ export default async function IndexPage() {
         ))}
       </ul>
     </div>
+  );
+}
+
+/** Ordem dos temas dos guias no Index. */
+const GUIDE_ORDER = ["Mapa de danos", "Manifestações patológicas", "Inspeção e laudo", "Tecnologia", "Restauro e patrimônio"];
+
+/** Guias técnicos agrupados por tema, com capa. */
+function GuideSections() {
+  const articles = getArticles();
+  if (!articles.length) return null;
+  const cats = [...new Set([...GUIDE_ORDER, ...articles.map((a) => a.category)])].filter((c) => articles.some((a) => a.category === c));
+  return (
+    <section className="mt-20">
+      <div className="flex items-baseline justify-between border-y py-3">
+        <h2 className="text-[13.5px] font-bold">Guias técnicos</h2>
+        <span className="text-[12.5px] text-muted-foreground">{articles.length} artigos</span>
+      </div>
+      {cats.map((c) => (
+        <div key={c} className="border-b py-8">
+          <h3 className="a-tag">{c}</h3>
+          <ul className="mt-5 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {articles
+              .filter((a) => a.category === c)
+              .map((a) => (
+                <li key={a.slug}>
+                  <PostCard post={a} />
+                </li>
+              ))}
+          </ul>
+        </div>
+      ))}
+    </section>
   );
 }

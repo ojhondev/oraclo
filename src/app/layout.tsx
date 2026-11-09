@@ -24,7 +24,13 @@ const serif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "https://archray.com.br"),
   title: { default: "ArchRay", template: "%s · ArchRay" },
+  applicationName: "ArchRay",
+  openGraph: { type: "website", siteName: "ArchRay", locale: "pt_BR", images: ["/site/showcase-fachada.jpg"] },
+  twitter: { card: "summary_large_image" },
+  // código do Google Search Console (Configurações → Propriedade → Verificação por tag HTML)
+  verification: process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : undefined,
   description:
     "Mapa de danos com IA: aponte os danos sobre fachadas e plantas em escala e receba quantitativos, orçamento do tratamento e laudo prontos.",
   appleWebApp: { capable: true, title: "ArchRay", statusBarStyle: "default" },

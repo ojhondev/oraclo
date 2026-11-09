@@ -5,6 +5,7 @@
 
 import { locale, type Lang } from "./site/lang";
 import { POSTS_EN } from "./updates-en";
+import { ARTICLES } from "./articles";
 
 export type PostBlock =
   | { p: string }
@@ -27,6 +28,14 @@ export type Post = {
   sections: PostSection[];
   author: string;
   notes?: string[];
+  /** Artigos (guias): foto de capa em /public, palavras-chave, perguntas frequentes e data de revisão. */
+  image?: string;
+  imageAlt?: string;
+  keywords?: string[];
+  faq?: { q: string; a: string }[];
+  updated?: string;
+  /** Título para o Google, quando diferente do título da página (até ~60 caracteres). */
+  seoTitle?: string;
 };
 
 export const POSTS: Post[] = [
@@ -307,7 +316,12 @@ export const POSTS: Post[] = [
 
 export const latestPost = POSTS[0];
 
-export const getPost = (slug: string, lang: Lang = "pt") => getPosts(lang).find((p) => p.slug === slug);
+/** Publicação ou artigo pelo endereço. Os artigos existem só em português e aparecem nos dois idiomas. */
+export const getPost = (slug: string, lang: Lang = "pt") => getPosts(lang).find((p) => p.slug === slug) ?? ARTICLES.find((a) => a.slug === slug);
+
+/** Artigos (guias técnicos para busca), do mais recente para o mais antigo. */
+export const getArticles = (): Post[] => [...ARTICLES].sort((a, b) => b.date.localeCompare(a.date));
+export const isArticle = (slug: string) => ARTICLES.some((a) => a.slug === slug);
 
 /** Publicações no idioma do site público (o app usa sempre o português). */
 export const getPosts = (lang: Lang): Post[] => (lang === "en" ? POSTS_EN : POSTS);

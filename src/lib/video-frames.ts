@@ -4,6 +4,7 @@
  * de envio das fotos e seguem para a fotogrametria no motor.
  */
 import { isBlurry, measureSharpness } from "./capture-queue";
+import { lookOf, type Look } from "./capture-coach";
 
 /** Duração de cada janela: um quadro guardado por janela. */
 export const FRAME_WINDOW_MS = 800;
@@ -69,6 +70,8 @@ export class FrameSelector {
   private gap = 0;
   kept = 0;
   verdicts: FrameVerdict[] = [];
+  /** Como a última janela parecia (escura, céu, parede lisa), para o treinador da tela. */
+  look: Look | null = null;
 
   offer(source: CanvasImageSource, w: number, h: number) {
     const s = measureSharpness(source, w, h);
@@ -91,6 +94,7 @@ export class FrameSelector {
     const sharpness = this.best;
     const diff = this.lastThumb && this.thumb ? meanDiff(this.lastThumb, this.thumb) : null;
     const verdict = judgeFrame({ sharpness, recent: this.recent, diff, gap: this.gap });
+    if (this.thumb) this.look = lookOf(this.thumb);
     this.verdicts = [...this.verdicts, verdict].slice(-8);
     this.filled = false;
     this.best = null;

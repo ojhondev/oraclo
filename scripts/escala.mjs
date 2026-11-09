@@ -13,6 +13,19 @@ const { AR } = require("js-aruco2");
  */
 export const MARKER = { dictionary: "ARUCO_MIP_36h12", ids: [7, 23], side: 0.09, gap: 0.16 };
 
+/**
+ * Barra de escala: duas folhas A4, uma com cada marcador (quadrado de 15 cm), presas com os centros
+ * a exatamente 1,00 m. A distância maior pesa menos o erro de detecção e é lida de mais longe.
+ */
+export const BAR = { ids: [41, 57], side: 0.15, gap: 1.0 };
+
+/** Conjuntos que o motor procura, do mais preciso para o menos. */
+export const MARKER_SETS = [
+  { kind: "barra", ...BAR },
+  { kind: "folha", ids: MARKER.ids, side: MARKER.side, gap: MARKER.gap },
+];
+const ALL_IDS = MARKER_SETS.flatMap((m) => m.ids);
+
 /** Diferença tolerada entre as medidas independentes (lados de cada quadrado e distância entre eles). */
 export const MAX_SPREAD = 0.03;
 
@@ -22,7 +35,7 @@ export function detectMarkers(width, height, rgba) {
   detector ??= new AR.Detector({ dictionaryName: MARKER.dictionary });
   return detector
     .detectImage(width, height, rgba)
-    .filter((m) => MARKER.ids.includes(m.id))
+    .filter((m) => ALL_IDS.includes(m.id))
     .map((m) => ({ id: m.id, corners: m.corners.map((c) => [c.x, c.y]) }));
 }
 
@@ -156,33 +169,50 @@ export function scaleFromDetections(detections, reconstruction) {
     const p = triangulate(views);
     if (p) corners[key] = { p, views: views.length };
   }
-  const measures = []; // { kind, units, meters }
-  const centers = {};
-  for (const id of MARKER.ids) {
-    const c = [0, 1, 2, 3].map((k) => corners[`${id}:${k}`]?.p);
-    if (c.some((p) => !p)) continue;
-    for (let k = 0; k < 4; k++) measures.push({ kind: `lado ${id}`, units: norm(sub(c[k], c[(k + 1) % 4])), meters: MARKER.side, a: c[k], b: c[(k + 1) % 4] });
-    centers[id] = [0, 1, 2].map((i) => (c[0][i] + c[1][i] + c[2][i] + c[3][i]) / 4);
+  // cada conjunto dá duas estimativas independentes: pelos lados dos quadrados e pela distância entre os centros
+  const results = [];
+  for (const set of MARKER_SETS) {
+    const sideFactors = [];
+    const centers = {};
+    for (const id of set.ids) {
+      const c = [0, 1, 2, 3].map((k) => corners[`${id}:${k}`]?.p);
+      if (c.some((p) => !p)) continue;
+      for (let k = 0; k < 4; k++) sideFactors.push(set.side / norm(sub(c[k], c[(k + 1) % 4])));
+      centers[id] = [0, 1, 2].map((i) => (c[0][i] + c[1][i] + c[2][i] + c[3][i]) / 4);
+    }
+    if (!sideFactors.length) continue;
+    sideFactors.sort((x, y) => x - y);
+    // mediana: um canto mal detectado não puxa o resultado
+    const bySides = sideFactors[Math.floor(sideFactors.length / 2)];
+    const [ia, ib] = set.ids;
+    const both = centers[ia] && centers[ib];
+    const byGap = both ? set.gap / norm(sub(centers[ia], centers[ib])) : null;
+    results.push({
+      kind: set.kind,
+      // a distância entre os centros é a medida mais longa, logo a mais precisa
+      factor: byGap ?? bySides,
+      meters: both ? set.gap : set.side,
+      a: both ? centers[ia] : corners[`${set.ids.find((id) => centers[id])}:0`].p,
+      b: both ? centers[ib] : corners[`${set.ids.find((id) => centers[id])}:1`].p,
+      markers: Object.keys(centers).length,
+      agreement: byGap ? Math.abs(bySides / byGap - 1) : null,
+    });
   }
-  const [ia, ib] = MARKER.ids;
-  if (centers[ia] && centers[ib]) measures.push({ kind: "entre marcadores", units: norm(sub(centers[ia], centers[ib])), meters: MARKER.gap, a: centers[ia], b: centers[ib] });
-  if (!measures.length) return null;
-
-  const factors = measures.map((m) => m.meters / m.units).sort((x, y) => x - y);
-  // mediana: um canto mal detectado não puxa o resultado
-  const factor = factors[Math.floor(factors.length / 2)];
-  const spread = factors.length > 1 ? factors[factors.length - 1] / factors[0] - 1 : null;
-  // a medida mais longa e confiável vira a referência gravada (dois pontos, como na calibração manual)
-  const ref = measures.find((m) => m.kind === "entre marcadores") ?? measures[0];
+  if (!results.length) return null;
+  const main = results.find((r) => r.markers === 2) ?? results[0];
+  // conferência: lados × distância no conjunto principal e, se houver, entre conjuntos diferentes
+  const checks = results.map((r) => r.agreement).filter((v) => v != null);
+  for (const r of results) if (r !== main && r.markers === 2) checks.push(Math.abs(r.factor / main.factor - 1));
+  const spread = checks.length ? Math.max(...checks) : null;
   return {
-    factor,
-    meters: ref.meters,
-    a: ref.a,
-    b: ref.b,
-    markers: Object.keys(centers).length,
-    measures: measures.length,
+    factor: main.factor,
+    meters: main.meters,
+    a: main.a,
+    b: main.b,
+    kind: main.kind,
+    markers: results.reduce((n, r) => n + r.markers, 0),
     spread,
     images: detections.filter((d) => d.markers.length).length,
-    doubtful: spread == null || spread > MAX_SPREAD || Object.keys(centers).length < 2,
+    doubtful: spread == null || spread > MAX_SPREAD || main.markers < 2,
   };
 }

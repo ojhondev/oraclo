@@ -227,7 +227,7 @@ async function publish(job, capture, dir) {
   await sql`update processing_jobs set stage = 'escala' where id = ${job.id}`;
   const auto = await autoScale(dir);
   const scale = auto
-    ? { factor: auto.factor, meters: auto.meters, a: auto.a, b: auto.b, at: new Date().toISOString(), source: "marcador", spread: auto.spread, markers: auto.markers, images: auto.images, doubtful: auto.doubtful }
+    ? { factor: auto.factor, meters: auto.meters, a: auto.a, b: auto.b, at: new Date().toISOString(), source: "marcador", kind: auto.kind, spread: auto.spread, markers: auto.markers, images: auto.images, doubtful: auto.doubtful }
     : null;
   const cloud = results.find((r) => r.kind === "nuvem");
   log("preparando a nuvem em níveis de detalhe");

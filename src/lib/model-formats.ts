@@ -36,6 +36,8 @@ export type ModelScale = {
   at: string;
   /** "marcador" = calculada sozinha pelo motor; ausente = medida com trena na calibração manual. */
   source?: "marcador" | "manual";
+  /** Qual marcador deu a escala: a folha única ou a barra de 1 m. */
+  kind?: "folha" | "barra";
   /** Divergência entre as medidas independentes do marcador (0,01 = 1%). */
   spread?: number | null;
   markers?: number;

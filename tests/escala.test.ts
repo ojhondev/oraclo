@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import sharp from "sharp";
-import { bearing, detectMarkers, markerSvg, MARKER, project, rodrigues, scaleFromDetections, triangulate } from "../scripts/escala.mjs";
+import { BAR, bearing, detectMarkers, markerSvg, MARKER, project, rodrigues, scaleFromDetections, triangulate } from "../scripts/escala.mjs";
 
 const W = 1600, H = 1200;
 const cam = { projection_type: "brown", focal_x: 0.85, focal_y: 0.85, c_x: 0.002, c_y: -0.003, k1: -0.08, k2: 0.02, k3: 0, p1: 0.0005, p2: -0.0003 };
@@ -94,10 +94,48 @@ describe("detecção na imagem", () => {
 
 describe("marcador impresso", () => {
   it("a página de impressão usa os mesmos ids e medidas que o motor procura", async () => {
-    const { SCALE_MARKER, MARKER_SVG } = await import("@/lib/scale-marker");
+    const { SCALE_MARKER, SCALE_BAR, MARKER_SVG } = await import("@/lib/scale-marker");
+    expect([...SCALE_BAR.ids]).toEqual(BAR.ids);
+    expect(SCALE_BAR.sideMm).toBeCloseTo(BAR.side * 1000, 6);
+    expect(SCALE_BAR.gapMm).toBeCloseTo(BAR.gap * 1000, 6);
+    for (const id of BAR.ids) expect(MARKER_SVG[id]).toBe(markerSvg(id));
     expect([...SCALE_MARKER.ids]).toEqual(MARKER.ids);
     expect(SCALE_MARKER.sideMm).toBeCloseTo(MARKER.side * 1000, 6);
     expect(SCALE_MARKER.gapMm).toBeCloseTo(MARKER.gap * 1000, 6);
     for (const id of MARKER.ids) expect(MARKER_SVG[id]).toBe(markerSvg(id));
+  });
+});
+
+describe("barra de escala de 1 m", () => {
+  const u = 2.6; // modelo com escala arbitrária
+  const square = (cy: number, side: number) => [[0, cy - side / 2, side / 2], [0, cy + side / 2, side / 2], [0, cy + side / 2, -side / 2], [0, cy - side / 2, -side / 2]];
+  function scene(ids: number[], dist: number) {
+    const s = BAR.side * u, g = BAR.gap * u;
+    const A = square(-g / 2, s), B = square(g / 2, s);
+    let seed = 11;
+    const noise = () => ((seed = (seed * 16807) % 2147483647) / 2147483647 - 0.5) * 1.2; // ±0,6 px
+    const shots: Record<string, ReturnType<typeof shotAt>> = {};
+    const detections = [];
+    for (let i = 0; i < 10; i++) {
+      const ang = -0.5 + (i / 9) * 1.0;
+      const name = `b${i}.jpg`;
+      shots[name] = shotAt([Math.cos(ang) * dist * u, Math.sin(ang) * dist * u, 0.3 * u]);
+      const markers = [
+        { id: BAR.ids[0]!, corners: A.map((p) => project(cam, shots[name]!, p, W, H).map((v) => v + noise())) },
+        { id: BAR.ids[1]!, corners: B.map((p) => project(cam, shots[name]!, p, W, H).map((v) => v + noise())) },
+      ].filter((m) => ids.includes(m.id));
+      detections.push({ image: name, width: W, height: H, markers });
+    }
+    return scaleFromDetections(detections, { shots, cameras: { c: cam } });
+  }
+  it("lida de 5 m acerta a escala com folga", () => {
+    const r = scene([...BAR.ids], 5)!;
+    expect(r.kind).toBe("barra");
+    expect(Math.abs(r.factor * u - 1)).toBeLessThan(0.005);
+    expect(r.doubtful).toBe(false);
+  });
+  it("com só uma das folhas vista, a escala fica marcada como duvidosa", () => {
+    const r = scene([BAR.ids[0]!], 4)!;
+    expect(r.doubtful).toBe(true);
   });
 });

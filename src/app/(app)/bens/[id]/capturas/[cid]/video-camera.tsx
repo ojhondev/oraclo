@@ -16,7 +16,7 @@ const GUIDE: { icon: typeof QrCode; title: string; text: string; href?: string; 
   {
     icon: QrCode,
     title: "Prenda o marcador de escala",
-    text: "Folha A4 impressa em tamanho real, lisa na parede perto da base. Com ela o ArchRay mede a fachada sozinho; sem ela, você precisará medir com trena.",
+    text: "Folha impressa em tamanho real, lisa na parede na altura da cintura. Comece a gravar perto dela, de ângulos diferentes. Com ela o ArchRay mede a fachada sozinho; sem ela, você mede uma porta com trena depois.",
     href: "/marcador",
     link: "Imprimir o marcador",
   },

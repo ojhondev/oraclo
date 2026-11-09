@@ -107,6 +107,7 @@ export function ModelViewer({
   const k = scale?.factor ?? 1;
   // fotogrametria sem marcador sai em escala arbitrária: não dá para presumir metros
   const fromMotor = output.meta?.source === "motor";
+  const needsScale = fromMotor && !scale && canEdit;
   const scaleState: { tone: "ok" | "warn" | "neutral"; label: string } = scale
     ? scale.source === "marcador"
       ? scale.doubtful
@@ -399,6 +400,13 @@ export function ModelViewer({
     if (grid) grid.visible = showGrid;
     three.current?.wake();
   }, [showGrid, progress]);
+
+  const askedScale = useRef(false);
+  useEffect(() => {
+    if (progress != null || heavy || !needsScale || askedScale.current) return;
+    askedScale.current = true;
+    setTool("medir");
+  }, [progress, heavy, needsScale]);
 
   /* ── marcadores (medição e ortofoto) ── */
   useEffect(() => {
@@ -831,7 +839,32 @@ export function ModelViewer({
           )}
           {tool === "medir" && (
             <div className="grid gap-3 text-[13.5px]">
-              <p className="text-muted-foreground">Clique em dois pontos do modelo.</p>
+              {needsScale ? (
+                <div className="grid gap-2 rounded-xl border-2 border-amber-400 p-3">
+                  <p className="font-medium">Defina a escala em 3 passos</p>
+                  <ol className="grid gap-1.5">
+                    {[
+                      "Clique numa ponta de algo que você mediu com trena (largura de uma porta, janela ou vão)",
+                      "Clique na outra ponta",
+                      "Digite a medida real abaixo e toque em Salvar escala",
+                    ].map((s, i) => {
+                      const done = i < 2 ? measure.length > i : false;
+                      const current = i === Math.min(2, measure.length);
+                      return (
+                        <li key={s} className={cn("flex gap-2", current ? "text-foreground" : "text-muted-foreground")}>
+                          <span className={cn("grid size-5 shrink-0 place-items-center rounded-full border text-[11px]", (done || current) && "border-foreground", done && "bg-foreground text-background")}>
+                            {i + 1}
+                          </span>
+                          <span className={cn(current && "font-medium")}>{s}</span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  <p className="text-[12px] text-muted-foreground">Dica: use as vistas Frente ou Lado e aproxime bem para clicar nos cantos com precisão.</p>
+                </div>
+              ) : (
+                <p className="text-muted-foreground">Clique em dois pontos do modelo.</p>
+              )}
               <div className="rounded-xl border p-4 text-center">
                 <p className="text-[12.5px] text-muted-foreground">Distância</p>
                 <p className="text-[26px] font-medium tabular-nums">{dist == null ? "—" : `${nf(dist, 3)} m`}</p>
@@ -853,7 +886,7 @@ export function ModelViewer({
                   <p className="text-muted-foreground">
                     Calibrado: {nf(scale.meters, 3)} m medidos entre dois pontos (fator {scale.factor.toPrecision(5)}). As medidas, áreas e ortofotos já usam essa escala.
                   </p>
-                ) : fromMotor ? (
+                ) : needsScale ? null : fromMotor ? (
                   <p className="rounded-lg bg-amber-100 p-2.5 text-amber-950 dark:bg-amber-400/15 dark:text-amber-200">
                     <b>Sem escala.</b> O marcador não apareceu na gravação, então o modelo tem tamanho arbitrário: medidas, áreas e orçamento não valem. Meça
                     algo de tamanho conhecido (um vão de porta, por exemplo), clique nos dois pontos e informe a medida real.
@@ -867,10 +900,10 @@ export function ModelViewer({
                   <>
                     <label className="grid gap-1">
                       <span className="text-[12px] text-muted-foreground">Distância real entre os dois pontos (m)</span>
-                      <Input inputMode="decimal" value={realM} onChange={(e) => setRealM(e.target.value)} placeholder="Ex.: 2,10" disabled={measure.length !== 2} />
+                      <Input inputMode="decimal" value={realM} onChange={(e) => setRealM(e.target.value)} placeholder="Ex.: 0,80" disabled={measure.length !== 2} autoFocus={needsScale && measure.length === 2} key={measure.length === 2 ? "pronto" : "espera"} />
                     </label>
                     <Button size="sm" onClick={calibrate} disabled={measure.length !== 2 || !realM.trim() || savingScale}>
-                      {savingScale ? <Loader2 className="animate-spin" /> : <Ruler />} Calibrar com estes pontos
+                      {savingScale ? <Loader2 className="animate-spin" /> : <Ruler />} {needsScale ? "Salvar escala" : "Calibrar com estes pontos"}
                     </Button>
                     {scale && (
                       <Button variant="ghost" size="sm" onClick={resetScale} disabled={savingScale}>

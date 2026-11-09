@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq, inArray } from "drizzle-orm";
-import { del } from "@vercel/blob";
+import { deleteUrls, isStorageUrl } from "@/lib/storage";
 import { z } from "zod";
 import { db, schema } from "@/lib/db";
 import { editors, requireUser } from "@/lib/auth";
@@ -67,8 +67,7 @@ export async function createOrthophoto(siteId: string, input: z.input<typeof cre
   const user = await requireUser(editors);
   await getSite(user.orgId, siteId);
   const data = createSchema.parse(input);
-  const url = new URL(data.url);
-  if (!url.hostname.endsWith(".blob.vercel-storage.com") || !data.pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/`)) {
+  if (!isStorageUrl(data.url) || !data.pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/`)) {
     throw new Error("Arquivo inválido.");
   }
   if (data.elementId) {
@@ -94,7 +93,7 @@ export async function createOrthophoto(siteId: string, input: z.input<typeof cre
   }
   if (data.sourceUrl) {
     const src = new URL(data.sourceUrl);
-    if (!src.hostname.endsWith(".blob.vercel-storage.com") || !src.pathname.slice(1).startsWith(`orgs/${user.orgId}/sites/${siteId}/`)) data.sourceUrl = null;
+    if (!isStorageUrl(src) || !src.pathname.slice(1).startsWith(`orgs/${user.orgId}/sites/${siteId}/`)) data.sourceUrl = null;
   }
   const [o] = await db
     .insert(orthophotos)
@@ -148,7 +147,7 @@ export async function deleteOrthophoto(siteId: string, oid: string) {
   const o = await getOrthophoto(siteId, oid);
   await db.delete(orthophotos).where(eq(orthophotos.id, oid));
   try {
-    await del(o.url);
+    await deleteUrls([o.url, o.sourceUrl]);
   } catch {
     // arquivo já removido do storage — segue
   }

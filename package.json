@@ -20,6 +20,7 @@
     "@neondatabase/serverless": "^1.2.0",
     "@tarikjabiri/dxf": "^2.9.0",
     "@vercel/blob": "^2.8.2",
+    "aws4fetch": "^1.0.20",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
     "date-fns": "^4.4.0",

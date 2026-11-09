@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { upload } from "@vercel/blob/client";
+import { upload } from "@/lib/upload-client";
 import { queue, newId, persistStorage, type QueuedPhoto } from "@/lib/capture-queue";
 import { registerFile } from "../actions";
 

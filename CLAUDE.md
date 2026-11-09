@@ -94,3 +94,4 @@ E-mail (convites e nova senha): `RESEND_API_KEY` + `EMAIL_FROM` (ex.: "ArchRay <
 
 ## Deploy
 Produção em **oraclo-app.vercel.app** (oraclo.vercel.app pertence a terceiros).
+- **Armazenamento (Cloudflare R2)**: src/lib/storage.ts (servidor) e src/lib/upload-client.ts (navegador, mesma assinatura do `upload` do Blob). Com R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET e **R2_PUBLIC_URL** definidos, /api/upload devolve endereço assinado e o navegador envia direto à R2; sem R2_PUBLIC_URL tudo cai no Vercel Blob. Arquivos antigos continuam onde estão (`isStorageUrl` aceita os dois; `deleteUrls`/`deletePrefix` apagam nos dois). O motor usa a R2 quando configurada. Migração: `node scripts/migrar-r2.mjs` (copia mantendo o caminho e troca os endereços no banco; não apaga o Blob). Bucket `archray` precisa de acesso público e CORS (GET/HEAD/PUT, cabeçalhos *, expõe ETag/Content-Range/Accept-Ranges).

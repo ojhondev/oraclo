@@ -1,6 +1,6 @@
 import "server-only";
 import { and, eq, inArray } from "drizzle-orm";
-import { del, list } from "@vercel/blob";
+import { deletePrefix } from "@/lib/storage";
 import { db, schema } from "@/lib/db";
 
 /**
@@ -88,12 +88,7 @@ export async function resetDemo(orgId: string, userId: string) {
   const old = await findDemo(orgId);
   if (old) {
     try {
-      let cursor: string | undefined;
-      do {
-        const page = await list({ prefix: `orgs/${orgId}/sites/${old}/`, cursor, limit: 1000 });
-        if (page.blobs.length) await del(page.blobs.map((b) => b.url));
-        cursor = page.hasMore ? page.cursor : undefined;
-      } while (cursor);
+      await deletePrefix(`orgs/${orgId}/sites/${old}/`);
     } catch {
       // sem acesso ao armazenamento: o banco é limpo mesmo assim (arquivos órfãos saem na limpeza periódica)
     }

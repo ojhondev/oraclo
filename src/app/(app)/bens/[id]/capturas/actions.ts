@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
-import { del } from "@vercel/blob";
+import { deleteUrls, isStorageUrl } from "@/lib/storage";
 import { z } from "zod";
 import { db, schema } from "@/lib/db";
 import { capturers, editors, requireUser } from "@/lib/auth";
@@ -160,8 +160,7 @@ const fileSchema = z.object({
 export async function registerFile(siteId: string, captureId: string, input: z.input<typeof fileSchema>) {
   const { user, capture } = await guard(siteId, captureId);
   const f = fileSchema.parse(input);
-  const host = new URL(f.url).hostname;
-  if (!host.endsWith(".blob.vercel-storage.com") || !f.pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/capturas/${captureId}/`)) {
+  if (!isStorageUrl(f.url) || !f.pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/capturas/${captureId}/`)) {
     throw new Error("Arquivo inválido.");
   }
   await db
@@ -199,7 +198,7 @@ export async function deleteFile(siteId: string, captureId: string, fileId: stri
     .delete(captureFiles)
     .where(and(eq(captureFiles.id, fileId), eq(captureFiles.captureId, captureId)))
     .returning({ url: captureFiles.url });
-  if (f?.url) await del(f.url).catch(() => {});
+  if (f?.url) await deleteUrls([f.url]).catch(() => {});
   await db
     .update(captures)
     .set({
@@ -214,7 +213,7 @@ export async function deleteCapture(siteId: string, captureId: string) {
   await guard(siteId, captureId, editors);
   const files = await db.select({ url: captureFiles.url }).from(captureFiles).where(eq(captureFiles.captureId, captureId));
   const urls = files.map((f) => f.url).filter((u): u is string => !!u);
-  for (let i = 0; i < urls.length; i += 100) await del(urls.slice(i, i + 100)).catch(() => {});
+  await deleteUrls(urls).catch(() => {});
   await db.delete(captures).where(eq(captures.id, captureId));
   await db.update(sites).set({ updatedAt: new Date() }).where(eq(sites.id, siteId));
   refresh(siteId);
@@ -237,7 +236,7 @@ export async function registerOutput(siteId: string, captureId: string, input: z
   const o = outputSchema.parse(input);
   const fmt = formatOf(o.name);
   if (!fmt) throw new Error("Formato não aceito. Use E57, LAS, LAZ, PLY, XYZ, PTS, GLB, OBJ, FBX, ZIP ou PDF.");
-  if (!new URL(o.url).hostname.endsWith(".blob.vercel-storage.com") || !o.pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/capturas/${captureId}/resultado/`)) {
+  if (!isStorageUrl(o.url) || !o.pathname.startsWith(`orgs/${user.orgId}/sites/${siteId}/capturas/${captureId}/resultado/`)) {
     throw new Error("Arquivo inválido.");
   }
   const meta: OutputMeta = { viewable: fmt.viewable, upAxis: fmt.upAxis };
@@ -267,6 +266,6 @@ export async function deleteOutput(siteId: string, captureId: string, outputId: 
     .delete(schema.outputs)
     .where(and(eq(schema.outputs.id, outputId), eq(schema.outputs.captureId, captureId)))
     .returning({ url: schema.outputs.url });
-  if (o?.url) await del(o.url).catch(() => {});
+  if (o?.url) await deleteUrls([o.url]).catch(() => {});
   refresh(siteId, captureId);
 }

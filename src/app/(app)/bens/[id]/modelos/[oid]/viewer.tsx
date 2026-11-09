@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { DRACOLoader } from "three/examples/jsm/loaders/DRACOLoader.js";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { upload } from "@vercel/blob/client";
+import { upload } from "@/lib/upload-client";
 import { toast } from "sonner";
 import { ArrowLeft, Box as BoxIcon, Download, Frame, Grid3x3, Loader2, Move3d, Ruler, Sparkles, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";

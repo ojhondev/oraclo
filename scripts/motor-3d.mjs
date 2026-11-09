@@ -7,7 +7,8 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { neon } from "@neondatabase/serverless";
-import { put } from "@vercel/blob";
+import { put as blobPut } from "@vercel/blob";
+import { AwsClient } from "aws4fetch";
 import sharp from "sharp";
 import { loadEnv } from "./treino-comum.mjs";
 import { levelFromShots, odmArgs, odmCommand, photosUsed, qualityOf, readLasCount, repairLasBounds, stageFromLine, stepDetail } from "./motor-comum.mjs";
@@ -19,6 +20,28 @@ const ODM_DIR = env.MOTOR_ODM_DIR || "A:\\Ferramentas\\ODM";
 const PROJECTS = env.MOTOR_PROJETOS || "A:\\Ferramentas\\odm-projetos";
 const CONVERTER = env.MOTOR_POTREE || "A:\\Ferramentas\\PotreeConverter\\PotreeConverter_2.1.5_x64_windows\\PotreeConverter.exe";
 const ONCE = process.env.MOTOR_UMA_VEZ === "1";
+// arquivos vão para a Cloudflare R2 quando ela está configurada; senão, para o Vercel Blob
+const R2 = env.R2_ACCOUNT_ID && env.R2_ACCESS_KEY_ID && env.R2_SECRET_ACCESS_KEY && env.R2_BUCKET && env.R2_PUBLIC_URL
+  ? { c: new AwsClient({ accessKeyId: env.R2_ACCESS_KEY_ID, secretAccessKey: env.R2_SECRET_ACCESS_KEY, service: "s3", region: "auto" }), base: `https://${env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${env.R2_BUCKET}`, pub: env.R2_PUBLIC_URL.replace(/\/+$/, "") }
+  : null;
+const encodeKey = (k) => k.split("/").map(encodeURIComponent).join("/");
+
+/** Envia um arquivo local e devolve { url, pathname }. random = sufixo aleatório no nome. */
+async function upload(path, file, { random = false } = {}) {
+  if (R2) {
+    let key = path;
+    if (random) {
+      const dot = key.lastIndexOf(".");
+      const rand = crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+      key = dot > key.lastIndexOf("/") ? `${key.slice(0, dot)}-${rand}${key.slice(dot)}` : `${key}-${rand}`;
+    }
+    const res = await R2.c.fetch(`${R2.base}/${encodeKey(key)}`, { method: "PUT", body: readFileSync(file), headers: { "content-type": "application/octet-stream" } });
+    if (!res.ok) throw new Error(`Falha ao enviar ${key} (${res.status}).`);
+    return { url: `${R2.pub}/${encodeKey(key)}`, pathname: key };
+  }
+  const blob = await blobPut(path, createReadStream(file), { access: "public", token, multipart: true, addRandomSuffix: random, allowOverwrite: !random, contentType: "application/octet-stream" });
+  return { url: blob.url, pathname: blob.pathname };
+}
 const POLL_MS = 30_000;
 
 const log = (...a) => console.log(new Date().toLocaleTimeString("pt-BR"), ...a);
@@ -136,7 +159,7 @@ async function publishOctree(job, capture, las, dir) {
   const prefix = `orgs/${capture.org_id}/sites/${capture.site_id}/capturas/${capture.id}/resultado/potree-${job.id.slice(0, 8)}`;
   let base = null;
   for (const name of ["metadata.json", "hierarchy.bin", "octree.bin"]) {
-    const blob = await put(`${prefix}/${name}`, createReadStream(join(out, name)), { access: "public", token, multipart: true, addRandomSuffix: false, allowOverwrite: true, contentType: "application/octet-stream" });
+    const blob = await upload(`${prefix}/${name}`, join(out, name));
     base = blob.url.slice(0, blob.url.lastIndexOf("/") + 1);
   }
   return base;
@@ -169,7 +192,7 @@ async function publish(job, capture, dir) {
     const bytes = statSync(r.file).size;
     log(`enviando ${r.name} (${Math.round(bytes / 1e6)} MB)`);
     const path = `orgs/${capture.org_id}/sites/${capture.site_id}/capturas/${capture.id}/resultado/${r.name}`;
-    const blob = await put(path, createReadStream(r.file), { access: "public", token, multipart: true, addRandomSuffix: true, contentType: "application/octet-stream" });
+    const blob = await upload(path, r.file, { random: true });
     const points = r.format === "las" ? readLasCount(r.file) : null;
     const meta = { viewable: true, upAxis: r.upAxis, source: "motor", level: level?.quaternion ?? null, ...(r.kind === "nuvem" && potree ? { potree, points } : {}) };
     await sql`insert into outputs (site_id, capture_id, kind, format, name, storage_key, url, bytes, point_count, meta)
@@ -258,6 +281,7 @@ process.on("SIGTERM", shutdown);
 // um trabalho interrompido volta para a fila; o ODM retoma da última etapa concluída
 await sql`update processing_jobs set status = 'na_fila' where status = 'rodando'`;
 log(ONCE ? "motor 3D: uma passada" : "motor 3D ligado. Deixe esta janela aberta e o computador sem suspender.");
+log(R2 ? "arquivos: Cloudflare R2" : "arquivos: Vercel Blob");
 
 for (;;) {
   await heartbeat().catch((e) => log("aviso:", e.message));

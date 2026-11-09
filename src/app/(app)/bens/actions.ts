@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { and, eq, inArray } from "drizzle-orm";
-import { del, list } from "@vercel/blob";
+import { deletePrefix } from "@/lib/storage";
 import { z } from "zod";
 import { db, schema } from "@/lib/db";
 import { editors, requireUser } from "@/lib/auth";
@@ -60,12 +60,7 @@ export async function updateSite(id: string, _: State, form: FormData): Promise<
 
 /** Apaga os arquivos do projeto no armazenamento, que tem limite e não acompanha o banco sozinho. */
 async function deleteSiteFiles(orgId: string, siteId: string) {
-  let cursor: string | undefined;
-  do {
-    const page = await list({ prefix: `orgs/${orgId}/sites/${siteId}/`, cursor, limit: 500 });
-    if (page.blobs.length) await del(page.blobs.map((b) => b.url));
-    cursor = page.hasMore ? page.cursor : undefined;
-  } while (cursor);
+  await deletePrefix(`orgs/${orgId}/sites/${siteId}/`);
 }
 
 export async function deleteSite(id: string): Promise<{ error?: string }> {

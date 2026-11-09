@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
-import { upload } from "@vercel/blob/client";
+import { upload } from "@/lib/upload-client";
 import { Camera, Check, Crosshair, Hand, Loader2, Plus, RotateCcw, Ruler, Spline, Target, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

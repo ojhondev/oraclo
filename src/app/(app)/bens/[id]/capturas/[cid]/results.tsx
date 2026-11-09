@@ -3,7 +3,7 @@
 import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { upload } from "@vercel/blob/client";
+import { upload } from "@/lib/upload-client";
 import { toast } from "sonner";
 import { Box, Download, FileUp, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";

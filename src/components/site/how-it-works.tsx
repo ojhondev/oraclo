@@ -170,8 +170,8 @@ function ArchRayArt({ steps }: { steps: string[] }) {
 export function HowItWorks({ lang }: { lang: Lang }) {
   const t = COPY[lang];
   return (
-    <section className="px-4 pt-6 pb-16 sm:px-6 sm:pb-24 lg:px-8" aria-labelledby="como-funciona">
-      <p className="a-tag" data-reveal>
+    <section className="bg-[#83809a] px-4 py-16 text-white sm:px-6 sm:py-24 lg:px-8" aria-labelledby="como-funciona">
+      <p className="a-tag text-white/80" data-reveal>
         {t.eyebrow}
       </p>
       <h2 id="como-funciona" className="mt-4 max-w-[30ch] a-fluid [--a:30] [--b:46] leading-[1.1]" data-reveal data-reveal-delay={60}>
@@ -180,7 +180,7 @@ export function HowItWorks({ lang }: { lang: Lang }) {
 
       <div className="mt-10 grid gap-5 xl:grid-cols-2">
         {/* hoje */}
-        <div className="a-card overflow-hidden p-5 sm:p-7" data-reveal>
+        <div className="a-card overflow-hidden p-5 text-foreground sm:p-7" data-reveal>
           <div className="flex items-baseline justify-between gap-4">
             <h3 className="text-[20px] font-semibold">{t.today}</h3>
             <span className="flex items-center gap-1.5 text-[13px] text-muted-foreground">
@@ -195,7 +195,7 @@ export function HowItWorks({ lang }: { lang: Lang }) {
         </div>
 
         {/* com o ArchRay */}
-        <div className="a-card overflow-hidden p-5 sm:p-7" data-reveal data-reveal-delay={120}>
+        <div className="a-card overflow-hidden p-5 text-foreground sm:p-7" data-reveal data-reveal-delay={120}>
           <div className="flex items-baseline justify-between gap-4">
             <h3 className="text-[20px] font-semibold">{t.archray}</h3>
             <span className="text-[13px] text-muted-foreground">{t.archraySlow}</span>
@@ -209,7 +209,7 @@ export function HowItWorks({ lang }: { lang: Lang }) {
       </div>
 
       {/* antes × depois, em linhas */}
-      <div className="mt-8 overflow-hidden rounded-[14px] border" data-reveal>
+      <div className="mt-8 overflow-hidden rounded-[14px] border border-white/20 bg-[var(--site-elev)] text-foreground" data-reveal>
         <div className="grid grid-cols-2 border-b bg-muted/50 text-[13px] font-medium">
           <span className="px-4 py-2.5 text-muted-foreground sm:px-6">{t.before}</span>
           <span className="border-l px-4 py-2.5 sm:px-6">{t.after}</span>

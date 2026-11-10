@@ -170,15 +170,8 @@ function ArchRayArt({ steps }: { steps: string[] }) {
 export function HowItWorks({ lang }: { lang: Lang }) {
   const t = COPY[lang];
   return (
-    <section className="bg-[#83809a] px-4 py-16 text-white sm:px-6 sm:py-24 lg:px-8" aria-labelledby="como-funciona">
-      <p className="a-tag text-white/80" data-reveal>
-        {t.eyebrow}
-      </p>
-      <h2 id="como-funciona" className="mt-4 max-w-[30ch] a-fluid [--a:30] [--b:46] leading-[1.1]" data-reveal data-reveal-delay={60}>
-        {t.title}
-      </h2>
-
-      <div className="mt-10 grid gap-5 xl:grid-cols-2">
+    <section className="bg-[#83809a] px-4 py-16 text-white sm:px-6 sm:py-24 lg:px-8" id="como-funciona" aria-label={t.eyebrow}>
+      <div className="grid gap-5 xl:grid-cols-2">
         {/* hoje */}
         <div className="a-card overflow-hidden p-5 text-foreground sm:p-7" data-reveal>
           <div className="flex items-baseline justify-between gap-4">
@@ -208,19 +201,6 @@ export function HowItWorks({ lang }: { lang: Lang }) {
         </div>
       </div>
 
-      {/* antes × depois, em linhas */}
-      <div className="mt-8 overflow-hidden rounded-[14px] border border-white/20 bg-[var(--site-elev)] text-foreground" data-reveal>
-        <div className="grid grid-cols-2 border-b bg-muted/50 text-[13px] font-medium">
-          <span className="px-4 py-2.5 text-muted-foreground sm:px-6">{t.before}</span>
-          <span className="border-l px-4 py-2.5 sm:px-6">{t.after}</span>
-        </div>
-        {t.rows.map(([a, b]) => (
-          <div key={a} className="grid grid-cols-2 border-b text-[14.5px] leading-snug last:border-b-0">
-            <span className="px-4 py-3.5 text-muted-foreground line-through decoration-foreground/25 sm:px-6">{a}</span>
-            <span className="border-l px-4 py-3.5 font-medium sm:px-6">{b}</span>
-          </div>
-        ))}
-      </div>
     </section>
   );
 }

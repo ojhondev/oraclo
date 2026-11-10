@@ -83,6 +83,39 @@ function Station({ x, y, icon: Icon, label, fill = C.oat, pulse }: { x: number; 
   );
 }
 
+/** Estação com o nome ao lado (versão vertical, celular). */
+function SideStation({ x, y, icon: Icon, label, fill = C.oat, side, pulse }: { x: number; y: number; icon: LucideIcon; label: string; fill?: string; side: "left" | "right"; pulse?: { at: number; dur: number } }) {
+  const words = label.split(" ");
+  const lines: string[] = [];
+  for (const w of words) {
+    const last = lines[lines.length - 1];
+    if (last && (last + " " + w).length <= 16) lines[lines.length - 1] = last + " " + w;
+    else lines.push(w);
+  }
+  const tx = side === "right" ? x + 42 : x - 42;
+  return (
+    <g>
+      <circle cx={x} cy={y} r={30} fill={fill} stroke={C.ink} strokeWidth={1.4}>
+        {pulse && (
+          <animate
+            attributeName="fill"
+            values={`${fill};${C.heather};${fill};${fill}`}
+            keyTimes={`0;${pulse.at.toFixed(3)};${Math.min(0.99, pulse.at + 0.08).toFixed(3)};1`}
+            dur={`${pulse.dur}s`}
+            repeatCount="indefinite"
+          />
+        )}
+      </circle>
+      <Icon x={x - 12} y={y - 12} width={24} height={24} color={C.ink} strokeWidth={1.6} />
+      {lines.map((l, i) => (
+        <text key={l + i} x={tx} y={y + 6 + (i - (lines.length - 1) / 2) * 19} textAnchor={side === "right" ? "start" : "end"} fontSize={16} fill="currentColor">
+          {l}
+        </text>
+      ))}
+    </g>
+  );
+}
+
 /** Hoje: estações espalhadas, caminho emaranhado, o arquivo trava e volta (retrabalho). */
 function TodayArt({ steps }: { steps: string[] }) {
   const S = [
@@ -97,7 +130,7 @@ function TodayArt({ steps }: { steps: string[] }) {
     "M70 70 C120 10, 170 120, 240 46 C300 -10, 330 150, 420 92 C470 60, 500 0, 600 52 C690 100, 640 170, 560 220 C480 270, 400 170, 300 226 C230 262, 330 120, 420 92";
   const icons = [Camera, Box, PenTool, Table, FileText, RotateCcw];
   return (
-    <svg viewBox="0 0 700 300" className="h-auto w-full min-w-[640px]" role="img" aria-label={steps.join(", ")}>
+    <svg viewBox="0 0 700 300" className="h-auto w-full" role="img" aria-label={steps.join(", ")}>
       <path d={path} fill="none" stroke={C.ink} strokeOpacity={0.35} strokeWidth={1.4} strokeDasharray="4 6">
         <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="3s" repeatCount="indefinite" />
       </path>
@@ -123,6 +156,75 @@ function TodayArt({ steps }: { steps: string[] }) {
   );
 }
 
+/** Celular: hoje, em zigue-zague vertical, com os nomes ao lado de cada estação. */
+function TodayArtVertical({ steps }: { steps: string[] }) {
+  const S = [
+    [60, 50],
+    [250, 140],
+    [70, 240],
+    [250, 340],
+    [70, 440],
+    [250, 540],
+  ] as const;
+  const path =
+    "M60 50 C150 20, 120 160, 250 140 C340 130, 0 180, 70 240 C110 280, 190 230, 250 340 C300 420, 20 380, 70 440 C110 490, 180 470, 250 540 C330 600, 360 300, 70 240";
+  const icons = [Camera, Box, PenTool, Table, FileText, RotateCcw];
+  return (
+    <svg viewBox="0 0 320 600" className="h-auto w-full" role="img" aria-label={steps.join(", ")}>
+      <path d={path} fill="none" stroke={C.ink} strokeOpacity={0.35} strokeWidth={1.4} strokeDasharray="4 6">
+        <animate attributeName="stroke-dashoffset" from="0" to="-40" dur="3s" repeatCount="indefinite" />
+      </path>
+      <path d="M250 540 C330 600, 360 300, 70 240" fill="none" stroke={C.fig} strokeWidth={1.8} strokeDasharray="3 5" />
+      {S.map(([x, y], i) => (
+        <SideStation key={i} x={x} y={y} icon={icons[i]!} label={steps[i]!} fill={i === 5 ? "#ebcece" : C.oat} side={x < 160 ? "right" : "left"} />
+      ))}
+      <g>
+        <rect x={-9} y={-11} width={18} height={22} rx={2} fill={C.ivory} stroke={C.ink} strokeWidth={1.3} />
+        <path d="M-5 -4 H5 M-5 1 H5 M-5 6 H2" stroke={C.ink} strokeWidth={1} />
+        <animateMotion
+          dur="14s"
+          repeatCount="indefinite"
+          path={path}
+          calcMode="linear"
+          keyPoints="0;0;0.13;0.13;0.3;0.3;0.46;0.46;0.62;0.62;0.8;0.8;1;1"
+          keyTimes="0;0.06;0.14;0.24;0.32;0.44;0.52;0.6;0.68;0.74;0.82;0.88;0.96;1"
+        />
+      </g>
+    </svg>
+  );
+}
+
+/** Celular: com o ArchRay, esteira vertical; a fachada desce passando por cada etapa. */
+function ArchRayArtVertical({ steps }: { steps: string[] }) {
+  const ys = [60, 170, 280, 390, 500];
+  const icons = [Video, Box, ScanSearch, Calculator, FileCheck2];
+  const start = 40;
+  const end = 520;
+  const dur = 7;
+  return (
+    <svg viewBox="0 0 320 560" className="h-auto w-full" role="img" aria-label={steps.join(", ")}>
+      <rect x={6} y={6} width={308} height={548} rx={22} fill="none" stroke={C.lilac} strokeWidth={1.5} />
+      <rect x={32} y={start - 20} width={22} height={end - start + 40} rx={11} fill={C.heather} stroke={C.ink} strokeWidth={1.3} />
+      <line x1={43} y1={start - 8} x2={43} y2={end + 8} stroke={C.ink} strokeOpacity={0.55} strokeWidth={2} strokeDasharray="10 12">
+        <animate attributeName="stroke-dashoffset" from="0" to="-22" dur="0.7s" repeatCount="indefinite" />
+      </line>
+      {ys.map((y, i) => (
+        <line key={`l${i}`} x1={56} y1={y} x2={92} y2={y} stroke={C.ink} strokeOpacity={0.3} strokeWidth={1.2} strokeDasharray="3 4" />
+      ))}
+      {ys.map((y, i) => (
+        <SideStation key={i} x={124} y={y} icon={icons[i]!} label={steps[i]!} side="right" pulse={{ at: Math.max(0.01, (y - start) / (end - start)), dur }} />
+      ))}
+      <g>
+        <path d="M-16 6 V-12 L0 -22 L16 -12 V6 Z" fill={C.ivory} stroke={C.ink} strokeWidth={1.3}>
+          <animate attributeName="fill" values={`${C.ivory};${C.oat};${C.heather};#bcd1ca;#ebcece;${C.ivory}`} dur={`${dur}s`} repeatCount="indefinite" />
+        </path>
+        <rect x={-5} y={-6} width={10} height={12} fill="none" stroke={C.ink} strokeWidth={1} />
+        <animateMotion dur={`${dur}s`} repeatCount="indefinite" path={`M43 ${start + 8} L43 ${end + 8}`} />
+      </g>
+    </svg>
+  );
+}
+
 /** Com o ArchRay: esteira contínua; a fachada passa por todas as etapas sem parar. */
 function ArchRayArt({ steps }: { steps: string[] }) {
   const xs = [80, 215, 350, 485, 620];
@@ -131,7 +233,7 @@ function ArchRayArt({ steps }: { steps: string[] }) {
   const end = 650;
   const dur = 7;
   return (
-    <svg viewBox="0 0 700 250" className="h-auto w-full min-w-[640px]" role="img" aria-label={steps.join(", ")}>
+    <svg viewBox="0 0 700 250" className="h-auto w-full" role="img" aria-label={steps.join(", ")}>
       {/* moldura: tudo dentro do ArchRay */}
       <rect x={10} y={8} width={680} height={234} rx={22} fill="none" stroke={C.lilac} strokeWidth={1.5} strokeDasharray="2 0" />
       {/* esteira */}
@@ -170,7 +272,7 @@ function ArchRayArt({ steps }: { steps: string[] }) {
 export function HowItWorks({ lang }: { lang: Lang }) {
   const t = COPY[lang];
   return (
-    <section className="bg-[#83809a] px-4 py-16 text-white sm:px-6 sm:py-24 lg:px-8" id="como-funciona" aria-label={t.eyebrow}>
+    <section className="bg-[#b4b1cb] px-4 py-16 text-white sm:px-6 sm:py-24 lg:px-8" id="como-funciona" aria-label={t.eyebrow}>
       <div className="grid gap-5 xl:grid-cols-2">
         {/* hoje */}
         <div className="a-card overflow-hidden p-5 text-foreground sm:p-7" data-reveal>
@@ -181,10 +283,12 @@ export function HowItWorks({ lang }: { lang: Lang }) {
             </span>
           </div>
           <p className="mt-1 text-[14.5px] text-muted-foreground">{t.todayNote}</p>
-          <div className="no-scrollbar -mx-5 mt-5 overflow-x-auto px-5 sm:-mx-7 sm:px-7">
+          <div className="mt-5 hidden md:block">
             <TodayArt steps={t.todaySteps} />
           </div>
-          <p className="mt-2 text-[12px] text-muted-foreground xl:hidden">{t.swipe}</p>
+          <div className="mx-auto mt-5 max-w-[340px] md:hidden">
+            <TodayArtVertical steps={t.todaySteps} />
+          </div>
         </div>
 
         {/* com o ArchRay */}
@@ -194,10 +298,12 @@ export function HowItWorks({ lang }: { lang: Lang }) {
             <span className="text-[13px] text-muted-foreground">{t.archraySlow}</span>
           </div>
           <p className="mt-1 text-[14.5px] text-muted-foreground">{t.archrayNote}</p>
-          <div className="no-scrollbar -mx-5 mt-5 overflow-x-auto px-5 sm:-mx-7 sm:px-7">
+          <div className="mt-5 hidden md:block">
             <ArchRayArt steps={t.archraySteps} />
           </div>
-          <p className="mt-2 text-[12px] text-muted-foreground xl:hidden">{t.swipe}</p>
+          <div className="mx-auto mt-5 max-w-[340px] md:hidden">
+            <ArchRayArtVertical steps={t.archraySteps} />
+          </div>
         </div>
       </div>
 

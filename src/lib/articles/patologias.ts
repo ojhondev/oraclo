@@ -1,4 +1,4 @@
-import { article, ER, IMG } from "./helper";
+import { article, ER } from "./helper";
 
 const CAT = "Manifestações patológicas";
 
@@ -9,7 +9,6 @@ export const PATOLOGIAS = [
     seoTitle: "Manifestações patológicas em fachadas: tipos e causas",
     summary: "As manifestações patológicas mais comuns em fachadas, como reconhecer cada uma, causas prováveis e por que mapear antes de tratar.",
     category: CAT,
-    ...IMG.fachada,
     keywords: ["manifestações patológicas em fachadas", "patologias em fachadas", "patologia das construções", "problemas em fachadas"],
     intro: [
       "Fachadas estão expostas a sol, chuva, vento, poluição e variações de temperatura todos os dias. Com o tempo, surgem as **manifestações patológicas**: sinais visíveis de que algo no sistema construtivo não vai bem. Reconhecê-las é o primeiro passo para tratar a causa, e não só o sintoma.",
@@ -79,7 +78,6 @@ export const PATOLOGIAS = [
     seoTitle: "Fissura, trinca e rachadura: diferenças e riscos",
     summary: "Entenda a diferença entre fissura, trinca e rachadura pela abertura, as causas mais comuns, como medir e quando a situação exige um profissional.",
     category: CAT,
-    ...IMG.vista,
     keywords: ["diferença entre fissura trinca e rachadura", "fissura na parede", "trinca na parede", "rachadura na parede", "tipos de fissuras"],
     intro: [
       "Fissura, trinca e rachadura são nomes para aberturas de tamanhos diferentes no mesmo fenômeno: a parede ou o revestimento se rompeu porque não acompanhou um esforço. Saber a diferença ajuda a comunicar o problema com precisão e a decidir quando chamar um especialista.",
@@ -157,7 +155,6 @@ export const PATOLOGIAS = [
     seoTitle: "Umidade ascendente na parede: causas e tratamento",
     summary: "O que é a umidade ascendente por capilaridade, como diferenciá-la de infiltração e condensação, por que ela destrói rebocos e quais tratamentos funcionam.",
     category: CAT,
-    ...IMG.convento,
     keywords: ["umidade ascendente", "umidade por capilaridade", "umidade na parede", "tratamento umidade ascendente", "salitre na parede"],
     intro: [
       "A umidade ascendente é a água do solo que sobe pelas paredes por capilaridade, como num pavio. Ela é especialmente comum em construções antigas, sem barreira impermeável na fundação, e responde por boa parte dos rebocos estufados e pinturas descascadas na base das paredes.",
@@ -231,7 +228,6 @@ export const PATOLOGIAS = [
     seoTitle: "Eflorescência: o que é e como tratar na parede",
     summary: "Eflorescência são os depósitos brancos de sais que surgem em paredes, tijolos e concreto. Veja por que aparecem, quando são sinal de problema maior e como tratar.",
     category: CAT,
-    ...IMG.igreja2010,
     keywords: ["eflorescência", "eflorescência na parede", "manchas brancas na parede", "eflorescência no tijolo", "como tratar eflorescência"],
     intro: [
       "A eflorescência é aquela camada esbranquiçada, às vezes em forma de pó ou de pequenos cristais, que aparece em paredes, tijolos aparentes, rejuntes e concreto. Ela é, na maioria das vezes, um aviso: há água atravessando o material.",
@@ -296,7 +292,6 @@ export const PATOLOGIAS = [
     seoTitle: "Descolamento de reboco e cerâmica na fachada",
     summary: "Por que rebocos e cerâmicas descolam em fachadas, como identificar áreas com som cavo antes da queda e o que considerar na recuperação.",
     category: CAT,
-    ...IMG.fachada,
     keywords: ["descolamento de reboco", "desplacamento cerâmico fachada", "revestimento cerâmico soltando", "reboco estufado", "teste de percussão fachada"],
     intro: [
       "O descolamento de revestimentos é uma das manifestações mais perigosas em fachadas: uma placa de reboco ou de cerâmica que cai de um pavimento alto pode ferir pessoas e danificar bens. Por isso merece atenção prioritária em qualquer inspeção.",
@@ -362,7 +357,6 @@ export const PATOLOGIAS = [
     seoTitle: "Biodeterioração em fachadas: fungos, liquens e plantas",
     summary: "Como micro-organismos e plantas degradam fachadas, como identificar cada agente e por que a limpeza precisa vir junto com o controle da umidade.",
     category: CAT,
-    ...IMG.convento,
     keywords: ["biodeterioração", "fungos na fachada", "limo na parede", "liquens em fachadas", "vegetação em fachada", "mofo na parede externa"],
     intro: [
       "Manchas verdes, pretas ou alaranjadas e pequenas plantas nascendo em frestas são sinais de **biodeterioração**: seres vivos colonizando a fachada. Além do aspecto, eles retêm umidade, produzem substâncias que atacam os materiais e, no caso das plantas, abrem fissuras com as raízes.",
@@ -429,7 +423,6 @@ export const PATOLOGIAS = [
     seoTitle: "Crosta negra em fachadas: causas e como limpar",
     summary: "A crosta negra é a camada escura e endurecida que se forma em fachadas urbanas, sobretudo em pedras. Veja como se forma, por que danifica e como limpar sem agredir.",
     category: CAT,
-    ...IMG.igreja2021,
     keywords: ["crosta negra", "sujidade em fachada", "limpeza de fachada histórica", "fachada escurecida", "limpeza de pedra"],
     intro: [
       "Em cidades com tráfego intenso, as fachadas escurecem. Em áreas lavadas pela chuva, a sujeira é removida naturalmente; nas áreas protegidas, como sob cornijas, frisos e ornamentos, ela se acumula e endurece, formando a **crosta negra**.",

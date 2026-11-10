@@ -1,4 +1,4 @@
-import { article, ER, IMG } from "./helper";
+import { article, ER } from "./helper";
 
 const CAT = "Mapa de danos";
 
@@ -10,7 +10,6 @@ export const MAPA_DE_DANOS = [
     summary:
       "Guia completo sobre mapa de danos: definição, quando ele é exigido, o que precisa conter, etapas de elaboração e como a tecnologia reduz dias de trabalho para horas.",
     category: CAT,
-    ...IMG.tablet,
     keywords: ["mapa de danos", "o que é mapa de danos", "como fazer mapa de danos", "mapeamento de danos", "mapa de danos fachada"],
     intro: [
       "O **mapa de danos** é o documento gráfico que registra, sobre desenhos ou imagens em escala de uma edificação, onde está cada manifestação patológica, de que tipo ela é e qual a sua extensão. É a base de qualquer decisão séria de manutenção, reforma ou restauro: sem saber o que existe, onde e quanto, não há orçamento confiável nem prioridade bem definida.",
@@ -96,7 +95,6 @@ export const MAPA_DE_DANOS = [
     seoTitle: "Mapa de danos de fachada: passo a passo prático",
     summary: "Como fazer o mapa de danos de uma fachada em seis etapas: planejamento, captura, base em escala, marcação dos danos, quantitativos e laudo, com dicas para evitar retrabalho.",
     category: CAT,
-    ...IMG.vista,
     keywords: ["mapa de danos fachada", "como fazer mapa de danos de fachada", "levantamento de danos fachada", "mapeamento de fachada"],
     intro: [
       "Fazer o mapa de danos de uma fachada é, antes de tudo, organizar informação: ver tudo, registrar tudo na mesma escala e não perder nada no caminho até o orçamento. Este guia prático mostra as seis etapas, do planejamento da visita ao laudo final.",
@@ -173,7 +171,6 @@ export const MAPA_DE_DANOS = [
     seoTitle: "Legenda de mapa de danos: cores e símbolos",
     summary: "Como montar uma legenda clara para o mapa de danos: grupos de manifestações, cores, hachuras, linhas e boas práticas para que qualquer pessoa leia o mapa sem dúvida.",
     category: CAT,
-    ...IMG.retificada,
     keywords: ["legenda mapa de danos", "simbologia mapa de danos", "cores mapa de danos", "hachuras mapa de danos"],
     intro: [
       "A legenda é o que transforma manchas coloridas em informação. Uma legenda confusa, com cores parecidas ou categorias que se sobrepõem, compromete a leitura do mapa e a confiança no laudo. Não existe uma única legenda obrigatória no Brasil, mas existem boas práticas que valem para qualquer projeto.",
@@ -242,7 +239,6 @@ export const MAPA_DE_DANOS = [
     seoTitle: "Mapa de danos em patrimônio histórico e tombado",
     summary: "Em edifícios históricos, o mapa de danos precisa registrar materiais, camadas e intervenções anteriores. Veja o que muda, como documentar e como ele embasa o projeto de restauro.",
     category: CAT,
-    ...IMG.igreja2021,
     keywords: ["mapa de danos patrimônio histórico", "mapa de danos restauro", "mapa de danos IPHAN", "levantamento estado de conservação"],
     intro: [
       "No patrimônio histórico, o mapa de danos não serve só para orçar. Ele documenta o estado de conservação de um bem cultural num momento específico e embasa decisões que precisam respeitar a autenticidade do edifício. Por isso exige mais rigor e mais camadas de informação.",
@@ -300,7 +296,6 @@ export const MAPA_DE_DANOS = [
     seoTitle: "Mapa de danos: AutoCAD x software especializado",
     summary: "Comparativo honesto entre fazer o mapa de danos no AutoCAD (com fotos e planilha) e usar um software especializado: tempo, precisão, quantitativos, laudo e custo.",
     category: CAT,
-    ...IMG.arquiteta,
     keywords: ["mapa de danos autocad", "software mapa de danos", "programa para mapa de danos", "mapa de danos digital"],
     intro: [
       "Boa parte dos mapas de danos no Brasil ainda é feita no AutoCAD: foto de fundo, polilinhas por cima, hachuras e uma planilha ao lado. Funciona, mas é lento e sujeito a erro. Softwares especializados surgiram para encurtar esse caminho. Qual escolher depende do volume de trabalho e do tipo de entrega.",

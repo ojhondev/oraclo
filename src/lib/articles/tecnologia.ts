@@ -1,4 +1,4 @@
-import { article, IMG } from "./helper";
+import { article } from "./helper";
 
 const CAT = "Tecnologia";
 
@@ -9,7 +9,6 @@ export const TECNOLOGIA = [
     seoTitle: "Fotogrametria na arquitetura: como funciona",
     summary: "Como a fotogrametria transforma fotos ou vídeo em modelo 3D, nuvem de pontos e imagens em escala, e como ela é usada em levantamentos, mapas de danos e restauro.",
     category: CAT,
-    ...IMG.retificada,
     keywords: ["fotogrametria", "fotogrametria arquitetura", "fotogrametria o que é", "fotogrametria para levantamento", "modelo 3D por fotos"],
     intro: [
       "A **fotogrametria** é a técnica de medir objetos a partir de imagens. Com várias fotos de um mesmo objeto, tiradas de pontos diferentes, um software calcula a posição de cada câmera e reconstrói a geometria em 3D. Na arquitetura, ela permite levantar fachadas, interiores e até cidades sem encostar nelas.",
@@ -88,7 +87,6 @@ export const TECNOLOGIA = [
     seoTitle: "Nuvem de pontos: o que é e para que serve",
     summary: "O que é uma nuvem de pontos, como ela é gerada (laser scanner ou fotogrametria), formatos comuns e como visualizar e usar milhões de pontos sem travar o computador.",
     category: CAT,
-    ...IMG.vista,
     keywords: ["nuvem de pontos", "nuvem de pontos o que é", "nuvem de pontos arquitetura", "arquivo LAS", "point cloud"],
     intro: [
       "Uma **nuvem de pontos** é um conjunto de milhões de pontos no espaço, cada um com coordenadas X, Y e Z e, normalmente, uma cor. Juntos, eles formam uma réplica digital da superfície medida: uma fachada, um interior, um terreno.",
@@ -160,7 +158,6 @@ export const TECNOLOGIA = [
     seoTitle: "Levantamento arquitetônico com celular x laser scanner",
     summary: "Comparativo entre levantamento por vídeo no celular, fotos com câmera e laser scanner: custo, precisão, tempo de campo e quando cada um faz sentido.",
     category: CAT,
-    ...IMG.fachada,
     keywords: ["levantamento arquitetônico com celular", "levantamento com laser scanner", "levantamento de fachada", "escaneamento 3D de edificações"],
     intro: [
       "Até pouco tempo, levantar uma fachada em 3D exigia laser scanner ou uma câmera profissional e horas de processamento. Hoje, o celular grava vídeo com qualidade suficiente para gerar modelo 3D e nuvem de pontos. Mas cada método tem seu lugar.",
@@ -236,7 +233,6 @@ export const TECNOLOGIA = [
     seoTitle: "Ortofoto de fachada e retificação: o que são",
     summary: "A diferença entre foto comum, foto retificada e ortofoto de fachada, por que a escala importa e como gerar uma imagem em escala para o mapa de danos.",
     category: CAT,
-    ...IMG.retificada,
     keywords: ["ortofoto de fachada", "retificação de imagem", "foto retificada fachada", "ortomosaico fachada", "imagem em escala"],
     intro: [
       "Uma foto comum de fachada tem perspectiva: o que está mais longe parece menor, e linhas paralelas convergem. Para medir sobre a imagem, é preciso corrigir essa distorção. É o que fazem a **retificação** e a **ortofoto**.",
@@ -296,7 +292,6 @@ export const TECNOLOGIA = [
     seoTitle: "Escala em fotogrametria: marcador e calibração",
     summary: "Por que modelos de fotogrametria saem sem medida real, quais as formas de dar escala (GPS, pontos de controle, marcadores, barra de escala, trena) e como conferir a precisão.",
     category: CAT,
-    ...IMG.vista,
     keywords: ["escala fotogrametria", "marcador de escala", "barra de escala fotogrametria", "alvos codificados", "calibrar escala modelo 3D"],
     intro: [
       "A fotogrametria reconstrói a forma de um objeto com grande fidelidade, mas não sabe o seu tamanho. Um prédio e uma maquete fotografados do mesmo jeito geram o mesmo modelo. A **escala** precisa vir de fora, e sem ela medidas, áreas e orçamentos não valem.",
@@ -359,7 +354,6 @@ export const TECNOLOGIA = [
     seoTitle: "IA na inspeção predial e mapa de danos",
     summary: "O que a inteligência artificial e a visão computacional já fazem bem na inspeção de fachadas, onde ainda erram e por que o profissional continua no controle.",
     category: CAT,
-    ...IMG.tablet,
     keywords: ["inteligência artificial inspeção predial", "IA mapa de danos", "detecção automática de fissuras", "visão computacional construção civil"],
     intro: [
       "Detectar fissuras, manchas e descolamentos automaticamente em imagens de fachada é um dos usos mais promissores da inteligência artificial na construção. Mas há muita promessa no mercado. Vale separar o que já funciona do que ainda está amadurecendo.",
@@ -422,7 +416,6 @@ export const TECNOLOGIA = [
     seoTitle: "Modelo 3D de edificação: usos na reforma e restauro",
     summary: "Para que serve um modelo 3D da edificação existente: medir depois da visita, planejar a obra, documentar o estado e acompanhar a evolução dos danos.",
     category: CAT,
-    ...IMG.igreja2010,
     keywords: ["modelo 3D edificação", "modelo 3D para reforma", "levantamento 3D de edificações", "gêmeo digital edificação"],
     intro: [
       "Ter um modelo 3D da edificação existente muda a forma de trabalhar: as dúvidas que antes exigiam nova visita ao local passam a ser resolvidas no computador. Com captura por celular, esse modelo deixou de ser exclusivo de grandes projetos.",

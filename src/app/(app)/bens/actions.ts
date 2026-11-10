@@ -181,3 +181,35 @@ export async function deleteCampaign(siteId: string, campaignId: string) {
   await db.delete(campaigns).where(and(eq(campaigns.id, campaignId), eq(campaigns.siteId, siteId)));
   await touch(siteId);
 }
+
+/** Renomeia o projeto (menu da barra lateral). */
+export async function renameSite(id: string, name: string): Promise<{ error?: string }> {
+  const user = await requireUser(editors);
+  await getSite(user.orgId, id);
+  const clean = name.trim().replace(/\s+/g, " ").slice(0, 160);
+  if (clean.length < 2) return { error: "Dê um nome com pelo menos 2 letras." };
+  await db.update(sites).set({ name: clean, updatedAt: new Date() }).where(eq(sites.id, id));
+  revalidatePath("/", "layout");
+  return {};
+}
+
+/**
+ * Duplica o projeto: ficha e áreas. Vistorias, fotos, modelos e mapas ficam só no original
+ * (são registros de campo de uma data e ocupam armazenamento).
+ */
+export async function duplicateSite(id: string): Promise<{ error?: string; id?: string }> {
+  const user = await requireUser(editors);
+  const site = await getSite(user.orgId, id);
+  const [row] = await db.select().from(sites).where(eq(sites.id, site.id)).limit(1);
+  if (!row) return { error: "Projeto não encontrado." };
+  const { id: _id, createdAt: _c, updatedAt: _u, isDemo: _d, ...rest } = row;
+  void [_id, _c, _u, _d];
+  const [copy] = await db
+    .insert(sites)
+    .values({ ...rest, name: `${row.name} (cópia)`.slice(0, 160), isDemo: false })
+    .returning({ id: sites.id });
+  const areas = await db.select().from(elements).where(eq(elements.siteId, id));
+  if (areas.length) await db.insert(elements).values(areas.map((a) => ({ siteId: copy!.id, name: a.name, kind: a.kind, sortOrder: a.sortOrder })));
+  revalidatePath("/", "layout");
+  return { id: copy!.id };
+}

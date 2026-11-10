@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { fmtPostDate, type Post } from "@/lib/updates";
 import type { Lang } from "@/lib/site/lang";
-import { Illo, type IlloName } from "@/components/site/illo";
+import { Illo, ILLO_NAMES, type IlloName } from "@/components/site/illo";
+import { ARTICLE_ILLO } from "@/lib/articles/illos";
 
 /** Ilustração de cada publicação do Index (mídia própria, sem fotos). */
 const POST_ILLO: Record<string, IlloName> = {
@@ -10,7 +11,11 @@ const POST_ILLO: Record<string, IlloName> = {
   "deteccao-automatica-de-danos": "deteccao",
   "archray-mapa-de-danos-com-ia": "retifica",
 };
-export const postIllo = (slug: string): IlloName => POST_ILLO[slug] ?? "grade";
+export const postIllo = (slug: string): IlloName => {
+  const a = ARTICLE_ILLO[slug];
+  if (a && (ILLO_NAMES as string[]).includes(a)) return a as IlloName;
+  return POST_ILLO[slug] ?? "grade";
+};
 
 /** Publicação em cartão: etiqueta, ilustração, título em negrito e resumo. */
 export function PostCard({ post, lang = "pt", image = true }: { post: Post; lang?: Lang; image?: boolean }) {

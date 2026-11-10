@@ -38,6 +38,8 @@ import { roles } from "@/lib/labels";
 import { logout } from "@/app/login/actions";
 import type { SessionUser } from "@/lib/auth";
 import type { Recent } from "@/lib/recent";
+import { ProjectItem } from "@/components/project-item";
+
 
 const ITEMS: { href: string; label: string; icon: React.ElementType; match: (p: string) => boolean; beta?: boolean }[] = [
   { href: "/", label: "Projetos", icon: Building2, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/ortofotos/") && !p.includes("/modelos/")) },
@@ -74,10 +76,10 @@ function Group({ title, empty, children, collapsed }: { title: string; empty: st
   const [open, setOpen] = useState(true);
   if (collapsed) return null;
   return (
-    <div className="mt-6 px-3">
+    <div className={`mt-6 px-3 [@media(max-height:860px)]:mt-3`}>
       <button
         onClick={() => setOpen((o) => !o)}
-        className="flex w-full items-center justify-between rounded-md px-2 py-1 text-[14px] text-sidebar-foreground/60 hover:text-sidebar-foreground"
+        className={`flex w-full items-center justify-between rounded-md px-2 py-1 text-[14px] text-sidebar-foreground/60 hover:text-sidebar-foreground [@media(max-height:860px)]:text-[13px]`}
       >
         {title}
         <ChevronDown className={cn("size-4 transition-transform", !open && "-rotate-90")} />
@@ -179,7 +181,7 @@ function NavContent({
   const pathname = usePathname();
   return (
     <div className="flex h-full flex-col">
-      <div className={cn("flex items-center px-3 pt-3.5 pb-4", collapsed ? "flex-col gap-2" : "justify-between")}>
+      <div className={cn(`flex items-center px-3 pt-3.5 pb-4 [@media(max-height:860px)]:pt-2.5 [@media(max-height:860px)]:pb-2`, collapsed ? "flex-col gap-2" : "justify-between")}>
         <Link
           href="/"
           onClick={onNavigate}
@@ -207,7 +209,7 @@ function NavContent({
           onClick={onNavigate}
           data-tour="novo"
           className={cn(
-            "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] hover:bg-sidebar-accent",
+            `flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] hover:bg-sidebar-accent [@media(max-height:860px)]:h-8 [@media(max-height:860px)]:text-[14px]`,
             collapsed && "justify-center px-0",
           )}
           title="Novo projeto"
@@ -231,7 +233,7 @@ function NavContent({
               title={label}
               data-tour={href === "/" ? "nav-bens" : `nav-${href.slice(1)}`}
               className={cn(
-                "flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] transition-colors hover:bg-sidebar-accent",
+                `flex h-10 items-center gap-3 rounded-lg px-2.5 text-[15px] transition-colors hover:bg-sidebar-accent [@media(max-height:860px)]:h-8 [@media(max-height:860px)]:text-[14px]`,
                 active && "bg-sidebar-accent",
                 collapsed && "justify-center px-0",
               )}
@@ -251,22 +253,12 @@ function NavContent({
       <div className="thin-scroll min-h-0 flex-1 overflow-y-auto pb-4">
         <Group title="Projetos recentes" empty="Nenhum projeto" collapsed={collapsed}>
           {recent.sites.map((s) => (
-            <Link
-              key={s.id}
-              href={`/bens/${s.id}`}
-              onClick={onNavigate}
-              className={cn(
-                "truncate rounded-md px-2 py-1.5 text-[14px] text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground",
-                pathname === `/bens/${s.id}` && "bg-sidebar-accent text-sidebar-foreground",
-              )}
-            >
-              {s.name}
-            </Link>
+            <ProjectItem key={s.id} site={s} role={user.role} active={pathname === `/bens/${s.id}`} onNavigate={onNavigate} />
           ))}
         </Group>
       </div>
 
-      <div className="p-2">
+      <div className={`p-2 [@media(max-height:860px)]:p-1.5`}>
         <AccountMenu user={user} collapsed={collapsed} onNavigate={onNavigate} />
       </div>
     </div>
@@ -417,11 +409,10 @@ export function MobileTabBar({ user, recent }: { user: SessionUser; recent: Rece
             {recent.sites.length > 0 && (
               <div className="grid gap-1">
                 <p className="label px-1">Projetos recentes</p>
-                {recent.sites.slice(0, 4).map((s) => (
-                  <Link key={s.id} href={`/bens/${s.id}`} onClick={close} className="truncate rounded-lg px-1 py-2.5 text-[15px]">
-                    {s.name}
-                  </Link>
+                {recent.sites.slice(0, 6).map((s) => (
+                  <ProjectItem key={s.id} site={s} role={user.role} active={false} onNavigate={close} className="[&_a]:py-2.5 [&_a]:text-[15px]" />
                 ))}
+                <p className="px-1 text-[12px] text-muted-foreground">Segure um projeto para renomear, duplicar ou excluir.</p>
               </div>
             )}
             <div className="grid gap-2">

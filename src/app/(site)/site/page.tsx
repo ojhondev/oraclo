@@ -4,7 +4,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
 import { SCIENCE } from "@/lib/site/science";
-import { AppShowcase } from "@/components/site/app-showcase";
+import { HowItWorks } from "@/components/site/how-it-works";
 import { Illo, type IlloName } from "@/components/site/illo";
 
 // Servida em "/" para quem não está logado (reescrita em src/proxy.ts).
@@ -44,8 +44,9 @@ export default async function SiteHome() {
         </h1>
       </section>
 
-      {/* simulação do app em abas */}
-      <AppShowcase lang={lang} />
+      {/* como funciona: hoje × com o ArchRay, ilustrado e animado
+          (a simulação do app, AppShowcase, volta quando houver imagens reais) */}
+      <HowItWorks lang={lang} />
 
       {/* destaque com colagem de ilustrações */}
       <section className="relative overflow-hidden bg-[var(--site-band)]" aria-labelledby="destaque">

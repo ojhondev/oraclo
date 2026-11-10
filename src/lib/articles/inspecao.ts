@@ -1,4 +1,4 @@
-import { article, ER, IMG } from "./helper";
+import { article, ER } from "./helper";
 
 const CAT = "Inspeção e laudo";
 
@@ -9,7 +9,6 @@ export const INSPECAO = [
     seoTitle: "Inspeção predial NBR 16747: guia prático",
     summary: "O que é a inspeção predial, o que a ABNT NBR 16747 estabelece, como é feita na prática e onde entram o mapa de danos e o laudo.",
     category: CAT,
-    ...IMG.fachada,
     keywords: ["inspeção predial", "NBR 16747", "norma de inspeção predial", "laudo de inspeção predial", "inspeção predial o que é"],
     intro: [
       "A **inspeção predial** é a avaliação das condições técnicas, de uso, de operação e de manutenção de uma edificação. No Brasil, a referência é a **ABNT NBR 16747** (Inspeção predial: diretrizes, conceitos, terminologia, requisitos e procedimento), publicada em 2020, que organizou um campo antes regido sobretudo por práticas de mercado.",
@@ -78,7 +77,6 @@ export const INSPECAO = [
     seoTitle: "Laudo de fachada: o que deve conter (checklist)",
     summary: "Checklist do laudo técnico de fachada: identificação, metodologia, mapa de danos, diagnóstico, recomendações, prioridades, orçamento e responsabilidade técnica.",
     category: CAT,
-    ...IMG.tablet,
     keywords: ["laudo de fachada", "laudo técnico de fachada", "o que deve conter um laudo de fachada", "laudo de inspeção de fachada"],
     intro: [
       "O laudo de fachada é o documento que transforma uma vistoria em decisão: ele diz o que há na fachada, por que aconteceu, o que fazer, em que ordem e quanto deve custar. Um laudo bem estruturado evita discussões, aditivos de obra e decisões no escuro.",
@@ -148,7 +146,6 @@ export const INSPECAO = [
     seoTitle: "Laudo técnico de patologia: estrutura e modelo",
     summary: "Modelo comentado de laudo técnico de manifestações patológicas, seção por seção, com exemplos de redação clara e o que evitar.",
     category: CAT,
-    ...IMG.livros,
     keywords: ["laudo técnico de patologia", "modelo de laudo técnico", "laudo de patologia das construções", "como fazer laudo técnico"],
     intro: [
       "Um bom laudo técnico se lê sem esforço: frases objetivas, conclusões amparadas em evidências e recomendações que qualquer gestor consegue executar. Este modelo comentado mostra a estrutura e exemplos de redação para cada seção.",
@@ -225,7 +222,6 @@ export const INSPECAO = [
     seoTitle: "Matriz GUT na manutenção predial: como usar",
     summary: "Como usar a matriz GUT (gravidade, urgência e tendência) para priorizar os reparos de uma edificação, com escala de notas, exemplo e cuidados.",
     category: CAT,
-    ...IMG.arquiteta,
     keywords: ["matriz GUT", "matriz GUT manutenção predial", "GUT gravidade urgência tendência", "priorização de manutenção", "matriz GUT exemplo"],
     intro: [
       "Quase toda edificação tem mais problemas do que verba para resolvê-los de uma vez. A **matriz GUT** é uma ferramenta simples para decidir o que vem primeiro, combinando três critérios numa nota única. É muito usada em laudos de inspeção e planos de manutenção.",
@@ -301,7 +297,6 @@ export const INSPECAO = [
     seoTitle: "Orçamento de recuperação de fachada: como calcular",
     summary: "Como montar o orçamento de recuperação de uma fachada a partir do mapa de danos: quantitativos por serviço, composições, itens indiretos e erros que geram aditivos.",
     category: CAT,
-    ...IMG.tablet,
     keywords: ["orçamento recuperação de fachada", "quanto custa recuperar fachada", "quantitativos de fachada", "orçamento reforma de fachada"],
     intro: [
       "Orçamentos de fachada feitos 'por verba' ou por estimativa visual costumam terminar em aditivos. A forma mais segura de orçar é partir de quantitativos medidos sobre o [mapa de danos](/index/mapa-de-danos), serviço por serviço.",
@@ -377,7 +372,6 @@ export const INSPECAO = [
     seoTitle: "Inspeção de fachada em condomínio: guia do síndico",
     summary: "Guia para síndicos e administradoras: por que inspecionar a fachada, quem é responsável, como planejar a inspeção e como levar o resultado à assembleia.",
     category: CAT,
-    ...IMG.fachada,
     keywords: ["inspeção de fachada condomínio", "laudo de fachada condomínio", "síndico manutenção fachada", "reforma de fachada condomínio"],
     intro: [
       "A fachada é uma área comum do condomínio, e a sua conservação é responsabilidade coletiva, administrada pelo síndico. Placas de revestimento soltas, infiltrações e fissuras não são só questão estética: envolvem segurança, valorização do imóvel e responsabilidade civil.",
@@ -434,7 +428,6 @@ export const INSPECAO = [
     seoTitle: "ART e RRT em laudos técnicos: o que são",
     summary: "O que são a ART (CREA) e o RRT (CAU), por que todo laudo técnico precisa de responsabilidade técnica registrada e o papel das ferramentas digitais nesse processo.",
     category: CAT,
-    ...IMG.livros,
     keywords: ["ART laudo técnico", "RRT laudo", "responsabilidade técnica laudo", "diferença entre ART e RRT"],
     intro: [
       "Todo laudo técnico de engenharia ou arquitetura precisa de um responsável identificado, com registro no conselho profissional. É isso que dão a **ART** (Anotação de Responsabilidade Técnica) e o **RRT** (Registro de Responsabilidade Técnica).",

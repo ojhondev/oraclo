@@ -1,4 +1,4 @@
-import { article, ER, IMG } from "./helper";
+import { article, ER } from "./helper";
 
 const CAT = "Restauro e patrimônio";
 
@@ -9,7 +9,6 @@ export const RESTAURO = [
     seoTitle: "Restauro de fachadas históricas: etapas e critérios",
     summary: "Como é o restauro de uma fachada histórica, da leitura do edifício e do mapa de danos ao projeto, à obra e à manutenção, com os critérios que diferenciam restauro de reforma.",
     category: CAT,
-    ...IMG.igreja2021,
     keywords: ["restauro de fachadas históricas", "restauração de fachada", "restauro de patrimônio histórico", "projeto de restauro", "fachada histórica"],
     intro: [
       "Restaurar uma fachada histórica não é deixá-la 'como nova'. É conservar o que ela tem de autêntico, tratar os danos com materiais compatíveis e deixar registro de tudo o que foi feito. Isso exige método, das primeiras visitas à manutenção depois da obra.",
@@ -82,7 +81,6 @@ export const RESTAURO = [
     seoTitle: "Conservação preventiva de edifícios históricos",
     summary: "O que é conservação preventiva, quais rotinas evitam que pequenos danos virem restauros caros e como inspeções periódicas e mapas de danos sustentam o plano de manutenção.",
     category: CAT,
-    ...IMG.convento,
     keywords: ["conservação preventiva", "conservação de edifícios históricos", "manutenção de patrimônio histórico", "plano de conservação"],
     intro: [
       "Cada grande restauro costuma ser o resultado de anos de pequenos problemas não resolvidos: uma calha entupida, uma telha quebrada, uma fissura que deixou entrar água. A **conservação preventiva** atua antes, com rotinas simples e acompanhamento constante.",
@@ -141,7 +139,6 @@ export const RESTAURO = [
     seoTitle: "Leis de incentivo para restauro de patrimônio",
     summary: "Como as leis de incentivo à cultura podem financiar o restauro de bens históricos, quais são os mecanismos mais conhecidos e por que um bom diagnóstico fortalece o projeto.",
     category: CAT,
-    ...IMG.igreja2010,
     keywords: ["lei de incentivo restauro", "Lei Rouanet patrimônio", "financiamento restauro patrimônio histórico", "ProAC restauro", "captação de recursos restauro"],
     intro: [
       "Restaurar um bem histórico costuma custar caro, e muitos proprietários, igrejas e instituições não têm esse recurso. As **leis de incentivo à cultura** permitem que empresas e pessoas direcionem parte de impostos devidos a projetos culturais aprovados, inclusive de preservação do patrimônio.",
@@ -203,7 +200,6 @@ export const RESTAURO = [
     seoTitle: "Monitoramento de danos: comparar vistorias",
     summary: "Como comparar duas vistorias da mesma fachada para saber o que surgiu, cresceu, ficou estável ou foi tratado, e por que isso muda a gestão da manutenção e do restauro.",
     category: CAT,
-    ...IMG.igreja2021,
     keywords: ["monitoramento de danos", "comparar vistorias", "evolução de fissuras", "monitoramento de patologias", "acompanhamento de edificações"],
     intro: [
       "Um mapa de danos mostra como a fachada está hoje. Para saber se ela está piorando, se a última intervenção funcionou ou o que priorizar na próxima obra, é preciso comparar com uma vistoria anterior. Até pouco tempo, isso era feito no olho, com duas fotos lado a lado.",

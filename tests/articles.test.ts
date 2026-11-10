@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { existsSync } from "node:fs";
+import { ARTICLE_ILLO } from "@/lib/articles/illos";
+import { ILLO_NAMES } from "@/components/site/illo";
 import { ARTICLES } from "@/lib/articles";
 import { POSTS } from "@/lib/updates";
 import { STORIES } from "@/lib/site/stories";
@@ -54,11 +55,20 @@ describe("guias técnicos do Index", () => {
       expect(a.summary.length, a.slug).toBeLessThanOrEqual(200);
       expect(a.keywords?.length, a.slug).toBeGreaterThanOrEqual(3);
       expect(a.faq?.length, a.slug).toBeGreaterThanOrEqual(2);
-      expect(existsSync(`public${a.image}`), a.slug).toBe(true);
+      expect(ARTICLE_ILLO[a.slug], `${a.slug}: sem ilustração`).toBeTruthy();
+      expect(ILLO_NAMES as string[], a.slug).toContain(ARTICLE_ILLO[a.slug]);
     }
   });
 
   it("os temas de restauro e patrimônio citam o Estúdio Restaura", () => {
     for (const a of ARTICLES.filter((x) => x.category === "Restauro e patrimônio")) expect(allText(a), a.slug).toMatch(/estudiorestaura\.com\.br/);
+  });
+});
+
+describe("capas ilustradas", () => {
+  it("cada guia tem uma ilustração própria, sem repetir", () => {
+    const used = ARTICLES.map((a) => ARTICLE_ILLO[a.slug]);
+    expect(new Set(used).size).toBe(ARTICLES.length);
+    for (const a of ARTICLES) expect(a.image, a.slug).toBeUndefined();
   });
 });

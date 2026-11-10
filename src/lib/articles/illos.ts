@@ -1,0 +1,36 @@
+/**
+ * Ilustração de capa de cada guia (nomes de src/components/site/illo.tsx e illo-extra.tsx).
+ * Uma por artigo, sem repetir, ligada ao tema. tests/articles.test.ts confere a cobertura.
+ */
+export const ARTICLE_ILLO: Record<string, string> = {
+  "mapa-de-danos": "mapa",
+  "mapa-de-danos-fachada-passo-a-passo": "fachada",
+  "legenda-mapa-de-danos": "hachuras",
+  "mapa-de-danos-patrimonio-historico": "igreja",
+  "mapa-de-danos-autocad-ou-software": "planta",
+  "manifestacoes-patologicas-fachadas": "sobrado",
+  "fissura-trinca-rachadura-diferenca": "fissura",
+  "umidade-ascendente": "umidade",
+  "eflorescencia-na-parede": "tijolos",
+  "descolamento-reboco-revestimento-fachada": "azulejo",
+  "biodeterioracao-fachadas": "vegetacao",
+  "crosta-negra-sujidade-fachada": "cornija",
+  "inspecao-predial-nbr-16747": "checklist",
+  "laudo-de-fachada": "laudo",
+  "laudo-tecnico-patologias-modelo": "lupa",
+  "matriz-gut-manutencao-predial": "gut",
+  "orcamento-recuperacao-fachada": "trena",
+  "inspecao-fachada-condominio": "andaime",
+  "art-rrt-laudo-tecnico": "capacete",
+  "fotogrametria-arquitetura": "camera",
+  "nuvem-de-pontos": "pontos",
+  "levantamento-arquitetonico-celular": "tablet",
+  "ortofoto-fachada-retificacao": "retifica",
+  "escala-fotogrametria-marcador": "escala",
+  "inteligencia-artificial-inspecao-predial": "deteccao",
+  "modelo-3d-edificacao-reforma": "camadas",
+  "restauro-fachadas-historicas": "frontao",
+  "conservacao-preventiva-edificios-historicos": "telhado",
+  "leis-de-incentivo-restauro-patrimonio": "coluna",
+  "monitoramento-danos-comparar-vistorias": "comparar",
+};

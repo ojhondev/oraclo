@@ -15,7 +15,6 @@ export async function generateMetadata({ params }: PageProps<"/index/[slug]">): 
   const post = getPost((await params).slug, await getLang());
   if (!post) return {};
   const url = `/index/${post.slug}`;
-  const image = post.image ?? "/site/showcase-fachada.jpg";
   return {
     title: { absolute: `${post.seoTitle ?? post.title} · ArchRay` },
     description: plain(post.summary),
@@ -29,7 +28,6 @@ export async function generateMetadata({ params }: PageProps<"/index/[slug]">): 
       publishedTime: post.date,
       modifiedTime: post.updated ?? post.date,
       authors: [post.author],
-      images: [{ url: image, alt: post.imageAlt ?? post.title }],
     },
   };
 }
@@ -106,7 +104,7 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
       "@type": "Article",
       headline: post.title,
       description: plain(post.summary),
-      image: [`${base}${post.image ?? "/site/showcase-fachada.jpg"}`],
+      image: [`${base}/index/${post.slug}/opengraph-image`],
       datePublished: post.date,
       dateModified: post.updated ?? post.date,
       inLanguage: "pt-BR",

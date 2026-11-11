@@ -1,0 +1,134 @@
+.credito {
+  /* paleta do rodapé escuro do ArchRay (.site-ink) */
+  --credito-texto: #b0aea5;
+  --credito-destaque: #faf9f5;
+  --credito-linha: #30302e;
+  --credito-fundo-pagina: #141413;
+  --credito-selo: #faf9f5;
+  --credito-selo-texto: #141413;
+  --credito-verde: #3ddc84;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-mono-ui, "IBM Plex Mono"), ui-monospace, monospace;
+  font-size: 13px;
+  letter-spacing: normal;
+  text-decoration: none;
+  color: var(--credito-texto);
+}
+
+/* ---------- foto */
+.credito-avatar {
+  position: relative;
+  flex-shrink: 0;
+}
+.credito-foto {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  object-fit: cover;
+  opacity: 0.7;
+  filter: grayscale(1);
+  box-shadow: 0 0 0 2px var(--credito-linha);
+  transition: filter 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease;
+}
+.credito-ponto {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--credito-verde);
+  box-shadow: 0 0 0 2px var(--credito-fundo-pagina);
+  transform: scale(0);
+  transition: transform 0.3s ease;
+}
+.credito:hover .credito-foto,
+.credito:focus-visible .credito-foto {
+  opacity: 1;
+  filter: grayscale(0);
+  box-shadow: 0 0 0 2px var(--credito-verde);
+}
+.credito:hover .credito-ponto,
+.credito:focus-visible .credito-ponto {
+  transform: scale(1);
+}
+
+/* ---------- texto que gira e vira o selo */
+.credito-troca {
+  display: inline-grid;
+  align-items: center;
+  justify-items: start;
+  perspective: 600px;
+}
+.credito-troca > span {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  transition: transform 0.55s cubic-bezier(0.2, 0.7, 0.2, 1), opacity 0.35s ease;
+}
+.credito-texto {
+  transform: rotateX(0deg);
+}
+.credito-texto strong {
+  font-weight: 700;
+  color: var(--credito-destaque);
+}
+.credito-cta {
+  padding: 6px 12px;
+  background: var(--credito-selo);
+  color: var(--credito-selo-texto);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  transform: rotateX(-90deg);
+  opacity: 0;
+  /* cantos "pixelados" */
+  clip-path: polygon(
+    0 4px, 4px 4px, 4px 0, calc(100% - 4px) 0, calc(100% - 4px) 4px, 100% 4px,
+    100% calc(100% - 4px), calc(100% - 4px) calc(100% - 4px), calc(100% - 4px) 100%,
+    4px 100%, 4px calc(100% - 4px), 0 calc(100% - 4px)
+  );
+}
+.credito:hover .credito-texto,
+.credito:focus-visible .credito-texto {
+  transform: rotateX(90deg);
+  opacity: 0;
+}
+.credito:hover .credito-cta,
+.credito:focus-visible .credito-cta {
+  transform: rotateX(0deg);
+  opacity: 1;
+}
+
+/* ---------- telas de toque: alterna sozinho */
+@media (hover: none) {
+  .credito-texto { animation: credito-sai 7s cubic-bezier(0.2, 0.7, 0.2, 1) infinite; }
+  .credito-cta { animation: credito-entra 7s cubic-bezier(0.2, 0.7, 0.2, 1) infinite; }
+  .credito-foto { animation: credito-cor 7s ease infinite; }
+}
+@keyframes credito-sai {
+  0%, 45% { transform: rotateX(0deg); opacity: 1; }
+  52%, 93% { transform: rotateX(90deg); opacity: 0; }
+  100% { transform: rotateX(0deg); opacity: 1; }
+}
+@keyframes credito-entra {
+  0%, 45% { transform: rotateX(-90deg); opacity: 0; }
+  52%, 93% { transform: rotateX(0deg); opacity: 1; }
+  100% { transform: rotateX(-90deg); opacity: 0; }
+}
+@keyframes credito-cor {
+  0%, 45%, 100% { filter: grayscale(1); opacity: 0.7; }
+  52%, 93% { filter: grayscale(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .credito-troca > span { transition: opacity 0.2s ease; }
+  .credito-texto,
+  .credito-cta,
+  .credito-foto { animation: none !important; }
+}

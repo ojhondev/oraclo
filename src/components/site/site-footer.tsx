@@ -3,6 +3,8 @@ import { ChevronDown } from "lucide-react";
 import { BrandLogo, BrandMark } from "@/components/brand";
 import { SITE } from "@/lib/site/site-copy";
 import type { Lang } from "@/lib/site/lang";
+import { Credito } from "@/components/credito";
+import "@/components/credito.css";
 
 /** Rodapé escuro na estrutura da Anthropic: marca à esquerda, grupos de links em acordeão à direita. */
 export function SiteFooter({ lang }: { lang: Lang }) {
@@ -69,9 +71,12 @@ export function SiteFooter({ lang }: { lang: Lang }) {
         </p>
       </a>
 
-      <p className="mt-10 text-[12.5px] text-muted-foreground">
-        © {new Date().getFullYear()} ArchRay · {en ? "a product of Estúdio Restaura" : "um produto Estúdio Restaura"}
-      </p>
+      <div className="mt-10 flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-[12.5px] text-muted-foreground">
+          © {new Date().getFullYear()} ArchRay · {en ? "a product of Estúdio Restaura" : "um produto Estúdio Restaura"}
+        </p>
+        <Credito site="ArchRay" />
+      </div>
     </footer>
   );
 }

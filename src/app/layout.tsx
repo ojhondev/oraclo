@@ -14,7 +14,7 @@ const sans = Instrument_Sans({
 const mono = IBM_Plex_Mono({
   variable: "--font-mono-ui",
   subsets: ["latin"],
-  weight: ["400", "500"],
+  weight: ["400", "500", "700"],
   display: "swap",
 });
 const serif = Source_Serif_4({

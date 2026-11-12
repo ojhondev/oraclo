@@ -1,5 +1,5 @@
 /**
- * Assinatura "Desenvolvido por @ojhondev".
+ * Assinatura "Desenvolvido por @devjhon" — leva para www.devjhon.tech.
  * P&B discreta; no hover a foto ganha cor e o texto gira no lugar,
  * virando o selo "Crie seu site ou aplicativo agora, fale comigo".
  * Em telas de toque (sem hover) os dois se alternam sozinhos.
@@ -7,20 +7,16 @@
  * Uso: <Credito site="Nome do Site" />
  * Requer: /public/ojhondev.webp e o arquivo credito.css importado.
  */
-const WHATSAPP = "5514998570045";
+const SITE = "https://www.devjhon.tech";
 
-export function Credito({ site = "seu site" }: { site?: string }) {
-  const link = `https://wa.me/${WHATSAPP}?text=${encodeURIComponent(
-    `Olá, Jhonatan! Vi o site ${site} e quero criar meu site ou aplicativo.`,
-  )}`;
-
+export function Credito({ site }: { site?: string }) {
   return (
     <a
-      href={link}
+      href={SITE}
       target="_blank"
-      rel="noopener noreferrer"
+      rel="noopener"
       className="credito"
-      aria-label="Desenvolvido por @ojhondev — crie seu site ou aplicativo agora, fale comigo no WhatsApp"
+      aria-label={`${site ? `${site} — d` : "D"}esenvolvido por @devjhon. Crie seu site ou aplicativo: www.devjhon.tech`}
     >
       <span className="credito-avatar">
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -29,7 +25,7 @@ export function Credito({ site = "seu site" }: { site?: string }) {
       </span>
       <span className="credito-troca" aria-hidden>
         <span className="credito-texto">
-          Desenvolvido por <strong>@ojhondev</strong>
+          Desenvolvido por <strong>@devjhon</strong>
         </span>
         <span className="credito-cta">Crie seu site ou aplicativo agora, fale comigo</span>
       </span>

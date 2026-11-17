@@ -4,7 +4,6 @@ import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
 import { fmtPostDate, getPosts } from "@/lib/updates";
 import { SCIENCE } from "@/lib/site/science";
-import { Formula } from "@/components/site/formula";
 import { EngBand, EngCta, EngHead, EngPageHero, EngPinnedSteps, type Step } from "@/components/eng/blocks";
 import type { ObjectName } from "@/components/eng/contour";
 
@@ -23,7 +22,7 @@ const OBJECT: Record<string, ObjectName> = {
   laudo: "laudo",
 };
 
-/** Nossa Tecnologia (v2): topo escuro, frentes técnicas presas na tela, transformação, matemática, IA e diferenciais. */
+/** Nossa Tecnologia (v2): topo escuro, etapas presas na tela, levantamento tradicional × ArchRay e diferenciais. Sem expor método interno. */
 export default async function TechPage() {
   const lang = await getLang();
   const en = lang === "en";
@@ -74,56 +73,6 @@ export default async function TechPage() {
             </div>
           ))}
         </div>
-      </EngBand>
-
-      {/* a matemática de cada frente */}
-      <EngBand tone="mist" id="matematica">
-        <EngHead eyebrow={en ? "Under the hood" : "Por dentro"} title={en ? "The mathematics behind each step." : "A matemática por trás de cada etapa."} />
-        <div className="mt-14 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {t.items.map((it, i) => (
-            <article key={it.id} className="flex min-w-0 flex-col rounded-[16px] bg-(--eng-0) p-7" data-reveal data-reveal-delay={(i % 3) * 70}>
-              <p className="eng-eyebrow">
-                {String(i + 1).padStart(2, "0")} · {it.status}
-              </p>
-              <h3 className="mt-6 text-[22px] leading-[1.2]">{it.name}</h3>
-              <ul className="mt-5 grid gap-4">
-                {(sci.math[it.id] ?? []).map((eq) => (
-                  <li key={eq.tex} className="min-w-0">
-                    <Formula tex={eq.tex} className="a-formula-box" />
-                    <p className="mt-2 text-[13.5px] leading-6 text-(--eng-mute)">{eq.note}</p>
-                  </li>
-                ))}
-              </ul>
-            </article>
-          ))}
-        </div>
-      </EngBand>
-
-      {/* a IA em cada etapa */}
-      <EngBand tone="dark" id="ia">
-        <EngHead eyebrow={sci.ai.label} title={sci.ai.title} text={sci.ai.text} dark />
-        <div className="mt-16 border-t border-white/30">
-          <div className="hidden gap-6 border-b border-white/15 py-3 font-mono text-[11px] tracking-[0.05em] text-white/50 uppercase lg:grid lg:grid-cols-[1fr_1.4fr_1.3fr_1.4fr_1.4fr]">
-            {sci.ai.headers.map((h) => (
-              <span key={h}>{h}</span>
-            ))}
-          </div>
-          {sci.ai.rows.map((row) => (
-            <dl key={row.step} className="grid gap-3 border-b border-white/15 py-6 lg:grid-cols-[1fr_1.4fr_1.3fr_1.4fr_1.4fr] lg:gap-6" data-reveal>
-              <div>
-                <dt className="sr-only">{sci.ai.headers[0]}</dt>
-                <dd className="text-[19px] leading-snug">{row.step}</dd>
-              </div>
-              {[row.method, row.nature, row.role, row.human].map((v, i) => (
-                <div key={i} className="min-w-0">
-                  <dt className="font-mono text-[11px] tracking-[0.05em] text-white/45 uppercase lg:sr-only">{sci.ai.headers[i + 1]}</dt>
-                  <dd className="mt-1 text-[14.5px] leading-6 text-white/75 lg:mt-0">{v}</dd>
-                </div>
-              ))}
-            </dl>
-          ))}
-        </div>
-        <p className="mt-8 max-w-[80ch] text-[15px] leading-6 text-white/55">{sci.ai.note}</p>
       </EngBand>
 
       {/* diferenciais */}

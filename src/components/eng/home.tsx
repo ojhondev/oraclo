@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from "motion/react";
-import { ArrowLeft, ArrowRight, ChevronDown, Landmark, Building2, HardHat, Scale, ShieldCheck, Ruler, ScrollText, Home, Smartphone } from "lucide-react";
+import { ArrowRight, ChevronDown, Landmark, Building2, HardHat, Scale, ShieldCheck, Home } from "lucide-react";
 import { ContourObject } from "./contour-object";
 import { Drift, Rise } from "./motion";
 import { topoPaths } from "./topo";
@@ -14,20 +14,20 @@ import type { Lang } from "@/lib/site/lang";
 
 const T = {
   pt: {
-    heroTitle: "Levantamento 3D e laudo de fachadas, sem laser scanner nem drone.",
+    heroTitle: "Levantamento 3D e nuvem de pontos com tecnologia própria: sem laser scanner nem drone.",
     heroSub: "O Estúdio Restaura vai até o imóvel, levanta a edificação em 3D com tecnologia própria, mapeia cada dano e entrega laudo, orçamento e prioridades. Mais simples, mais rápido e mais acessível.",
     heroCta: "Solicitar orçamento",
     heroCta2: "Como funciona",
     scroll: "Role para explorar",
-    heroAfterTitle: "Diagnóstico pronto, não dado bruto.",
-    heroAfterText: "Laser scanner e drone entregam uma nuvem de pontos. Nós entregamos o que fazer com ela: mapa de danos, quantitativos, orçamento do tratamento e laudo assinado por profissional habilitado.",
+    heroAfterTitle: "Aplicativo próprio com tecnologia LiDAR e IA embutida.",
+    heroAfterText: "O ArchRay é software próprio que capta em vídeo e gera imagens retificadas, modelo 3D, mapa de danos e nuvem de pontos.",
     stages: [
       { eyebrow: "01 · Vistoria", title: "Nossa equipe vai até o imóvel e grava a fachada com o celular.", text: "Um marcador de escala na parede e o nosso app de captura bastam. Sem mobilizar laser scanner, sem drone e sem interromper o uso do edifício.", cta: "Como capturamos", href: "/tecnologia#captura" },
       { eyebrow: "02 · Levantamento 3D", title: "A gravação vira modelo 3D e nuvem de pontos em escala real.", text: "A fotogrametria reconstrói a edificação e o marcador confere a medida sozinho, com a divergência declarada. Já usa laser? Trabalhamos sobre a sua nuvem.", cta: "Modelo 3D e nuvem", href: "/tecnologia#captura" },
-      { eyebrow: "03 · Diagnóstico", title: "Arquitetos de restauro mapeiam cada dano sobre a fachada em escala.", text: "A IA sugere fissuras, manchas e perdas; quem confirma cada dano é a nossa equipe técnica. Nada entra no laudo sem revisão.", cta: "Como diagnosticamos", href: "/tecnologia#deteccao" },
+      { eyebrow: "03 · Diagnóstico", title: "IA embutida faz o mapeamento de danos primário, e nossa equipe revisa.", text: "Fissuras, manchas e perdas são marcadas pela IA sobre a fachada em escala; arquitetos de restauro conferem cada dano. Nada entra no laudo sem revisão.", cta: "Como diagnosticamos", href: "/tecnologia#deteccao" },
       { eyebrow: "04 · Entrega", title: "Você recebe laudo, orçamento e prioridades, prontos para decidir.", text: "Mapa de danos, quantitativos, orçamento do tratamento, matriz GUT, pranchas e DXF, com o laudo assinado pelo responsável técnico.", cta: "O que entregamos", href: "/tecnologia#laudo" },
     ],
-    statement: "Um celular, um marcador de escala e tecnologia própria no lugar de equipamentos caros. O campo fica mais curto, o orçamento mais acessível, e quem revisa cada dano é um arquiteto de restauro.",
+    statement: "Contratar levantamento com laser scanner e drone custa caro e não cabe em prazos apertados: equipamento, equipe especializada e semanas de espera. O ArchRay resolve a maioria dos casos de um jeito mais simples, com custo até 60% menor e entrega mais rápida.",
     galleryA: "Levantamento e laudo para",
     galleryB: "Do patrimônio tombado ao prédio comercial, o mesmo serviço: vistoria, modelo 3D, mapa de danos e laudo.",
     galleryWords: ["igrejas.", "fachadas.", "casarões.", "condomínios.", "galpões."],
@@ -40,13 +40,6 @@ const T = {
       { icon: Home, title: "Condomínios", text: "Inspeção da fachada com orçamento por prioridade, pronto para levar à assembleia.", href: "/empresas" },
       { icon: Scale, title: "Perícias e seguros", text: "Registro datado, medido e comparável do estado da edificação.", href: "/empresas#pericias" },
       { icon: ShieldCheck, title: "Poder público", text: "Diagnóstico de acervo edificado e monitoramento entre vistorias.", href: "/empresas#publico" },
-    ],
-    pillarsTitle: "Por que contratar o ArchRay.",
-    pillars: [
-      { icon: Smartphone, title: "Sem laser scanner, sem drone", text: "Levantamos com celular, marcador de escala e fotogrametria. Menos equipamento em campo, menos mobilização e um orçamento mais acessível.", href: "/tecnologia#captura" },
-      { icon: ScrollText, title: "Diagnóstico, não só dado bruto", text: "Você recebe mapa de danos, quantitativos, orçamento do tratamento e prioridades, prontos para decidir e aprovar.", href: "/tecnologia#laudo" },
-      { icon: Landmark, title: "Feito por arquitetos de restauro", text: "O serviço é do Estúdio Restaura. A tecnologia acelera; cada dano é revisado e o laudo é assinado por profissional habilitado.", href: "/empresa" },
-      { icon: Ruler, title: "Quando o scanner é melhor, dizemos", text: "Se o projeto exige precisão milimétrica ou BIM detalhado, indicamos o laser scanner. Se você já tem a nuvem, trabalhamos sobre ela.", href: "/compromissos" },
     ],
     more: "Saiba mais",
     latestTitle: "Do campo ao laudo.",
@@ -62,20 +55,20 @@ const T = {
     finalCta: "Solicitar orçamento",
   },
   en: {
-    heroTitle: "3D surveys and façade reports, without laser scanners or drones.",
+    heroTitle: "3D surveys and point clouds with in-house technology: no laser scanner, no drone.",
     heroSub: "Estúdio Restaura goes to the building, surveys it in 3D with in-house technology, maps every defect and delivers the report, budget and priorities. Simpler, faster and more affordable.",
     heroCta: "Request a quote",
     heroCta2: "How it works",
     scroll: "Scroll to explore",
-    heroAfterTitle: "A finished diagnosis, not raw data.",
-    heroAfterText: "Laser scanners and drones deliver a point cloud. We deliver what to do with it: damage map, quantities, treatment budget and a report signed by a licensed professional.",
+    heroAfterTitle: "Our own app, with LiDAR technology and built-in AI.",
+    heroAfterText: "ArchRay is in-house software that captures on video and produces rectified images, a 3D model, a damage map and a point cloud.",
     stages: [
       { eyebrow: "01 · Site visit", title: "Our team goes to the building and records the façade on a phone.", text: "A scale marker on the wall and our capture app are enough. No laser scanner, no drone, no disruption to the building.", cta: "How we capture", href: "/tecnologia#captura" },
       { eyebrow: "02 · 3D survey", title: "The recording becomes a 3D model and point cloud at real scale.", text: "Photogrammetry rebuilds the building and the marker checks the measurement on its own, with the divergence stated. Already have a laser scan? We work on your cloud.", cta: "3D model and cloud", href: "/tecnologia#captura" },
-      { eyebrow: "03 · Diagnosis", title: "Restoration architects map every defect on the scaled façade.", text: "AI suggests cracks, stains and losses; our technical team confirms each one. Nothing reaches the report without review.", cta: "How we diagnose", href: "/tecnologia#deteccao" },
+      { eyebrow: "03 · Diagnosis", title: "Built-in AI does the first damage mapping, and our team reviews it.", text: "Cracks, stains and losses are marked by AI on the scaled façade; restoration architects check every defect. Nothing reaches the report without review.", cta: "How we diagnose", href: "/tecnologia#deteccao" },
       { eyebrow: "04 · Delivery", title: "You receive the report, budget and priorities, ready to decide.", text: "Damage map, quantities, treatment budget, GUT matrix, drawings and DXF, with the report signed by the professional in charge.", cta: "What we deliver", href: "/tecnologia#laudo" },
     ],
-    statement: "A phone, a scale marker and in-house technology instead of expensive equipment. Shorter site work, a more affordable budget, and every defect reviewed by a restoration architect.",
+    statement: "Hiring a laser scanner and drone survey is expensive and rarely fits a tight deadline: equipment, a specialised crew and weeks of waiting. ArchRay handles most cases in a simpler way, at up to 60% lower cost and with faster delivery.",
     galleryA: "Surveys and reports for",
     galleryB: "From listed heritage to commercial buildings, the same service: site visit, 3D model, damage map and report.",
     galleryWords: ["churches.", "façades.", "mansions.", "condos.", "warehouses."],
@@ -88,13 +81,6 @@ const T = {
       { icon: Home, title: "Condominiums", text: "Façade inspection with a budget by priority, ready for the owners' meeting.", href: "/empresas" },
       { icon: Scale, title: "Forensics and insurance", text: "A dated, measured and comparable record of the building's condition.", href: "/empresas#pericias" },
       { icon: ShieldCheck, title: "Public sector", text: "Diagnosis of built assets and monitoring between surveys.", href: "/empresas#publico" },
-    ],
-    pillarsTitle: "Why hire ArchRay.",
-    pillars: [
-      { icon: Smartphone, title: "No laser scanner, no drone", text: "We survey with a phone, a scale marker and photogrammetry. Less equipment on site, less mobilisation and a more affordable budget.", href: "/tecnologia#captura" },
-      { icon: ScrollText, title: "A diagnosis, not just raw data", text: "You receive a damage map, quantities, treatment budget and priorities, ready to decide and approve.", href: "/tecnologia#laudo" },
-      { icon: Landmark, title: "Done by restoration architects", text: "The service belongs to Estúdio Restaura. Technology speeds it up; every defect is reviewed and the report is signed by a licensed professional.", href: "/empresa" },
-      { icon: Ruler, title: "When a scanner is better, we say so", text: "If the project needs millimetre precision or detailed BIM, we recommend a laser scan. If you already have the cloud, we work on it.", href: "/compromissos" },
     ],
     more: "Learn more",
     latestTitle: "From site to report.",
@@ -325,7 +311,7 @@ function Statement({ t }: { t: (typeof T)["pt"] }) {
     <section ref={ref} className="eng-dark relative bg-black" style={{ height: "260vh" }}>
       <div className="sticky top-0 flex h-[100svh] items-center overflow-hidden">
         <motion.div style={{ left: inset, borderRadius: radius }} className="absolute inset-y-[10svh] right-0 bg-[#1e1c28]">
-          <p className="absolute top-[12%] right-[6%] left-[6%] max-w-[22ch] text-[clamp(26px,3.6vw,56px)] leading-[1.12] tracking-[-0.02em] text-white">
+          <p className="absolute top-[10%] right-[6%] left-[6%] max-w-[24ch] text-[clamp(23px,3vw,46px)] leading-[1.14] tracking-[-0.02em] text-white">
             {words.map((w, i) => (
               <Word key={i} w={w} i={i} n={words.length} progress={scrollYProgress} />
             ))}
@@ -410,80 +396,86 @@ function Gallery({ t }: { t: (typeof T)["pt"] }) {
   );
 }
 
-/* ─────────────────────────── 5. setores em carrossel ─────────────────────────── */
+/* ─────────────────────────── 5. setores em trilho horizontal ─────────────────────────── */
 
+/** Cor e objeto de cada setor (mesma ordem de T.sectors). */
+const SECTOR_LOOK: { card: string; ink: string; obj: ObjectName }[] = [
+  { card: "bg-[#193a29] text-white", ink: "text-white/85", obj: "catedral" },
+  { card: "eng-light bg-[#d9d1e2]", ink: "text-black/80", obj: "notebook" },
+  { card: "eng-light bg-[#a8927c]", ink: "text-black/80", obj: "torre" },
+  { card: "bg-black text-white", ink: "text-white/85", obj: "fachada" },
+  { card: "bg-(--eng-1)", ink: "text-(--eng-ink)", obj: "laudo" },
+  { card: "bg-[#79648c] text-white", ink: "text-white/85", obj: "igreja" },
+];
+
+/**
+ * Setores no padrão do Scale: a seção fica presa e a rolagem vertical empurra um trilho de cartões
+ * grandes para o lado. Cada cartão desenha o seu objeto em curvas de nível quando entra na tela.
+ */
 function Sectors({ t }: { t: (typeof T)["pt"] }) {
-  const rail = useRef<HTMLUListElement>(null);
-  const go = (d: number) => rail.current?.scrollBy({ left: d * 360, behavior: "smooth" });
+  const ref = useRef<HTMLElement>(null);
+  const rail = useRef<HTMLDivElement>(null);
+  const [dist, setDist] = useState(0);
+  const [active, setActive] = useState(0);
+  useEffect(() => {
+    const el = rail.current;
+    if (!el) return;
+    const measure = () => setDist(Math.max(0, el.scrollWidth - window.innerWidth));
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    window.addEventListener("resize", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", measure);
+    };
+  }, []);
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const k = (v: number) => Math.min(1, Math.max(0, (v - 0.04) / 0.92));
+  const x = useTransform(scrollYProgress, (v) => -dist * k(v));
+  const bar = useTransform(scrollYProgress, (v) => `${100 * k(v)}%`);
+  const n = t.sectors.length;
+  useMotionValueEvent(scrollYProgress, "change", (v) => setActive(Math.min(n - 1, Math.round(k(v) * (n - 1)))));
   return (
-    <section className="bg-(--eng-0) py-24 sm:py-32">
-      <div className="flex items-end justify-between gap-6 px-4 sm:px-6 lg:px-8">
-        <Rise>
-          <h2 className="max-w-[20ch] text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.025em]">{t.sectorsTitle}</h2>
-        </Rise>
-        <div className="flex gap-2">
-          {[-1, 1].map((d) => (
-            <button key={d} onClick={() => go(d)} aria-label={d < 0 ? "Anterior" : "Próximo"} className="grid size-10 place-items-center rounded-[8px] border border-(--eng-line) bg-(--eng-0) hover:bg-(--eng-1)">
-              {d < 0 ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}
-            </button>
-          ))}
+    <section ref={ref} className="relative bg-(--eng-0)" style={{ height: `calc(100svh + ${Math.round(dist * 1.15)}px)` }}>
+      <div className="sticky top-0 flex h-[100svh] flex-col justify-center overflow-hidden pt-16 pb-8">
+        <div className="flex items-end justify-between gap-6 px-4 sm:px-6 lg:px-8">
+          <Rise>
+            <h2 className="max-w-[16ch] text-[clamp(32px,4.4vw,64px)] leading-[1.04] tracking-[-0.03em]">{t.sectorsTitle}</h2>
+          </Rise>
+          <p className="eng-eyebrow shrink-0 tabular-nums">
+            {String(active + 1).padStart(2, "0")} / {String(n).padStart(2, "0")}
+          </p>
         </div>
-      </div>
-      <ul ref={rail} className="no-scrollbar mt-12 flex snap-x snap-mandatory gap-4 overflow-x-auto scroll-px-4 px-4 sm:scroll-px-6 sm:px-6 lg:scroll-px-8 lg:px-8">
-        {t.sectors.map((s, i) => (
-          <motion.li
-            key={s.title}
-            initial={{ opacity: 0, y: 24 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-10%" }}
-            transition={{ duration: 0.9, delay: i * 0.06, ease }}
-            className="w-[min(82vw,340px)] shrink-0 snap-start"
-          >
-            <Link href={s.href} className="group flex h-[360px] flex-col rounded-[16px] bg-(--eng-1) p-8 transition-colors hover:bg-(--eng-2)">
-              <span className="grid size-11 place-items-center rounded-[8px] bg-(--eng-3)">
-                <s.icon className="size-5" strokeWidth={1.4} />
-              </span>
-              <span className="mt-auto text-[24px] leading-[1.2] tracking-[-0.01em]">{s.title}</span>
-              <span className="mt-3 text-[15px] leading-[1.5] text-(--eng-mute)">{s.text}</span>
-              <span className="mt-6 flex items-center gap-1.5 font-mono text-[11px] tracking-[0.05em] uppercase">
-                {t.more} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
-              </span>
-            </Link>
-          </motion.li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-/* ─────────────────────────── 6. pilares ─────────────────────────── */
-
-function Pillars({ t }: { t: (typeof T)["pt"] }) {
-  return (
-    <section className="relative z-[1] -mt-6 rounded-t-[24px] bg-(--eng-1) px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-      <Rise>
-        <h2 className="max-w-[18ch] text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.025em]">{t.pillarsTitle}</h2>
-      </Rise>
-      <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {t.pillars.map((p, i) => (
-          <motion.div
-            key={p.title}
-            initial={{ opacity: 0, y: 28 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, margin: "-10%" }}
-            transition={{ duration: 1, delay: i * 0.1, ease }}
-            className="flex flex-col rounded-[16px] bg-(--eng-0) p-8"
-          >
-            <span className="grid size-11 place-items-center rounded-[8px] bg-(--eng-1)">
-              <p.icon className="size-5" strokeWidth={1.4} />
-            </span>
-            <h3 className="mt-16 text-[24px] leading-[1.2]">{p.title}</h3>
-            <p className="mt-3 text-[15px] leading-[1.55] text-(--eng-mute)">{p.text}</p>
-            <Link href={p.href} className="mt-8 inline-flex h-10 w-fit items-center rounded-[8px] px-4 text-[14px] shadow-[inset_0_0_0_1px_var(--eng-line2)] hover:bg-(--eng-1)">
-              {t.more}
-            </Link>
-          </motion.div>
-        ))}
+        <motion.div ref={rail} style={{ x }} className="mt-8 flex w-max gap-4 px-4 sm:mt-10 sm:px-6 lg:px-8">
+          {t.sectors.map((s, i) => {
+            const look = SECTOR_LOOK[i % SECTOR_LOOK.length]!;
+            return (
+              <Link
+                key={s.title}
+                href={s.href}
+                className={`group relative flex h-[min(60svh,560px)] w-[min(84vw,460px)] shrink-0 flex-col overflow-hidden rounded-[20px] p-7 transition-transform duration-500 hover:-translate-y-1.5 sm:p-9 ${look.card}`}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <span className="font-mono text-[12px] tracking-[0.05em] uppercase opacity-70">{String(i + 1).padStart(2, "0")}</span>
+                  <span className="grid size-10 place-items-center rounded-full border border-current/25 transition-transform duration-500 group-hover:rotate-[-45deg]">
+                    <ArrowRight className="size-4" />
+                  </span>
+                </div>
+                <div className="pointer-events-none absolute inset-x-0 top-[8%] h-[58%] transition-transform duration-700 group-hover:scale-[1.06]">
+                  <ContourObject names={[look.obj]} step={look.obj === "catedral" ? 2 : 1} className={`mx-auto size-full ${look.ink}`} />
+                </div>
+                <div className="relative mt-auto">
+                  <h3 className="text-[clamp(24px,2.2vw,32px)] leading-[1.12] tracking-[-0.015em]">{s.title}</h3>
+                  <p className="mt-3 max-w-[38ch] text-[15px] leading-[1.5] opacity-75">{s.text}</p>
+                </div>
+              </Link>
+            );
+          })}
+        </motion.div>
+        <div className="mx-4 mt-8 h-px bg-(--eng-line) sm:mx-6 lg:mx-8">
+          <motion.div style={{ width: bar }} className="h-px bg-(--eng-ink)" />
+        </div>
       </div>
     </section>
   );
@@ -615,7 +607,6 @@ export function EngHome({ lang, guides }: { lang: Lang; guides: GuideCard[] }) {
       <Statement t={t} />
       <Gallery t={t} />
       <Sectors t={t} />
-      <Pillars t={t} />
       <Latest t={t} guides={guides} />
       <FinalCta t={t} />
     </>

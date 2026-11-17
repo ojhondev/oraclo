@@ -71,7 +71,7 @@ export const TECNOLOGIA = [
         title: "Limites",
         blocks: [
           { p: "Superfícies lisas e sem textura, vidros e reflexos geram falhas. Partes altas vistas só do chão ficam mais pobres. Para esses casos, há o [laser scanner](/index/levantamento-arquitetonico-celular), drones ou capturas complementares." },
-          { p: "O ArchRay usa fotogrametria de código aberto (OpenDroneMap) para processar a captura em vídeo feita pelo celular e entrega modelo 3D, nuvem de pontos e imagem em escala dentro da própria plataforma." },
+          { p: "O ArchRay processa a captura em vídeo feita pelo celular com tecnologia própria e entrega modelo 3D, nuvem de pontos e imagem em escala dentro da própria plataforma." },
         ],
       },
     ],

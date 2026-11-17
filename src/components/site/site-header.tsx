@@ -30,13 +30,13 @@ function NavPill({ menu, align = "left" }: { menu: MenuDef; align?: "left" | "ri
       <div
         className={`invisible absolute top-full z-50 pt-2 opacity-0 transition-[opacity,visibility] duration-150 group-focus-within/menu:visible group-focus-within/menu:opacity-100 group-hover/menu:visible group-hover/menu:opacity-100 ${align === "right" ? "right-0" : "left-0"}`}
       >
-        <ul className="grid w-64 gap-0.5 rounded-2xl border bg-popover p-2 shadow-xl">
+        <ul className="grid w-64 gap-0.5 rounded-[12px] border bg-popover p-2 text-foreground shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_rgb(0_0_0/0.08)]">
           {menu.items.map((it) => (
             <li key={it.href + it.label}>
               <Link
                 href={it.href}
                 {...(external(it.href) ? { target: "_blank", rel: "noreferrer" } : {})}
-                className="block rounded-lg px-3 py-2 text-[14px] hover:bg-muted"
+                className="block rounded-[8px] px-3 py-2 text-[14px] hover:bg-muted"
               >
                 {it.label}
                 {it.hint && <span className="block text-[12px] text-muted-foreground">{it.hint}</span>}
@@ -49,33 +49,28 @@ function NavPill({ menu, align = "left" }: { menu: MenuDef; align?: "left" | "ri
   );
 }
 
-/** Cabeçalho do site público, na estrutura da Anthropic: pílulas à esquerda, marca ao centro, ações à direita. */
+/**
+ * Cabeçalho do site público (v2, no padrão do Scale): marca à esquerda, menu em links simples,
+ * login contornado e ação principal preta à direita. Sobre a primeira dobra escura da home fica
+ * transparente com texto branco, e ganha fundo branco ao rolar (ver .site-header em site.css).
+ */
 export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang }) {
   const user = await getUser();
   const t = SITE[lang].nav;
-  // logado: o menu "Acessar" dá lugar ao botão "Abrir o ArchRay"
-  const right = user ? t.right.slice(0, -1) : t.right;
+  const menus = [...t.left, ...t.right.filter((m) => m.label !== "Acessar" && m.label !== "Access")];
   return (
-    <header className="sticky top-0 z-40 bg-background">
-      <div className="grid h-[68px] grid-cols-[1fr_auto_1fr] items-center gap-4 px-4 sm:px-6 lg:px-8">
-        <nav className="hidden min-w-0 items-center gap-1.5 lg:flex" aria-label={lang === "en" ? "Main" : "Principal"}>
-          {t.left.map((m) => (
+    <header className="site-header sticky top-0 z-40 border-b border-transparent bg-background transition-[background-color,border-color,color] duration-300">
+      <div className="flex h-[68px] items-center gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
+        <Link href="/" aria-label={lang === "en" ? "ArchRay — home" : "ArchRay — início"} className="flex shrink-0 items-center gap-2">
+          <BrandMark className="site-mark h-[22px]" />
+          <BrandLogo className="site-logo h-[14px]" />
+        </Link>
+        <nav className="hidden min-w-0 items-center gap-1 lg:flex" aria-label={lang === "en" ? "Main" : "Principal"}>
+          {menus.map((m) => (
             <NavPill key={m.label} menu={m} />
           ))}
         </nav>
-        <Link href="/" aria-label={lang === "en" ? "ArchRay — home" : "ArchRay — início"} className="col-start-1 row-start-1 flex shrink-0 items-center gap-2 justify-self-start lg:col-start-2 lg:justify-self-center">
-          <BrandMark className="site-mark h-[24px]" />
-          {/* ao rolar, o nome recolhe para trás do polvo (ver .site-wordmark em site.css) */}
-          <span className="site-wordmark">
-            <BrandLogo className="site-logo h-[15px]" />
-          </span>
-        </Link>
-        <div className="col-start-3 row-start-1 flex items-center justify-end gap-1.5">
-          <div className="hidden items-center gap-1.5 lg:flex">
-            {right.map((m) => (
-              <NavPill key={m.label} menu={m} align="right" />
-            ))}
-          </div>
+        <div className="ml-auto flex items-center gap-2">
           <SiteLangToggle lang={lang} className="hidden sm:flex" />
           <SiteThemeToggle rootId={rootId} />
           {user ? (
@@ -83,27 +78,33 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
               {t.open} <ArrowUpRight className="size-3.5" />
             </Link>
           ) : (
-            <Link href="/contato" className="a-btn a-btn-sm lg:hidden">
-              {lang === "en" ? "Request" : "Solicitar"}
-            </Link>
+            <>
+              <Link href="/login" className="site-login hidden h-[38px] items-center rounded-[8px] px-4 text-[15px] text-[#575757] shadow-[inset_0_0_0_1px_#c7c7c7] transition-colors hover:text-foreground sm:inline-flex">
+                {lang === "en" ? "Log in" : "Entrar"}
+              </Link>
+              <Link href="/contato" className="a-btn a-btn-sm">
+                <span className="sm:hidden">{lang === "en" ? "Request" : "Solicitar"}</span>
+                <span className="hidden sm:inline">{lang === "en" ? "Request a diagnosis" : "Solicitar diagnóstico"}</span>
+              </Link>
+            </>
           )}
           <details className="relative lg:hidden">
-            <summary className="grid size-[30px] cursor-pointer list-none place-items-center rounded-full bg-[var(--site-pill)] hover:bg-[var(--site-pill-hover)] [&::-webkit-details-marker]:hidden" aria-label={t.menu}>
+            <summary className="grid size-[38px] cursor-pointer list-none place-items-center rounded-[8px] shadow-[inset_0_0_0_1px_#c7c7c7] [&::-webkit-details-marker]:hidden" aria-label={t.menu}>
               <Menu className="size-4" />
             </summary>
-            <nav className="absolute top-10 right-0 grid max-h-[80svh] w-72 gap-3 overflow-y-auto rounded-2xl border bg-popover p-3 text-[15px] shadow-2xl">
+            <nav className="absolute top-12 right-0 grid max-h-[80svh] w-72 gap-3 overflow-y-auto rounded-[16px] border bg-popover p-3 text-[15px] text-foreground shadow-2xl">
               {[...t.left, ...t.right].map((m) =>
                 m.items ? (
                   <div key={m.label}>
-                    <p className="px-2 pb-1 text-[12px] text-muted-foreground">{m.label}</p>
+                    <p className="px-2 pb-1 font-mono text-[11px] tracking-[0.05em] text-muted-foreground uppercase">{m.label}</p>
                     {m.items.map((it) => (
-                      <Link key={it.href + it.label} href={it.href} className="block rounded-lg px-2 py-1.5 hover:bg-muted">
+                      <Link key={it.href + it.label} href={it.href} className="block rounded-[8px] px-2 py-1.5 hover:bg-muted">
                         {it.label}
                       </Link>
                     ))}
                   </div>
                 ) : (
-                  <Link key={m.label} href={m.href!} className="rounded-lg px-2 py-1.5 font-medium hover:bg-muted">
+                  <Link key={m.label} href={m.href!} className="rounded-[8px] px-2 py-1.5 hover:bg-muted">
                     {m.label}
                   </Link>
                 ),

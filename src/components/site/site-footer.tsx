@@ -1,12 +1,11 @@
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
 import { BrandLogo, BrandMark } from "@/components/brand";
 import { SITE } from "@/lib/site/site-copy";
 import type { Lang } from "@/lib/site/lang";
 import { Credito } from "@/components/credito";
 import "@/components/credito.css";
 
-/** Rodapé escuro na estrutura da Anthropic: marca à esquerda, grupos de links em acordeão à direita. */
+/** Rodapé preto (v2, padrão do Scale): marca à esquerda e colunas de links com títulos em mono caixa-alta. */
 export function SiteFooter({ lang }: { lang: Lang }) {
   const en = lang === "en";
   const s = SITE[lang];
@@ -21,32 +20,29 @@ export function SiteFooter({ lang }: { lang: Lang }) {
     ...s.nav.right,
   ];
   return (
-    <footer className="site-ink mt-24 px-4 pt-16 pb-10 sm:px-6 lg:px-8">
-      <div className="grid gap-12 lg:grid-cols-[1fr_2fr] lg:gap-16">
+    <footer className="site-ink overflow-x-clip px-4 pt-24 pb-10 sm:px-6 sm:pt-28 lg:px-8">
+      <div className="grid gap-14 lg:grid-cols-[1.1fr_2fr] lg:gap-16">
         <div>
           <Link href="/" className="flex items-center gap-2.5" aria-label="ArchRay">
-            <BrandMark className="h-[30px]" />
-            <BrandLogo className="site-logo h-[19px]" />
+            <BrandMark className="h-[28px]" />
+            <BrandLogo className="site-logo h-[17px]" />
           </Link>
-          <p className="mt-5 max-w-xs text-[14px] leading-6 text-muted-foreground">{s.footer.blurb}</p>
+          <p className="mt-6 max-w-xs text-[15px] leading-6 text-muted-foreground">{s.footer.blurb}</p>
         </div>
-        <div>
+        <div className="grid grid-cols-2 gap-x-8 gap-y-10 sm:grid-cols-3 lg:grid-cols-4">
           {groups.map((g) => (
-            <details key={g.label} className="group border-t last:border-b">
-              <summary className="flex cursor-pointer list-none items-center justify-between py-4 text-[14px] [&::-webkit-details-marker]:hidden">
-                {g.label}
-                <ChevronDown className="size-4 text-muted-foreground transition-transform group-open:rotate-180" />
-              </summary>
-              <ul className="grid gap-2 pb-5 text-[14px] text-muted-foreground sm:grid-cols-2">
+            <div key={g.label}>
+              <p className="font-mono text-[11px] tracking-[0.05em] text-white/50 uppercase">{g.label}</p>
+              <ul className="mt-5 grid gap-2.5 text-[15px] text-white/80">
                 {g.items!.map((l) => (
                   <li key={l.href + l.label}>
-                    <Link href={l.href} {...(l.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})} className="hover:text-foreground">
+                    <Link href={l.href} {...(l.href.startsWith("http") ? { target: "_blank", rel: "noreferrer" } : {})} className="hover:text-white">
                       {l.label}
                     </Link>
                   </li>
                 ))}
               </ul>
-            </details>
+            </div>
           ))}
         </div>
       </div>

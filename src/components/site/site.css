@@ -482,3 +482,219 @@ html:has(.site-theme.site-dark) {
 .site-theme .a-fluid {
   font-size: clamp(calc(var(--a) * 0.84px), calc(var(--a) * 1px + (var(--b) - var(--a)) * ((100vw - 360px) / 1240)), calc(var(--b) * 1px));
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+ * v2 · Engenharia (2026-11-17): linguagem visual inspirada no Scale. Branco e preto,
+ * faixas cinza no lugar de sombras, títulos leves e grandes (peso 400, tracking negativo),
+ * rótulos em mono caixa-alta, botões monocromáticos de raio 8, cartões de raio 16 sem borda.
+ * Ilustrações em curvas de nível (src/components/eng). Sobrepõe a camada anterior.
+ * ═════════════════════════════════════════════════════════════════════════════ */
+.site-theme {
+  --font-sans: var(--font-eng), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-eng-mono), ui-monospace, monospace;
+  --background: #ffffff;
+  --foreground: #000000;
+  --card: #f2f2f2;
+  --muted: #f2f2f2;
+  --muted-foreground: #575757;
+  --accent: #eaeaea;
+  --border: #e5e5e5;
+  --input: #c7c7c7;
+  --secondary: #f2f2f2;
+  --site-elev: #f2f2f2;
+  --site-band: #eaeaea;
+  --site-pill: transparent;
+  --site-pill-hover: #f2f2f2;
+  --site-btn2: transparent;
+  --site-accent: #83809a;
+  --eng-sand: #a8927c;
+  --eng-forest: #193a29;
+  --eng-iris: #79648c;
+  --eng-slate: #839cb2;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss02" on;
+}
+.site-theme.site-dark {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #111111;
+  --muted: #111111;
+  --muted-foreground: #a3a3a3;
+  --accent: #1c1c1c;
+  --border: #262626;
+  --site-elev: #111111;
+  --site-band: #0b0b0b;
+  --site-pill-hover: #1c1c1c;
+}
+.site-theme .site-ink {
+  --background: #000000;
+  --foreground: #ffffff;
+  --card: #111111;
+  --muted: #111111;
+  --muted-foreground: rgb(255 255 255 / 0.68);
+  --border: #262626;
+  --site-elev: #111111;
+  --site-pill-hover: #1c1c1c;
+}
+html:has(.site-theme) {
+  background: #ffffff;
+}
+html:has(.site-theme.site-dark) {
+  background: #000000;
+}
+
+.site-theme :is(h1, h2, h3, h4) {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+.site-theme .a-serif,
+.site-theme .a-lead {
+  font-family: var(--font-sans);
+  font-weight: 400;
+  letter-spacing: -0.025em;
+}
+.site-theme .a-title {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.site-theme .a-label,
+.site-theme .eng-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted-foreground);
+}
+
+@layer components {
+  .site-theme .a-pill {
+    height: 32px;
+    padding: 0 10px;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--foreground);
+    font-size: 15px;
+    letter-spacing: 0;
+  }
+  .site-theme .a-btn,
+  .site-theme .a-btn-2 {
+    height: 48px;
+    padding: 0 18px;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 400;
+  }
+  .site-theme .a-btn {
+    background: #000000;
+    color: #ffffff;
+  }
+  .site-theme .a-btn:hover {
+    opacity: 1;
+    background: #212121;
+  }
+  .site-theme .a-btn-2 {
+    background: transparent;
+    color: var(--foreground);
+    box-shadow: inset 0 0 0 1px var(--input);
+  }
+  .site-theme .a-btn-2:hover {
+    background: var(--site-pill-hover);
+  }
+  /* em faixas escuras o botão principal inverte */
+  .site-theme .site-ink .a-btn,
+  .site-theme.site-dark .a-btn,
+  .site-theme .eng-dark .a-btn {
+    background: #ffffff;
+    color: #000000;
+  }
+  .site-theme .site-ink .a-btn:hover,
+  .site-theme.site-dark .a-btn:hover,
+  .site-theme .eng-dark .a-btn:hover {
+    background: #e5e5e5;
+  }
+  .site-theme .a-btn-sm {
+    height: 38px;
+    padding: 0 14px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+  .site-theme .a-card {
+    border-radius: 16px;
+    background: var(--site-elev);
+  }
+  /* rótulo acima dos títulos: mono caixa-alta com um quadradinho */
+  .site-theme .a-tag {
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+  .site-theme .a-tag::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    padding: 0;
+    border-radius: 1px;
+    background: currentColor;
+  }
+}
+
+/* revelar ao rolar: subida curta e sem desfoque (mais sóbrio) */
+.motion-ready [data-reveal] {
+  filter: none;
+  transform: translate3d(0, 20px, 0);
+  transition:
+    opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* rolagem suave (Lenis) */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+/* cabeçalho v2: borda ao rolar; transparente e branco sobre a primeira dobra escura da home */
+.site-theme[data-scrolled] .site-header {
+  border-bottom-color: var(--border);
+}
+.site-theme .site-wordmark,
+.site-theme[data-scrolled] .site-wordmark {
+  max-width: none;
+  margin: 0;
+}
+.site-theme[data-scrolled] .site-mark {
+  transform: none;
+}
+.site-theme:not([data-scrolled]):has(.eng-hero) .site-header {
+  background: transparent;
+  color: #ffffff;
+}
+.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .site-logo {
+  filter: invert(1);
+}
+.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .a-pill,
+.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .site-login {
+  color: #ffffff;
+}
+.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .site-login {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
+}
+.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .a-btn {
+  background: #ffffff;
+  color: #000000;
+}
+.site-theme:not([data-scrolled]):has(.eng-hero) .site-header summary {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
+}

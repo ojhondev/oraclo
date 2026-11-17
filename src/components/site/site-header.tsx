@@ -62,7 +62,7 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
     <header className="site-header sticky top-0 z-40 border-b border-transparent bg-background transition-[background-color,border-color,color] duration-300">
       <div className="flex h-[68px] items-center gap-3 px-4 sm:gap-6 sm:px-6 lg:px-8">
         <Link href="/" aria-label={lang === "en" ? "ArchRay — home" : "ArchRay — início"} className="flex shrink-0 items-center gap-2">
-          <BrandMark className="site-mark h-[22px]" />
+          <BrandMark className="site-mark h-[28px]" />
           <BrandLogo className="site-logo h-[14px]" />
         </Link>
         <nav className="hidden min-w-0 items-center gap-1 lg:flex" aria-label={lang === "en" ? "Main" : "Principal"}>

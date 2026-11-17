@@ -147,7 +147,9 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
   const backZ = useTransform(p, (v) => `translateZ(${-140 * k(v, 0.22, 0.45)}px) translateX(${-6 * k(v, 0.22, 0.45)}%)`);
   const frontZ = useTransform(p, (v) => `translateZ(${110 * k(v, 0.22, 0.45)}px) translateX(${5 * k(v, 0.22, 0.45)}%)`);
   const topoClip = useTransform(p, (v) => `inset(0 ${100 - 100 * k(v, 0.32, 0.55)}% 0 0)`);
-  const videoDim = useTransform(p, (v) => 0.85 - 0.25 * k(v, 0.3, 0.55));
+  const videoDim = useTransform(p, (v) => 0.62 - 0.12 * k(v, 0.3, 0.55));
+  // véu escuro forte enquanto o título está na tela; some quando o vídeo vira o aparelho
+  const veil = useTransform(p, (v) => 1 - 0.6 * k(v, 0.05, 0.3));
   const textO = useTransform(p, (v) => k(v, 0.45, 0.6));
   const textY = useTransform(p, (v) => 30 * (1 - k(v, 0.45, 0.6)));
   const promptO = useTransform(p, (v) => 1 - k(v, 0, 0.06));
@@ -175,7 +177,7 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
                 <source src="/site/video/hero-854.mp4" type="video/mp4" media="(max-width: 767px)" />
                 <source src="/site/video/hero-1280.mp4" type="video/mp4" />
               </motion.video>
-              <div className="absolute inset-0 bg-black/30" />
+              <motion.div style={{ opacity: veil }} className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,rgb(0_0_0/0.72),rgb(0_0_0/0.45))]" />
               {/* curvas de nível desenhadas por cima do vídeo */}
               <motion.svg style={{ clipPath: topoClip }} viewBox="0 0 1000 500" preserveAspectRatio="none" className="absolute inset-0 size-full" fill="none" stroke="white" aria-hidden>
                 {paths.map((d, i) => (
@@ -183,8 +185,8 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
                 ))}
               </motion.svg>
               <motion.div style={{ opacity: titleO }} className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">
-                <h1 className="max-w-[20ch] text-[clamp(36px,4.6vw,68px)] leading-[1.06] tracking-[-0.02em]">{t.heroTitle}</h1>
-                <p className="mt-5 max-w-[56ch] text-[16px] leading-[1.5] text-white/80 sm:text-[18px]">{t.heroSub}</p>
+                <h1 className="max-w-[20ch] text-[clamp(36px,4.6vw,68px)] leading-[1.06] tracking-[-0.02em] [text-shadow:0_2px_24px_rgb(0_0_0/0.45)]">{t.heroTitle}</h1>
+                <p className="mt-5 max-w-[56ch] text-[16px] leading-[1.5] text-white/90 [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-[18px]">{t.heroSub}</p>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
                   <Link href="/contato" className="inline-flex h-12 items-center rounded-[8px] bg-white px-[18px] text-[16px] text-black hover:bg-[#e5e5e5]">
                     {t.heroCta}

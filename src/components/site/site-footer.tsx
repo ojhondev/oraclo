@@ -24,7 +24,7 @@ export function SiteFooter({ lang }: { lang: Lang }) {
       <div className="grid gap-14 lg:grid-cols-[1.1fr_2fr] lg:gap-16">
         <div>
           <Link href="/" className="flex items-center gap-2.5" aria-label="ArchRay">
-            <BrandMark className="h-[28px]" />
+            <BrandMark className="site-mark h-[34px]" />
             <BrandLogo className="site-logo h-[17px]" />
           </Link>
           <p className="mt-6 max-w-xs text-[15px] leading-6 text-muted-foreground">{s.footer.blurb}</p>

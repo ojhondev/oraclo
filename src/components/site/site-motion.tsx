@@ -10,7 +10,7 @@ import { usePathname } from "next/navigation";
 export function SiteMotion({ rootId }: { rootId: string }) {
   const pathname = usePathname();
 
-  // ao rolar, marca o site para o cabeçalho recolher a logo e ficar só com o polvo
+  // ao rolar, marca o site (borda do cabeçalho e estados que dependem da rolagem)
   useEffect(() => {
     const root = document.getElementById(rootId);
     if (!root) return;

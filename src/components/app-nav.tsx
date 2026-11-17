@@ -188,7 +188,7 @@ function NavContent({
           aria-label="ArchRay — início"
           className={cn("flex h-9 items-center rounded-lg hover:bg-sidebar-accent", collapsed ? "w-9 justify-center" : "gap-2 px-2")}
         >
-          <BrandMark className="h-[21px]" />
+          <BrandMark className="h-[26px]" />
           {!collapsed && <BrandLogo className="h-[13px]" />}
         </Link>
         <div className={cn("flex items-center gap-0.5", collapsed && "flex-col")}>
@@ -322,7 +322,7 @@ export function MobileBar() {
           </>
         ) : (
           <Link href="/" aria-label="ArchRay — início" className="flex min-w-0 flex-1 items-center gap-2 px-2">
-            <BrandMark className="h-[20px]" />
+            <BrandMark className="h-[24px]" />
             <BrandLogo className="h-[12px]" />
           </Link>
         )}

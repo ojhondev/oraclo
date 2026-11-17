@@ -100,7 +100,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
 
   return (
     <article className="pb-24">
-      <header className="px-4 pt-14 sm:px-6 sm:pt-20 lg:px-8">
+      <header className="eng-hero eng-dark site-ink -mt-[68px] bg-black px-4 pt-[140px] pb-16 text-white sm:px-6 lg:px-8">
         <Link href="/historias" className="inline-flex items-center gap-1.5 text-[14px] text-muted-foreground hover:text-foreground">
           <ArrowLeft className="size-3.5" /> {t.back}
         </Link>
@@ -108,7 +108,7 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
           <span className="font-medium">{story.segment}</span>
           <span className="ml-2 text-muted-foreground">{fmtStoryDate(story.date, lang)}</span>
         </p>
-        <h1 className="site-fade-in mt-3 max-w-[22ch] a-fluid [--a:36] [--b:64] leading-[1.04] font-medium tracking-[-0.04em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
+        <h1 className="site-fade-in mt-3 max-w-[22ch] text-[clamp(36px,5vw,72px)] leading-[1.04] tracking-[-0.03em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
           {story.title}
         </h1>
         <p className="site-fade-in mt-5 max-w-2xl text-[17px] leading-8 text-muted-foreground sm:text-[19px]" style={{ "--d": "240ms" } as React.CSSProperties}>

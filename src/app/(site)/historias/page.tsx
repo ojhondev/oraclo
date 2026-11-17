@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getStories } from "@/lib/site/stories";
 import { getLang } from "@/lib/site/get-lang";
 import { StoryCard } from "@/components/site/blocks";
+import { EngBand, EngCta, EngPageHero } from "@/components/eng/blocks";
 
 const T = {
   pt: {
@@ -18,32 +19,40 @@ const T = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = T[await getLang()];
-  return { title: t.title, description: t.description };
+  return { title: t.title, description: t.description, alternates: { canonical: "/historias" } };
 }
 
+/** Casos (v2): topo escuro, caso em destaque e demais em grade, chamada final. */
 export default async function HistoriasPage() {
   const lang = await getLang();
+  const en = lang === "en";
   const t = T[lang];
   const [first, ...rest] = getStories(lang);
   return (
-    <div className="px-4 pt-12 pb-8 sm:px-6 sm:pt-16 lg:px-8">
-      <p className="a-label">{t.title}</p>
-      <h1 className="mt-5 max-w-[1100px] a-fluid [--a:30] [--b:44] leading-[1.15]">{t.lead}</h1>
-      {first && (
-        <div className="mt-14 border-t pt-8">
-          <StoryCard story={first} large lang={lang} />
-          <p className="mt-3 max-w-2xl text-[15.5px] leading-7 text-muted-foreground">{first.summary}</p>
-        </div>
-      )}
-      {rest.length > 0 && (
-        <ul className="mt-14 grid gap-8 border-t pt-8 md:grid-cols-3">
-          {rest.map((s) => (
-            <li key={s.slug}>
-              <StoryCard story={s} lang={lang} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
+    <>
+      <EngPageHero eyebrow={t.title} title={en ? "Real buildings, measured end to end." : "Imóveis reais, medidos de ponta a ponta."} text={t.lead} object="igreja" video="fachada" />
+      <EngBand tone="white">
+        {first && (
+          <div>
+            <StoryCard story={first} large lang={lang} />
+            <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#575757]">{first.summary}</p>
+          </div>
+        )}
+        {rest.length > 0 && (
+          <ul className="mt-16 grid gap-8 border-t border-black pt-10 md:grid-cols-3">
+            {rest.map((s) => (
+              <li key={s.slug}>
+                <StoryCard story={s} lang={lang} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </EngBand>
+      <EngCta
+        title={en ? "Your building could be the next case." : "Seu imóvel pode ser o próximo caso."}
+        cta={{ href: "/contato", label: en ? "Request a diagnosis" : "Solicitar diagnóstico" }}
+        object="fachada"
+      />
+    </>
   );
 }

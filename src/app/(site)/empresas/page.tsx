@@ -3,8 +3,11 @@ import Link from "next/link";
 import { getStories } from "@/lib/site/stories";
 import { getLang } from "@/lib/site/get-lang";
 import type { Lang } from "@/lib/site/lang";
-import { SectionHead, StoryCard } from "@/components/site/blocks";
-import { Illo, type IlloName } from "@/components/site/illo";
+import { StoryCard } from "@/components/site/blocks";
+import { EngBand, EngCta, EngHead, EngPageHero, EngStickyIndex } from "@/components/eng/blocks";
+import { ContourObject } from "@/components/eng/contour-object";
+import type { ObjectName } from "@/components/eng/contour";
+import type { IlloName } from "@/components/site/illo";
 
 type Segment = { id: string; illo: IlloName; title: string; also: string; who: string; pain: string; gain: string[]; example: { title: string; steps: string[] } };
 
@@ -305,126 +308,106 @@ const T = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = T[await getLang()];
-  return { title: t.title, description: t.description };
+  return { title: t.title, description: t.description, alternates: { canonical: "/empresas" } };
 }
 
-/** Setores atendidos: título, cinco setores com exemplo de aplicação, método e casos. */
+const SECTOR_OBJ: ObjectName[] = ["igreja", "fachada", "torre", "notebook", "laudo", "celular"];
+
+/** Setores atendidos (v2): topo escuro, setores com índice que acompanha a rolagem, método, casos e chamada final. */
 export default async function EmpresasPage() {
   const lang = await getLang();
+  const en = lang === "en";
   const t = T[lang];
   const stories = getStories(lang);
   return (
     <>
-      {/* título em duas colunas */}
-      <section className="grid gap-8 px-4 pt-12 pb-16 sm:px-6 sm:pt-16 lg:grid-cols-2 lg:gap-16 lg:px-8">
-        <div>
-          <p className="a-label">{t.kicker}</p>
-          <h1 className="mt-5 a-fluid [--a:40] [--b:58] leading-[1.05]">{t.h1}</h1>
-        </div>
-        <div className="lg:pt-10">
-          <p className="a-serif text-[21px] leading-[1.45] sm:text-[24px]">{t.lead}</p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <Link href="/contato" className="a-btn a-btn-sm">
-              {t.cta}
-            </Link>
-            <Link href="/tecnologia" className="a-btn-2 a-btn-sm">
-              {t.cta2}
-            </Link>
+      <EngPageHero eyebrow={t.kicker} title={t.h1} text={t.lead} object="torre" video="planta" ctas={[{ href: "/contato", label: t.cta }, { href: "/tecnologia", label: t.cta2 }]} />
+
+      {/* setores: índice preso à esquerda, cada setor em bloco largo */}
+      <EngBand tone="white">
+        <div className="grid gap-12 lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-16">
+          <EngStickyIndex label={t.segmentsLabel} items={t.segments.map((s) => ({ id: s.id, label: s.title }))} />
+          <div className="grid gap-4">
+            {t.segments.map((s, i) => (
+              <article key={s.id} id={s.id} className="grid scroll-mt-24 gap-0 overflow-hidden rounded-[16px] bg-[#f2f2f2] xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]" data-reveal>
+                <div className="relative flex min-w-0 flex-col p-8 sm:p-10">
+                  <div className="flex items-start justify-between gap-6">
+                    <p className="eng-eyebrow">{String(i + 1).padStart(2, "0")}</p>
+                    <div className="hidden size-24 shrink-0 rounded-[12px] bg-white p-2 sm:block">
+                      <ContourObject names={[SECTOR_OBJ[i % SECTOR_OBJ.length]!]} className="size-full text-black" />
+                    </div>
+                  </div>
+                  <h2 className="mt-4 text-[clamp(28px,3vw,40px)] leading-[1.08] tracking-[-0.02em]">{s.title}</h2>
+                  <p className="mt-3 text-[14px] leading-5 text-[#575757]">
+                    <span className="text-black">{t.alsoLabel}:</span> {s.also}
+                  </p>
+                  <p className="mt-1 text-[14px] leading-5 text-[#575757]">{s.who}</p>
+                  <p className="mt-6 max-w-[60ch] text-[17px] leading-[1.55]">{s.pain}</p>
+                  <ul className="mt-6 grid gap-2.5 border-t border-black/10 pt-5 text-[15px] leading-6">
+                    {s.gain.map((g) => (
+                      <li key={g} className="flex gap-3">
+                        <span className="mt-[9px] size-1.5 shrink-0 rounded-[1px] bg-black" />
+                        {g}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="min-w-0 bg-white/60 p-8 sm:p-10 xl:border-l xl:border-black/5">
+                  <p className="eng-eyebrow">{t.exampleLabel}</p>
+                  <h3 className="mt-4 text-[21px] leading-snug">{s.example.title}</h3>
+                  <ol className="mt-6 grid gap-4 text-[15px] leading-6">
+                    {s.example.steps.map((step, n) => (
+                      <li key={step} className="grid grid-cols-[28px_1fr] gap-2">
+                        <span className="font-mono text-[11px] leading-6 text-[#575757]">{String(n + 1).padStart(2, "0")}</span>
+                        <span>{step}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </article>
+            ))}
+            <p className="pt-2 text-[14px] leading-5 text-[#575757]">
+              {t.examplesNote}{" "}
+              <Link href="/historias" className="text-black underline underline-offset-4">
+                {t.stories}
+              </Link>
+            </p>
           </div>
         </div>
-      </section>
+      </EngBand>
 
-      {/* índice rápido dos setores */}
-      <nav className="px-4 sm:px-6 lg:px-8" aria-label={t.segmentsLabel}>
-        <div className="flex flex-wrap gap-1.5 border-t pt-5">
-          {t.segments.map((s) => (
-            <a key={s.id} href={`#${s.id}`} className="a-pill">
-              {s.title}
-            </a>
-          ))}
-        </div>
-      </nav>
-
-      {/* setores em largura total: ilustração, dor e entregas, e um exemplo de aplicação */}
-      <section className="grid gap-4 px-4 pt-8 sm:px-6 lg:px-8">
-        {t.segments.map((s, i) => (
-          <article key={s.id} id={s.id} className="a-card grid scroll-mt-24 overflow-hidden md:grid-cols-[180px_minmax(0,1fr)] xl:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)]" data-reveal>
-            <div className="aspect-[16/9] md:aspect-auto">
-              <Illo name={s.illo} />
-            </div>
-            <div className="flex min-w-0 flex-col p-6 sm:p-7">
-              <p className="a-label">0{i + 1}</p>
-              <h2 className="mt-3 a-fluid [--a:26] [--b:30] leading-tight">{s.title}</h2>
-              <p className="mt-2 text-[13.5px] leading-5 text-muted-foreground">
-                <span className="font-medium text-foreground">{t.alsoLabel}:</span> {s.also}
-              </p>
-              <p className="mt-1 text-[13.5px] leading-5 text-muted-foreground">{s.who}</p>
-              <p className="mt-4 text-[15px] leading-6">{s.pain}</p>
-              <ul className="mt-4 border-t text-[14px] leading-6">
-                {s.gain.map((g) => (
-                  <li key={g} className="flex gap-2.5 border-b py-2">
-                    <span className="mt-[9px] size-1.5 shrink-0 rounded-full bg-[var(--site-accent)]" />
-                    {g}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="min-w-0 border-t p-6 sm:p-7 md:col-span-2 xl:col-span-1 xl:border-t-0 xl:border-l">
-              <p className="a-tag">{t.exampleLabel}</p>
-              <h3 className="a-title mt-3 text-[19px] leading-snug">{s.example.title}</h3>
-              <ol className="mt-4 grid gap-3 text-[14.5px] leading-6">
-                {s.example.steps.map((step, n) => (
-                  <li key={step} className="flex gap-3">
-                    <span className="a-label mt-[3px] shrink-0">{n + 1}</span>
-                    <span>{step}</span>
-                  </li>
-                ))}
-              </ol>
-            </div>
-          </article>
-        ))}
-        <p className="pt-2 text-[13.5px] leading-5 text-muted-foreground">
-          {t.examplesNote}{" "}
-          <Link href="/historias" className="underline underline-offset-4 hover:text-foreground">
-            {t.stories}
-          </Link>
-        </p>
-      </section>
-
-      {/* como trabalhamos: colunas com linha fina no topo */}
-      <section className="px-4 pt-20 sm:px-6 sm:pt-28 lg:px-8">
-        <h2 className="a-fluid [--a:30] [--b:40] leading-tight">{t.teamTitle}</h2>
-        <ul className="mt-10 grid gap-x-8 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+      {/* como trabalhamos */}
+      <EngBand tone="dark">
+        <EngHead eyebrow={en ? "Method" : "Método"} title={t.teamTitle} dark />
+        <ol className="mt-16 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
           {t.team.map(([title, text], i) => (
-            <li key={title} className="border-t pt-4" data-reveal data-reveal-delay={(i % 3) * 80}>
-              <p className="a-label">0{i + 1}</p>
-              <h3 className="a-title mt-3 text-[17px]">{title}</h3>
-              <p className="mt-2 text-[14.5px] leading-6 text-muted-foreground">{text}</p>
+            <li key={title} className="border-t border-white/20 pt-5" data-reveal data-reveal-delay={(i % 3) * 80}>
+              <p className="font-mono text-[11px] text-white/45">{String(i + 1).padStart(2, "0")}</p>
+              <h3 className="mt-4 text-[22px] leading-snug">{title}</h3>
+              <p className="mt-3 text-[15px] leading-6 text-white/65">{text}</p>
             </li>
           ))}
-        </ul>
-      </section>
+        </ol>
+      </EngBand>
 
-      <section className="px-4 pt-20 sm:px-6 sm:pt-28 lg:px-8">
-        <SectionHead title={t.stories} href="/historias" more={t.seeAll} />
-        <ul className="mt-8 grid gap-8 md:grid-cols-3">
+      {/* casos */}
+      <EngBand tone="mist">
+        <div className="flex items-end justify-between gap-6">
+          <h2 className="text-[clamp(30px,3.8vw,56px)] leading-[1.06] tracking-[-0.025em]">{t.stories}</h2>
+          <Link href="/historias" className="eng-eyebrow text-black underline-offset-4 hover:underline">
+            {t.seeAll}
+          </Link>
+        </div>
+        <ul className="mt-12 grid gap-8 md:grid-cols-3">
           {stories.map((s) => (
             <li key={s.slug} className={stories.length === 1 ? "md:col-span-3" : undefined}>
               <StoryCard story={s} large={stories.length === 1} lang={lang} />
             </li>
           ))}
         </ul>
-      </section>
+      </EngBand>
 
-      <section className="px-4 pt-24 sm:px-6 lg:px-8">
-        <div className="a-card px-6 py-20 text-center">
-          <h2 className="a-serif mx-auto max-w-[22ch] a-fluid [--a:32] [--b:46] leading-[1.15]">{t.finalTitle}</h2>
-          <p className="mx-auto mt-4 max-w-md text-[16px] leading-7 text-muted-foreground">{t.finalText}</p>
-          <Link href="/contato" className="a-btn mt-8">
-            {t.finalCta}
-          </Link>
-        </div>
-      </section>
+      <EngCta title={t.finalTitle} text={t.finalText} cta={{ href: "/contato", label: t.finalCta }} object="torre" />
     </>
   );
 }

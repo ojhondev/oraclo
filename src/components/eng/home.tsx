@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useRef, useState, useEffect } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from "motion/react";
 import { ArrowLeft, ArrowRight, ChevronDown, Crosshair, Landmark, Building2, HardHat, Scale, ShieldCheck, Ruler, ScrollText, Home } from "lucide-react";
 import { ContourObject } from "./contour-object";
+import { topoPaths } from "./topo";
 import type { ObjectName } from "./contour";
 import type { Lang } from "@/lib/site/lang";
 
@@ -17,6 +18,8 @@ const T = {
     heroCta: "Solicitar diagnóstico",
     heroCta2: "Ver a tecnologia",
     scroll: "Role para explorar",
+    heroAfterTitle: "Precisão de engenharia não tem atalho.",
+    heroAfterText: "O ArchRay cobre o diagnóstico inteiro, da gravação da fachada ao laudo assinado, com cada medida rastreável e o profissional no controle de cada decisão.",
     stages: [
       { eyebrow: "01 · Captura", title: "Uma fachada inteira, gravada em vídeo pelo celular.", text: "O app guia a gravação em tempo real e guarda só os quadros nítidos. Sem scanner, sem drone, sem software instalado.", cta: "Como capturar", href: "/tecnologia#captura" },
       { eyebrow: "02 · Modelo 3D e nuvem de pontos", title: "Milhões de pontos medidos, com escala real.", text: "A fotogrametria reconstrói a geometria e o marcador de escala confere a medida sozinho, com a divergência declarada.", cta: "Modelo 3D e nuvem", href: "/tecnologia#captura" },
@@ -56,6 +59,8 @@ const T = {
     heroCta: "Request a diagnosis",
     heroCta2: "See the technology",
     scroll: "Scroll to explore",
+    heroAfterTitle: "Engineering precision has no shortcuts.",
+    heroAfterText: "ArchRay covers the whole diagnosis, from recording the façade to the signed report, with every measurement traceable and the professional in control of every decision.",
     stages: [
       { eyebrow: "01 · Capture", title: "A whole façade, recorded on a phone video.", text: "The app guides the recording in real time and keeps only sharp frames. No scanner, no drone, no installed software.", cta: "How to capture", href: "/tecnologia#captura" },
       { eyebrow: "02 · 3D model and point cloud", title: "Millions of measured points, at real scale.", text: "Photogrammetry rebuilds the geometry and the scale marker checks the measurement on its own, with the divergence stated.", cta: "3D model and cloud", href: "/tecnologia#captura" },
@@ -97,48 +102,117 @@ const ease = [0.16, 1, 0.3, 1] as const;
 
 /* ─────────────────────────── 1. primeira dobra ─────────────────────────── */
 
+/** Moldura de "celular deitado" em linhas finas, do tamanho do cartão (camadas da frente e de trás). */
+function DeviceFrame({ dotted = false }: { dotted?: boolean }) {
+  return (
+    <svg viewBox="0 0 1000 500" preserveAspectRatio="none" className="absolute inset-0 size-full overflow-visible" fill="none" stroke="white" aria-hidden>
+      <rect x="1" y="1" width="998" height="498" rx="34" strokeWidth="1.4" vectorEffect="non-scaling-stroke" />
+      <rect x="18" y="18" width="964" height="464" rx="24" strokeWidth="0.8" strokeOpacity="0.5" vectorEffect="non-scaling-stroke" />
+      {dotted &&
+        [70, 150, 230, 310, 390].map((y, i) => (
+          <g key={y}>
+            <path d={`M-60 ${y} L${180 + i * 40} ${y + (i % 2 ? 14 : -10)}`} strokeWidth="1" strokeDasharray="2 6" vectorEffect="non-scaling-stroke" />
+            <path d={`M-66 ${y - 6} l10 6 l-10 6 z`} fill="white" stroke="none" />
+            <path d={`M${860 - i * 24} ${y + 20} L1060 ${y + 30}`} strokeWidth="1" strokeDasharray="2 6" vectorEffect="non-scaling-stroke" />
+            <text x="1072" y={y + 34} fill="white" stroke="none" fontSize="16" fontFamily="monospace" opacity="0.8">
+              {["1101", "0110", "1011", "1110", "0101"][i]}
+            </text>
+          </g>
+        ))}
+    </svg>
+  );
+}
+
+/**
+ * Primeira dobra no padrão do Scale: o vídeo num cartão com margens e cantos arredondados; ao rolar,
+ * o fundo escurece e o cartão encolhe e gira em 3D para dentro de uma moldura de "celular deitado",
+ * com curvas de nível desenhadas por cima e o texto aparecendo embaixo.
+ */
 function Hero({ t }: { t: (typeof T)["pt"] }) {
   const ref = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end start"] });
-  const scale = useTransform(scrollYProgress, [0, 1], [1, 1.12]);
-  const fade = useTransform(scrollYProgress, [0, 0.6], [1, 0]);
-  const lift = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const { scrollYProgress: p } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const k = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
+  const sm = (x: number) => x * x * (3 - 2 * x);
+  const bg = useTransform(p, (v) => {
+    const c = Math.round(255 * (1 - k(v, 0.02, 0.22)));
+    return `rgb(${c} ${c} ${c})`;
+  });
+  const scale = useTransform(p, (v) => 1 - 0.5 * sm(k(v, 0.04, 0.42)));
+  const rotY = useTransform(p, (v) => -17 * sm(k(v, 0.1, 0.45)));
+  const rotX = useTransform(p, (v) => 7 * sm(k(v, 0.1, 0.45)));
+  const lift = useTransform(p, (v) => `${-9 * sm(k(v, 0.04, 0.42))}vh`);
+  const radius = useTransform(p, (v) => 16 + 30 * k(v, 0.04, 0.42));
+  const titleO = useTransform(p, (v) => 1 - k(v, 0, 0.12));
+  const frameO = useTransform(p, (v) => k(v, 0.22, 0.4));
+  const backZ = useTransform(p, (v) => `translateZ(${-140 * k(v, 0.22, 0.45)}px) translateX(${-6 * k(v, 0.22, 0.45)}%)`);
+  const frontZ = useTransform(p, (v) => `translateZ(${110 * k(v, 0.22, 0.45)}px) translateX(${5 * k(v, 0.22, 0.45)}%)`);
+  const topoClip = useTransform(p, (v) => `inset(0 ${100 - 100 * k(v, 0.32, 0.55)}% 0 0)`);
+  const videoDim = useTransform(p, (v) => 0.85 - 0.25 * k(v, 0.3, 0.55));
+  const textO = useTransform(p, (v) => k(v, 0.45, 0.6));
+  const textY = useTransform(p, (v) => 30 * (1 - k(v, 0.45, 0.6)));
+  const promptO = useTransform(p, (v) => 1 - k(v, 0, 0.06));
+  const paths = useMemo(() => topoPaths({ w: 1000, h: 500, levels: 11, cols: 90, seed: 11 }), []);
+
+  // o cabeçalho fica escuro enquanto o fundo da primeira dobra está escuro
+  useMotionValueEvent(p, "change", (v) => {
+    const root = document.getElementById("archray-site");
+    if (root) root.toggleAttribute("data-hero-dark", v > 0.12 && v < 0.999);
+  });
+  useEffect(() => () => document.getElementById("archray-site")?.removeAttribute("data-hero-dark"), []);
+
   return (
-    <section ref={ref} className="eng-hero eng-dark relative -mt-[68px] h-[100svh] min-h-[620px] overflow-hidden bg-black text-white">
-      <motion.div style={{ scale }} className="absolute inset-0">
-        <video className="size-full object-cover opacity-70" autoPlay muted loop playsInline preload="metadata" poster="/site/video/hero-poster.jpg" aria-hidden>
-          <source src="/site/video/hero-854.mp4" type="video/mp4" media="(max-width: 767px)" />
-          <source src="/site/video/hero-1280.mp4" type="video/mp4" />
-        </video>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgb(0_0_0/0.25),rgb(0_0_0/0.75))]" />
-      </motion.div>
-      <motion.div style={{ opacity: fade, y: lift }} className="relative flex h-full flex-col items-center justify-center px-4 text-center">
-        <motion.h1
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1.2, ease }}
-          className="max-w-[18ch] text-[clamp(40px,6.4vw,92px)] leading-[1.02] tracking-[-0.03em]"
-        >
-          {t.heroTitle}
-        </motion.h1>
-        <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, delay: 0.2, ease }} className="mt-6 max-w-[56ch] text-[17px] leading-[1.5] text-white/75 sm:text-[19px]">
-          {t.heroSub}
-        </motion.p>
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, delay: 0.35, ease }} className="mt-9 flex flex-wrap justify-center gap-3">
-          <Link href="/contato" className="a-btn">
-            {t.heroCta}
-          </Link>
-          <Link href="/tecnologia" className="inline-flex h-12 items-center rounded-[8px] px-[18px] text-[16px] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.4)] transition-colors hover:bg-white/10">
-            {t.heroCta2}
-          </Link>
+    <section ref={ref} className="relative" style={{ height: "280vh" }}>
+      <motion.div style={{ background: bg }} className="sticky top-0 h-[100svh] overflow-hidden">
+        <div className="absolute inset-x-3 top-[76px] bottom-3 [perspective:1800px] sm:inset-x-6 sm:bottom-6">
+          <motion.div style={{ scale, rotateY: rotY, rotateX: rotX, y: lift, transformStyle: "preserve-3d" }} className="relative size-full">
+            {/* moldura de trás */}
+            <motion.div style={{ opacity: frameO, transform: backZ }} className="pointer-events-none absolute inset-0">
+              <DeviceFrame />
+            </motion.div>
+            {/* o vídeo */}
+            <motion.div style={{ borderRadius: radius }} className="absolute inset-0 overflow-hidden bg-black">
+              <motion.video style={{ opacity: videoDim }} className="size-full object-cover" autoPlay muted loop playsInline preload="metadata" poster="/site/video/hero-poster.jpg" aria-hidden>
+                <source src="/site/video/hero-854.mp4" type="video/mp4" media="(max-width: 767px)" />
+                <source src="/site/video/hero-1280.mp4" type="video/mp4" />
+              </motion.video>
+              <div className="absolute inset-0 bg-black/30" />
+              {/* curvas de nível desenhadas por cima do vídeo */}
+              <motion.svg style={{ clipPath: topoClip }} viewBox="0 0 1000 500" preserveAspectRatio="none" className="absolute inset-0 size-full" fill="none" stroke="white" aria-hidden>
+                {paths.map((d, i) => (
+                  <path key={i} d={d} strokeWidth="1" strokeOpacity={0.35 + 0.05 * i} vectorEffect="non-scaling-stroke" />
+                ))}
+              </motion.svg>
+              <motion.div style={{ opacity: titleO }} className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">
+                <h1 className="max-w-[20ch] text-[clamp(36px,4.6vw,68px)] leading-[1.06] tracking-[-0.02em]">{t.heroTitle}</h1>
+                <p className="mt-5 max-w-[56ch] text-[16px] leading-[1.5] text-white/80 sm:text-[18px]">{t.heroSub}</p>
+                <div className="mt-8 flex flex-wrap justify-center gap-3">
+                  <Link href="/contato" className="inline-flex h-12 items-center rounded-[8px] bg-white px-[18px] text-[16px] text-black hover:bg-[#e5e5e5]">
+                    {t.heroCta}
+                  </Link>
+                  <Link href="/tecnologia" className="inline-flex h-12 items-center rounded-[8px] px-[18px] text-[16px] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.5)] hover:bg-white/10">
+                    {t.heroCta2}
+                  </Link>
+                </div>
+              </motion.div>
+              <motion.a style={{ opacity: promptO }} href="#etapas" className="absolute right-5 bottom-5 flex items-center gap-3 font-mono text-[13px] text-white sm:right-8 sm:bottom-7">
+                {t.scroll}
+                <span className="grid size-10 place-items-center rounded-[8px] border border-white">
+                  <ChevronDown className="size-4" />
+                </span>
+              </motion.a>
+            </motion.div>
+            {/* moldura da frente, com as linhas pontilhadas e os rótulos */}
+            <motion.div style={{ opacity: frameO, transform: frontZ }} className="pointer-events-none absolute inset-0">
+              <DeviceFrame dotted />
+            </motion.div>
+          </motion.div>
+        </div>
+        {/* texto que aparece embaixo do aparelho */}
+        <motion.div style={{ opacity: textO, y: textY }} className="absolute inset-x-0 bottom-[9vh] px-4 text-center text-white">
+          <h2 className="text-[clamp(28px,3vw,44px)] leading-[1.1] tracking-[-0.02em]">{t.heroAfterTitle}</h2>
+          <p className="mx-auto mt-4 max-w-[62ch] text-[15px] leading-[1.55] text-white/65 sm:text-[16px]">{t.heroAfterText}</p>
         </motion.div>
       </motion.div>
-      <a href="#etapas" className="absolute right-4 bottom-6 flex items-center gap-3 font-mono text-[13px] text-white/80 sm:right-8">
-        {t.scroll}
-        <span className="grid size-10 place-items-center rounded-[8px] border border-white/60">
-          <ChevronDown className="size-4" />
-        </span>
-      </a>
     </section>
   );
 }

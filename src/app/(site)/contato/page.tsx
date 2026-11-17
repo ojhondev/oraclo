@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Check } from "lucide-react";
 import { getLang } from "@/lib/site/get-lang";
 import { LeadForm } from "./lead-form";
+import { ContourObject } from "@/components/eng/contour-object";
 
 const T = {
   pt: {
@@ -36,42 +37,40 @@ const T = {
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = T[await getLang()];
-  return { title: t.title, description: t.description };
+  return { title: t.title, description: t.description, alternates: { canonical: "/contato" } };
 }
 
+/** Contato (v2): faixa escura com o texto e o objeto em curvas de nível, formulário em cartão branco. */
 export default async function ContatoPage() {
   const lang = await getLang();
   const t = T[lang];
   return (
-    <div className="px-4 pt-16 pb-24 sm:px-6 sm:pt-24 lg:px-8">
-      <div className="grid gap-12 lg:grid-cols-[1fr_1.25fr] lg:gap-20">
+    <section className="eng-hero eng-dark relative -mt-[68px] bg-black px-4 pt-[140px] pb-24 text-white sm:px-6 lg:px-8">
+      <div className="grid gap-14 lg:grid-cols-[1fr_1.15fr] lg:gap-20">
         <div>
-          <p className="site-fade-in text-[14px] font-medium text-muted-foreground">{t.kicker}</p>
-          <h1 className="site-fade-in mt-4 max-w-[16ch] a-fluid [--a:40] [--b:60] leading-[1.04] font-medium tracking-[-0.04em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
-            {t.h1}
-          </h1>
-          <p className="site-fade-in mt-6 max-w-[46ch] text-[17px] leading-7 text-muted-foreground" style={{ "--d": "240ms" } as React.CSSProperties}>
-            {t.lead}
-          </p>
-          <div className="site-fade-in mt-10 border-t pt-8" style={{ "--d": "360ms" } as React.CSSProperties}>
-            <p className="text-[14px] font-medium">{t.nextTitle}</p>
-            <ol className="mt-4 grid gap-3">
+          <p className="eng-eyebrow text-white/60">{t.kicker}</p>
+          <h1 className="mt-6 max-w-[15ch] text-[clamp(38px,5vw,72px)] leading-[1.03] tracking-[-0.03em]">{t.h1}</h1>
+          <p className="mt-6 max-w-[46ch] text-[17px] leading-7 text-white/70">{t.lead}</p>
+          <div className="mt-12 border-t border-white/20 pt-8">
+            <p className="eng-eyebrow text-white/55">{t.nextTitle}</p>
+            <ol className="mt-6 grid gap-4">
               {t.next.map((n, i) => (
-                <li key={n} className="grid grid-cols-[28px_1fr] gap-2 text-[15px] leading-6">
-                  <span className="grid size-6 place-items-center rounded-full border text-[12px] text-muted-foreground tabular-nums">{i + 1}</span>
+                <li key={n} className="grid grid-cols-[32px_1fr] gap-2 text-[15.5px] leading-6 text-white/85">
+                  <span className="font-mono text-[11px] leading-6 text-white/45">{String(i + 1).padStart(2, "0")}</span>
                   <span>{n}</span>
                 </li>
               ))}
             </ol>
-            <p className="mt-6 inline-flex items-center gap-1.5 text-[13.5px] text-muted-foreground">
+            <p className="mt-8 inline-flex items-center gap-1.5 font-mono text-[11px] tracking-[0.05em] text-white/50 uppercase">
               <Check className="size-3.5" /> ArchRay · Estúdio Restaura
             </p>
           </div>
+          <ContourObject names={["celular"]} className="mt-10 hidden h-[220px] w-auto text-white/80 lg:block" />
         </div>
-        <div className="site-fade-in" style={{ "--d": "300ms" } as React.CSSProperties}>
+        <div className="self-start rounded-[16px] bg-white p-2 text-black sm:p-3">
           <LeadForm lang={lang} />
         </div>
       </div>
-    </div>
+    </section>
   );
 }

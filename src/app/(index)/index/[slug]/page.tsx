@@ -137,19 +137,21 @@ export default async function PostPage({ params }: PageProps<"/index/[slug]">) {
     <article className="px-4 pb-24 sm:px-8">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       {/* cabeçalho centralizado */}
-      <header className="mx-auto max-w-[1100px] pt-12 sm:pt-16">
+      <header className="eng-hero eng-dark site-ink -mx-4 -mt-[68px] bg-black px-4 pt-[140px] pb-14 text-white sm:-mx-8 sm:px-8">
+        <div className="mx-auto max-w-[1100px]">
         <p className="a-tag">
           <Link href="/index" className="hover:text-foreground">
             {post.category}
           </Link>
           <span>{fmtPostDate(post.date, "long", lang)}</span>
         </p>
-        <h1 className="mt-5 max-w-[22ch] text-[38px] leading-[1.06] sm:text-[60px]">{post.title}</h1>
-        <p className="a-serif mt-6 max-w-[48ch] text-[20px] leading-[1.45] sm:text-[23px]">{post.summary}</p>
+        <h1 className="mt-5 max-w-[22ch] text-[clamp(36px,5vw,68px)] leading-[1.04] tracking-[-0.03em]">{post.title}</h1>
+        <p className="mt-6 max-w-[56ch] text-[18px] leading-[1.5] text-white/70 sm:text-[21px]">{post.summary}</p>
         <Cover slug={post.slug} title={post.title} image={post.image} imageAlt={post.imageAlt} aspect="aspect-[21/9]" className="mt-10" priority />
         <div className="mt-6 flex items-center justify-between border-b pb-4 text-[14px]">
           <span className="text-muted-foreground">{post.author}</span>
           <ShareButton title={post.title} lang={lang} />
+        </div>
         </div>
       </header>
 

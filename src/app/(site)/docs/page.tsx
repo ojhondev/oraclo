@@ -73,9 +73,9 @@ export default async function DocsPage() {
   return (
     <div className="px-4 pb-28 sm:px-6 lg:px-8">
       {/* abertura */}
-      <header className="mx-auto max-w-[900px] pt-20 text-center sm:pt-28">
-        <p className="site-fade-in text-[14px] font-medium text-muted-foreground">{t.title}</p>
-        <h1 className="site-fade-in mt-5 a-fluid [--a:40] [--b:68] leading-[1.04] font-medium tracking-[-0.04em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
+      <header className="eng-hero eng-dark site-ink -mx-4 -mt-[68px] bg-black px-4 pt-[150px] pb-20 text-center text-white sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <p className="site-fade-in eng-eyebrow text-white/60">{t.title}</p>
+        <h1 className="site-fade-in mx-auto mt-5 max-w-[20ch] text-[clamp(38px,5.4vw,80px)] leading-[1.03] tracking-[-0.03em] text-balance" style={{ "--d": "120ms" } as React.CSSProperties}>
           {t.h1(STEPS.length)}
         </h1>
         <p className="site-fade-in mx-auto mt-6 max-w-[620px] text-[17px] leading-7 text-balance text-muted-foreground" style={{ "--d": "240ms" } as React.CSSProperties}>

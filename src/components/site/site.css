@@ -490,7 +490,7 @@ html:has(.site-theme.site-dark) {
  * Ilustrações em curvas de nível (src/components/eng). Sobrepõe a camada anterior.
  * ═════════════════════════════════════════════════════════════════════════════ */
 .site-theme {
-  --font-sans: var(--font-eng), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Satoshi", var(--font-eng), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-eng-mono), ui-monospace, monospace;
   --background: #ffffff;
   --foreground: #000000;
@@ -677,24 +677,22 @@ html.lenis body {
 .site-theme[data-scrolled] .site-mark {
   transform: none;
 }
-.site-theme:not([data-scrolled]):has(.eng-hero) .site-header {
-  background: transparent;
+/* sobre seções escuras (.eng-dark ou a primeira dobra escurecida) o cabeçalho fica preto, como no Scale */
+.site-theme:is([data-nav-dark], [data-hero-dark]) .site-header {
+  background: #000000;
   color: #ffffff;
+  border-bottom-color: transparent;
 }
-.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .site-logo {
+.site-theme:is([data-nav-dark], [data-hero-dark]) .site-header .site-logo {
   filter: invert(1);
 }
-.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .a-pill,
-.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .site-login {
+.site-theme:is([data-nav-dark], [data-hero-dark]) .site-header :is(.a-pill, .site-login) {
   color: #ffffff;
 }
-.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .site-login {
+.site-theme:is([data-nav-dark], [data-hero-dark]) .site-header :is(.site-login, summary) {
   box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
 }
-.site-theme:not([data-scrolled]):has(.eng-hero) .site-header .a-btn {
+.site-theme:is([data-nav-dark], [data-hero-dark]) .site-header .a-btn {
   background: #ffffff;
   color: #000000;
-}
-.site-theme:not([data-scrolled]):has(.eng-hero) .site-header summary {
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.45);
 }

@@ -1,37 +1,32 @@
 import type { Metadata } from "next";
 import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
-import { Illo } from "@/components/site/illo";
+import { EngCta, EngPageHero, EngPinnedSteps, type Step } from "@/components/eng/blocks";
+import type { ObjectName } from "@/components/eng/contour";
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = SITE[await getLang()].commitments;
-  return { title: t.metaTitle, description: t.statement };
+  return { title: t.metaTitle, description: t.statement, alternates: { canonical: "/compromissos" } };
 }
 
-/** Compromissos (na estrutura das páginas de compromissos da Anthropic): frase e um bloco por compromisso. */
+const OBJ: Record<string, ObjectName> = { precisao: "fachada", revisao: "notebook", transparencia: "laudo", dados: "torre" };
+
+/** Compromissos (v2): topo escuro e um compromisso por etapa, presos na tela. */
 export default async function CommitmentsPage() {
   const lang = await getLang();
+  const en = lang === "en";
   const t = SITE[lang].commitments;
+  const steps: Step[] = t.items.map((it, i) => ({ id: it.id, eyebrow: `${String(i + 1).padStart(2, "0")} · ${it.title}`, title: it.title, text: it.text, object: OBJ[it.id] ?? "fachada" }));
   return (
     <>
-      <section className="px-4 pt-12 pb-16 sm:px-6 sm:pt-16 sm:pb-24 lg:px-8">
-        <p className="a-label">{t.metaTitle}</p>
-        <h1 className="mt-5 max-w-[1100px] a-fluid [--a:30] [--b:44] leading-[1.15]">{t.statement}</h1>
-      </section>
-      <section className="grid gap-4 px-4 sm:grid-cols-2 sm:px-6 lg:px-8">
-        {t.items.map((it, i) => (
-          <article key={it.id} id={it.id} className="a-card flex scroll-mt-24 flex-col overflow-hidden" data-reveal data-reveal-delay={(i % 2) * 90}>
-            <div className="aspect-[16/9]">
-              <Illo name={it.illo} />
-            </div>
-            <div className="p-6 sm:p-8">
-              <p className="a-label">0{i + 1}</p>
-              <h2 className="mt-3 text-[24px] leading-tight sm:text-[28px]">{it.title}</h2>
-              <p className="mt-3 text-[15.5px] leading-7 text-muted-foreground">{it.text}</p>
-            </div>
-          </article>
-        ))}
-      </section>
+      <EngPageHero eyebrow={t.metaTitle} title={en ? "Trust is measured, not promised." : "Confiança se mede, não se promete."} text={t.statement} object="laudo" />
+      <EngPinnedSteps steps={steps} eyebrow={t.metaTitle} />
+      <EngCta
+        title={en ? "Questions about method or data?" : "Dúvidas sobre método ou dados?"}
+        text={en ? "Talk to the team. We explain how each number is produced." : "Fale com a equipe. Explicamos como cada número é produzido."}
+        cta={{ href: "/contato", label: en ? "Talk to us" : "Fale com a gente" }}
+        object="laudo"
+      />
     </>
   );
 }

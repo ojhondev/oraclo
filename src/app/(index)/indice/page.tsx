@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { fmtPostDate, getArticles, getPosts } from "@/lib/updates";
 import { getLang } from "@/lib/site/get-lang";
 import { Cover, PostCard } from "../post-card";
+import { ContourObject } from "@/components/eng/contour-object";
 
 export async function generateMetadata(): Promise<Metadata> {
   const en = (await getLang()) === "en";
@@ -26,7 +27,22 @@ export default async function IndexPage() {
   const today = fmtPostDate(new Date().toISOString().slice(0, 10), "long", lang);
 
   return (
-    <div className="px-4 pt-10 pb-8 sm:px-6 lg:px-8">
+    <>
+    <section className="eng-hero eng-dark relative -mt-[68px] overflow-hidden bg-black px-4 pt-[140px] pb-20 text-white sm:px-6 lg:px-8">
+      <div className="grid items-end gap-10 lg:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]">
+        <div>
+          <p className="eng-eyebrow text-white/60">Index</p>
+          <h1 className="mt-6 max-w-[16ch] text-[clamp(40px,5.6vw,84px)] leading-[1.02] tracking-[-0.03em]">{en ? "News and technical guides." : "Novidades e guias técnicos."}</h1>
+          <p className="mt-6 max-w-[56ch] text-[17px] leading-[1.55] text-white/70 sm:text-[19px]">
+            {en
+              ? "What's new on the platform and guides on damage mapping, façade inspection, building pathology, photogrammetry and heritage conservation."
+              : "O que há de novo na plataforma e guias sobre mapa de danos, inspeção de fachadas, manifestações patológicas, fotogrametria e restauro."}
+          </p>
+        </div>
+        <ContourObject names={["laudo"]} className="hidden h-[300px] w-auto justify-self-center text-white lg:block" />
+      </div>
+    </section>
+    <div className="px-4 pt-16 pb-8 sm:px-6 lg:px-8">
       <div className="flex items-baseline justify-between border-y py-3">
         <h1 className="text-[13.5px] font-bold">{en ? "Latest" : "Últimas"}</h1>
         <span className="text-[12.5px] text-muted-foreground">{today}</span>
@@ -106,6 +122,7 @@ export default async function IndexPage() {
         ))}
       </ul>
     </div>
+    </>
   );
 }
 

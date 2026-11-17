@@ -22,6 +22,9 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
   const lang = await getLang();
   return (
     <div id={ROOT_ID} lang={lang === "en" ? "en" : "pt-BR"} className={cn("site-theme flex min-h-svh flex-col", eng.variable, engMono.variable, dark && "site-dark")}>
+      {/* Satoshi (Fontshare, licença livre): a grotesca geométrica gratuita mais próxima da Aeonik do Scale */}
+      <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="" />
+      <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" precedence="default" />
       <SiteHeader rootId={ROOT_ID} lang={lang} />
       <main className="flex-1">{children}</main>
       <SiteFooter lang={lang} />

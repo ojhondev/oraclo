@@ -8,6 +8,32 @@ import Lenis from "lenis";
  * nativa da página, que o Lenis continua atualizando. Respeita "reduzir movimento".
  */
 export function SmoothScroll() {
+  // cabeçalho escuro sobre seções escuras: confere o que está logo abaixo dele
+  useEffect(() => {
+    const root = document.getElementById("archray-site");
+    if (!root) return;
+    let raf = 0;
+    const check = () => {
+      raf = 0;
+      const header = root.querySelector<HTMLElement>(".site-header");
+      header?.style.setProperty("pointer-events", "none");
+      const el = document.elementFromPoint(window.innerWidth / 2, 74);
+      header?.style.removeProperty("pointer-events");
+      root.toggleAttribute("data-nav-dark", !!el?.closest(".eng-dark"));
+    };
+    const onScroll = () => {
+      if (!raf) raf = requestAnimationFrame(check);
+    };
+    check();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      cancelAnimationFrame(raf);
+    };
+  }, []);
+
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const lenis = new Lenis({ duration: 1.1, easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)), smoothWheel: true });

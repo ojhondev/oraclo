@@ -18,7 +18,7 @@ export default async function LoginPage() {
         <>
           Acesso só por convite.{" "}
           <Link href="/contato" className="font-medium text-foreground underline underline-offset-4">
-            Solicitar diagnóstico
+            Solicitar orçamento
           </Link>
         </>
       }

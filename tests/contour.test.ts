@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { objectHeight, objectSlices, project, ringPath, type ObjectName } from "@/components/eng/contour";
 
-const NAMES: ObjectName[] = ["celular", "igreja", "notebook", "laudo", "fachada", "torre"];
+const NAMES: ObjectName[] = ["celular", "igreja", "notebook", "laudo", "fachada", "torre", "catedral"];
 
 describe("ilustrações em curvas de nível", () => {
   it("cada objeto tem fatias ordenadas de baixo para cima, com contornos fechados válidos", () => {
@@ -27,5 +27,15 @@ describe("ilustrações em curvas de nível", () => {
     const d = ringPath([[0, 0], [1, 0], [1, 1]], 0, v);
     expect(d.startsWith("M")).toBe(true);
     expect(d.endsWith("Z")).toBe(true);
+  });
+});
+
+describe("catedral", () => {
+  it("tem duas torres que chegam mais alto que a cúpula e muitos contornos na base", () => {
+    const s = objectSlices("catedral");
+    expect(s[0]!.rings.length).toBeGreaterThan(10);
+    const top = s[s.length - 1]!;
+    expect(top.z).toBeGreaterThan(3);
+    expect(top.rings.length).toBeLessThanOrEqual(2); // só os coruchéus
   });
 });

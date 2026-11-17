@@ -50,7 +50,7 @@ export default async function TechPage() {
         object="notebook"
         video="fachada"
         ctas={[
-          { href: "/contato", label: en ? "Request a diagnosis" : "Solicitar diagnóstico" },
+          { href: "/contato", label: en ? "Request a quote" : "Solicitar orçamento" },
           { href: "/docs", label: en ? "Documentation" : "Documentação" },
         ]}
       />
@@ -60,8 +60,8 @@ export default async function TechPage() {
       {/* a transformação: antes e depois, linha a linha */}
       <EngBand tone="white" id="transformacao">
         <EngHead eyebrow={sci.transform.label} title={sci.transform.title} text={sci.transform.text} />
-        <div className="mt-16 border-t border-black">
-          <div className="hidden gap-6 border-b py-3 font-mono text-[11px] tracking-[0.05em] text-[#575757] uppercase md:grid md:grid-cols-[1fr_1.5fr_1.8fr]">
+        <div className="mt-16 border-t border-(--eng-ink)">
+          <div className="hidden gap-6 border-b py-3 font-mono text-[11px] tracking-[0.05em] text-(--eng-mute) uppercase md:grid md:grid-cols-[1fr_1.5fr_1.8fr]">
             <span />
             <span>{sci.transform.before}</span>
             <span>{sci.transform.after}</span>
@@ -69,7 +69,7 @@ export default async function TechPage() {
           {sci.transform.rows.map(([topic, before, after]) => (
             <div key={topic} className="grid gap-2 border-b py-6 md:grid-cols-[1fr_1.5fr_1.8fr] md:gap-6" data-reveal>
               <p className="eng-eyebrow md:self-center">{topic}</p>
-              <p className="text-[16px] leading-6 text-[#575757] line-through decoration-black/20 md:self-center md:no-underline">{before}</p>
+              <p className="text-[16px] leading-6 text-(--eng-mute) line-through decoration-black/20 md:self-center md:no-underline">{before}</p>
               <p className="text-[19px] leading-snug sm:text-[21px]">{after}</p>
             </div>
           ))}
@@ -81,7 +81,7 @@ export default async function TechPage() {
         <EngHead eyebrow={en ? "Under the hood" : "Por dentro"} title={en ? "The mathematics behind each step." : "A matemática por trás de cada etapa."} />
         <div className="mt-14 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {t.items.map((it, i) => (
-            <article key={it.id} className="flex min-w-0 flex-col rounded-[16px] bg-white p-7" data-reveal data-reveal-delay={(i % 3) * 70}>
+            <article key={it.id} className="flex min-w-0 flex-col rounded-[16px] bg-(--eng-0) p-7" data-reveal data-reveal-delay={(i % 3) * 70}>
               <p className="eng-eyebrow">
                 {String(i + 1).padStart(2, "0")} · {it.status}
               </p>
@@ -90,7 +90,7 @@ export default async function TechPage() {
                 {(sci.math[it.id] ?? []).map((eq) => (
                   <li key={eq.tex} className="min-w-0">
                     <Formula tex={eq.tex} className="a-formula-box" />
-                    <p className="mt-2 text-[13.5px] leading-6 text-[#575757]">{eq.note}</p>
+                    <p className="mt-2 text-[13.5px] leading-6 text-(--eng-mute)">{eq.note}</p>
                   </li>
                 ))}
               </ul>
@@ -129,8 +129,8 @@ export default async function TechPage() {
       {/* diferenciais */}
       <EngBand tone="white" id="diferenciais">
         <EngHead eyebrow={sci.diff.label} title={sci.diff.title} text={sci.diff.text} />
-        <div className="mt-16 border-t border-black">
-          <div className="hidden gap-6 border-b py-3 font-mono text-[11px] tracking-[0.05em] text-[#575757] uppercase lg:grid lg:grid-cols-[1fr_1.4fr_1.6fr_1.6fr]">
+        <div className="mt-16 border-t border-(--eng-ink)">
+          <div className="hidden gap-6 border-b py-3 font-mono text-[11px] tracking-[0.05em] text-(--eng-mute) uppercase lg:grid lg:grid-cols-[1fr_1.4fr_1.6fr_1.6fr]">
             {sci.diff.headers.map((h) => (
               <span key={h}>{h}</span>
             ))}
@@ -143,14 +143,14 @@ export default async function TechPage() {
               </div>
               {cells.map((v, i) => (
                 <div key={i} className="min-w-0">
-                  <dt className="font-mono text-[11px] tracking-[0.05em] text-[#575757] uppercase lg:sr-only">{sci.diff.headers[i + 1]}</dt>
-                  <dd className={i === 2 ? "mt-1 text-[15px] leading-6 lg:mt-0" : "mt-1 text-[14.5px] leading-6 text-[#575757] lg:mt-0"}>{v}</dd>
+                  <dt className="font-mono text-[11px] tracking-[0.05em] text-(--eng-mute) uppercase lg:sr-only">{sci.diff.headers[i + 1]}</dt>
+                  <dd className={i === 2 ? "mt-1 text-[15px] leading-6 lg:mt-0" : "mt-1 text-[14.5px] leading-6 text-(--eng-mute) lg:mt-0"}>{v}</dd>
                 </div>
               ))}
             </dl>
           ))}
         </div>
-        <p className="mt-8 max-w-[80ch] text-[15px] leading-6 text-[#575757]">{sci.diff.note}</p>
+        <p className="mt-8 max-w-[80ch] text-[15px] leading-6 text-(--eng-mute)">{sci.diff.note}</p>
       </EngBand>
 
       {/* publicações */}
@@ -162,12 +162,12 @@ export default async function TechPage() {
         <ul className="mt-12 grid gap-4 md:grid-cols-3">
           {posts.map((p) => (
             <li key={p.slug}>
-              <Link href={`/index/${p.slug}`} className="group flex h-full min-h-[240px] flex-col rounded-[16px] bg-white p-7 hover:bg-[#fafafa]">
+              <Link href={`/index/${p.slug}`} className="group flex h-full min-h-[240px] flex-col rounded-[16px] bg-(--eng-0) p-7 hover:bg-(--eng-h)">
                 <p className="eng-eyebrow">
                   {p.category} · {fmtPostDate(p.date, "short", lang)}
                 </p>
                 <h3 className="mt-auto pt-10 text-[20px] leading-[1.25] group-hover:underline group-hover:underline-offset-4">{p.title}</h3>
-                <p className="mt-3 line-clamp-3 text-[14.5px] leading-6 text-[#575757]">{p.summary}</p>
+                <p className="mt-3 line-clamp-3 text-[14.5px] leading-6 text-(--eng-mute)">{p.summary}</p>
               </Link>
             </li>
           ))}
@@ -177,7 +177,7 @@ export default async function TechPage() {
       <EngCta
         title={en ? "See it working on your façade." : "Veja funcionando na sua fachada."}
         text={en ? "Tell us about the building. An architect from Estúdio Restaura replies with the path to a diagnosis." : "Conte sobre o edifício. Um arquiteto do Estúdio Restaura responde com o caminho do diagnóstico."}
-        cta={{ href: "/contato", label: en ? "Request a diagnosis" : "Solicitar diagnóstico" }}
+        cta={{ href: "/contato", label: en ? "Request a quote" : "Solicitar orçamento" }}
         object="fachada"
       />
     </>

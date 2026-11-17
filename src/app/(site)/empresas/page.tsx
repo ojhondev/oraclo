@@ -15,17 +15,17 @@ const T = {
   pt: {
     title: "Setores que atendemos",
     description:
-      "Diagnóstico de danos em edificações para arquitetura, engenharia, construtoras, poder público, perícias e seguros, com tecnologia própria do Estúdio Restaura.",
+      "Levantamento 3D, mapa de danos e laudo de fachadas para arquitetura, engenharia, construtoras, poder público, perícias e seguros. Serviço do Estúdio Restaura, sem laser scanner nem drone.",
     kicker: "Setores que atendemos",
-    h1: "Diagnóstico de danos para quem decide a obra",
+    h1: "Levantamento e laudo para quem decide a obra",
     lead:
-      "De um escritório de arquitetura a uma carteira de prédios públicos: vistoriamos, mapeamos cada dano e entregamos quantitativos, orçamento e laudo prontos para a sua decisão.",
-    cta: "Solicitar diagnóstico",
+      "De um escritório de arquitetura a uma carteira de prédios públicos: nossa equipe vai ao imóvel, levanta a edificação em 3D com tecnologia própria, mapeia cada dano e entrega quantitativos, orçamento e laudo. Sem laser scanner, sem drone e sem esperar semanas por equipamento.",
+    cta: "Solicitar orçamento",
     cta2: "Conheça a tecnologia",
     segmentsLabel: "Cinco setores",
     exampleLabel: "Exemplo de aplicação",
     alsoLabel: "Inclui",
-    examplesNote: "Os exemplos ilustram o uso da ferramenta e não descrevem clientes reais. Para um caso real, veja Casos.",
+    examplesNote: "Os exemplos ilustram como o serviço é aplicado e não descrevem clientes reais. Para um caso real, veja Casos.",
     segments: [
       {
         id: "arquitetura",
@@ -154,24 +154,24 @@ const T = {
     ],
     stories: "Casos",
     seeAll: "Ver tudo",
-    finalTitle: "Conte qual é o imóvel. Um arquiteto responde.",
+    finalTitle: "Conte qual é o imóvel. Mandamos o orçamento.",
     finalText: "Descreva o imóvel e o objetivo. Depois do briefing, enviamos o orçamento do diagnóstico, sem compromisso.",
-    finalCta: "Solicitar diagnóstico",
+    finalCta: "Solicitar orçamento",
   },
   en: {
     title: "Sectors we serve",
     description:
-      "Building damage diagnosis for architecture, engineering, contractors, the public sector, surveys and insurance, with Estúdio Restaura's in-house technology.",
+      "3D surveys, damage maps and façade reports for architecture, engineering, contractors, the public sector, surveys and insurance. A service by Estúdio Restaura, without laser scanners or drones.",
     kicker: "Sectors we serve",
-    h1: "Damage diagnosis for those who decide the works",
+    h1: "Surveys and reports for those who decide the works",
     lead:
-      "From an architecture practice to a portfolio of public buildings: we survey, map every damage and deliver quantities, a budget and a report ready for your decision.",
-    cta: "Request a diagnosis",
+      "From an architecture practice to a portfolio of public buildings: our team goes to the building, surveys it in 3D with in-house technology, maps every defect and delivers quantities, a budget and a report. No laser scanner, no drone, no waiting for equipment.",
+    cta: "Request a quote",
     cta2: "Explore the technology",
     segmentsLabel: "Five sectors",
     exampleLabel: "Application example",
     alsoLabel: "Includes",
-    examplesNote: "These examples illustrate how the tool is used and do not describe real clients. For a real case, see Cases.",
+    examplesNote: "These examples illustrate how the service is applied and do not describe real clients. For a real case, see Cases.",
     segments: [
       {
         id: "arquitetura",
@@ -300,9 +300,9 @@ const T = {
     ],
     stories: "Cases",
     seeAll: "See all",
-    finalTitle: "Tell us about the building. An architect will reply.",
+    finalTitle: "Tell us about the building. We'll send a quote.",
     finalText: "Describe the building and your goal. After the briefing, we send a quote for the diagnosis, with no obligation.",
-    finalCta: "Request a diagnosis",
+    finalCta: "Request a quote",
   },
 } satisfies Record<Lang, unknown>;
 
@@ -329,36 +329,36 @@ export default async function EmpresasPage() {
           <EngStickyIndex label={t.segmentsLabel} items={t.segments.map((s) => ({ id: s.id, label: s.title }))} />
           <div className="grid gap-4">
             {t.segments.map((s, i) => (
-              <article key={s.id} id={s.id} className="grid scroll-mt-24 gap-0 overflow-hidden rounded-[16px] bg-[#f2f2f2] xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]" data-reveal>
+              <article key={s.id} id={s.id} className="grid scroll-mt-24 gap-0 overflow-hidden rounded-[16px] bg-(--eng-1) xl:grid-cols-[minmax(0,1.2fr)_minmax(0,1fr)]" data-reveal>
                 <div className="relative flex min-w-0 flex-col p-8 sm:p-10">
                   <div className="flex items-start justify-between gap-6">
                     <p className="eng-eyebrow">{String(i + 1).padStart(2, "0")}</p>
-                    <div className="hidden size-24 shrink-0 rounded-[12px] bg-white p-2 sm:block">
-                      <ContourObject names={[SECTOR_OBJ[i % SECTOR_OBJ.length]!]} className="size-full text-black" />
+                    <div className="hidden size-24 shrink-0 rounded-[12px] bg-(--eng-0) p-2 sm:block">
+                      <ContourObject names={[SECTOR_OBJ[i % SECTOR_OBJ.length]!]} step={2} className="size-full text-(--eng-ink)" />
                     </div>
                   </div>
                   <h2 className="mt-4 text-[clamp(28px,3vw,40px)] leading-[1.08] tracking-[-0.02em]">{s.title}</h2>
-                  <p className="mt-3 text-[14px] leading-5 text-[#575757]">
-                    <span className="text-black">{t.alsoLabel}:</span> {s.also}
+                  <p className="mt-3 text-[14px] leading-5 text-(--eng-mute)">
+                    <span className="text-(--eng-ink)">{t.alsoLabel}:</span> {s.also}
                   </p>
-                  <p className="mt-1 text-[14px] leading-5 text-[#575757]">{s.who}</p>
+                  <p className="mt-1 text-[14px] leading-5 text-(--eng-mute)">{s.who}</p>
                   <p className="mt-6 max-w-[60ch] text-[17px] leading-[1.55]">{s.pain}</p>
-                  <ul className="mt-6 grid gap-2.5 border-t border-black/10 pt-5 text-[15px] leading-6">
+                  <ul className="mt-6 grid gap-2.5 border-t border-(--eng-ink)/10 pt-5 text-[15px] leading-6">
                     {s.gain.map((g) => (
                       <li key={g} className="flex gap-3">
-                        <span className="mt-[9px] size-1.5 shrink-0 rounded-[1px] bg-black" />
+                        <span className="mt-[9px] size-1.5 shrink-0 rounded-[1px] bg-(--eng-ink)" />
                         {g}
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className="min-w-0 bg-white/60 p-8 sm:p-10 xl:border-l xl:border-black/5">
+                <div className="min-w-0 bg-(--eng-0)/60 p-8 sm:p-10 xl:border-l xl:border-(--eng-ink)/5">
                   <p className="eng-eyebrow">{t.exampleLabel}</p>
                   <h3 className="mt-4 text-[21px] leading-snug">{s.example.title}</h3>
                   <ol className="mt-6 grid gap-4 text-[15px] leading-6">
                     {s.example.steps.map((step, n) => (
                       <li key={step} className="grid grid-cols-[28px_1fr] gap-2">
-                        <span className="font-mono text-[11px] leading-6 text-[#575757]">{String(n + 1).padStart(2, "0")}</span>
+                        <span className="font-mono text-[11px] leading-6 text-(--eng-mute)">{String(n + 1).padStart(2, "0")}</span>
                         <span>{step}</span>
                       </li>
                     ))}
@@ -366,9 +366,9 @@ export default async function EmpresasPage() {
                 </div>
               </article>
             ))}
-            <p className="pt-2 text-[14px] leading-5 text-[#575757]">
+            <p className="pt-2 text-[14px] leading-5 text-(--eng-mute)">
               {t.examplesNote}{" "}
-              <Link href="/historias" className="text-black underline underline-offset-4">
+              <Link href="/historias" className="text-(--eng-ink) underline underline-offset-4">
                 {t.stories}
               </Link>
             </p>
@@ -394,7 +394,7 @@ export default async function EmpresasPage() {
       <EngBand tone="mist">
         <div className="flex items-end justify-between gap-6">
           <h2 className="text-[clamp(30px,3.8vw,56px)] leading-[1.06] tracking-[-0.025em]">{t.stories}</h2>
-          <Link href="/historias" className="eng-eyebrow text-black underline-offset-4 hover:underline">
+          <Link href="/historias" className="eng-eyebrow text-(--eng-ink) underline-offset-4 hover:underline">
             {t.seeAll}
           </Link>
         </div>

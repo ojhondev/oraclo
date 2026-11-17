@@ -32,10 +32,10 @@ export default async function CompanyPage() {
         <p className="eng-eyebrow">{t.purposeLabel}</p>
         <ul className="mt-10 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
           {t.purpose.map(([title, text], i) => (
-            <li key={title} className="border-t border-black pt-5" data-reveal data-reveal-delay={i * 80}>
-              <p className="font-mono text-[11px] text-[#575757]">{String(i + 1).padStart(2, "0")}</p>
+            <li key={title} className="border-t border-(--eng-ink) pt-5" data-reveal data-reveal-delay={i * 80}>
+              <p className="font-mono text-[11px] text-(--eng-mute)">{String(i + 1).padStart(2, "0")}</p>
               <h2 className="mt-4 text-[24px] leading-[1.15] tracking-[-0.01em]">{title}</h2>
-              <p className="mt-3 text-[15px] leading-6 text-[#575757]">{text}</p>
+              <p className="mt-3 text-[15px] leading-6 text-(--eng-mute)">{text}</p>
             </li>
           ))}
         </ul>
@@ -47,7 +47,7 @@ export default async function CompanyPage() {
       <EngBand tone="mist">
         <div className="grid gap-12 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)] lg:gap-16">
           <div data-reveal="fade">
-            <div className="relative aspect-square max-w-[560px] overflow-hidden rounded-[16px] bg-[#e5e5e5]">
+            <div className="relative aspect-square max-w-[560px] overflow-hidden rounded-[16px] bg-(--eng-3)">
               <Image src="/site/jhonatan-ribeiro-obra.webp" alt={t.founder.photoAlt} fill sizes="(min-width: 1024px) 40vw, 100vw" className="object-cover grayscale-[0.2]" />
             </div>
           </div>
@@ -59,9 +59,9 @@ export default async function CompanyPage() {
                 <p key={p}>{p}</p>
               ))}
             </div>
-            <div className="mt-10 border-t border-black/15 pt-5">
+            <div className="mt-10 border-t border-(--eng-ink)/15 pt-5">
               <p className="text-[18px]">{t.founder.name}</p>
-              <p className="mt-1 font-mono text-[11px] tracking-[0.05em] text-[#575757] uppercase">{t.founder.role}</p>
+              <p className="mt-1 font-mono text-[11px] tracking-[0.05em] text-(--eng-mute) uppercase">{t.founder.role}</p>
             </div>
           </div>
         </div>
@@ -73,13 +73,13 @@ export default async function CompanyPage() {
       <EngBand tone="white">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr] lg:gap-16">
           <EngHead eyebrow={en ? "Values" : "Valores"} title={t.valuesTitle} text={t.valuesText} className="lg:grid-cols-1 lg:items-start" />
-          <ol className="border-t border-black">
+          <ol className="border-t border-(--eng-ink)">
             {t.values.map(([title, text], i) => (
               <li key={title} className="grid grid-cols-[44px_1fr] gap-4 border-b py-7" data-reveal data-reveal-delay={i * 60}>
-                <span className="pt-2 font-mono text-[11px] text-[#575757]">{String(i + 1).padStart(2, "0")}</span>
+                <span className="pt-2 font-mono text-[11px] text-(--eng-mute)">{String(i + 1).padStart(2, "0")}</span>
                 <div>
                   <h3 className="text-[24px] leading-snug tracking-[-0.01em] sm:text-[28px]">{title}</h3>
-                  <p className="mt-2 text-[15px] leading-7 text-[#575757]">{text}</p>
+                  <p className="mt-2 text-[15px] leading-7 text-(--eng-mute)">{text}</p>
                 </div>
               </li>
             ))}

@@ -27,7 +27,7 @@ export default async function SignupPage() {
         <p className="text-muted-foreground">Recebeu um convite? Abra o link que chegou por e-mail ou WhatsApp para criar a sua senha.</p>
         <p className="text-muted-foreground">Quer um diagnóstico do seu imóvel? Fale com um arquiteto do Estúdio Restaura.</p>
         <Link href="/contato" className="mt-2 inline-flex h-11 items-center justify-center rounded-[10px] bg-foreground px-5 font-medium text-background hover:opacity-85">
-          Solicitar diagnóstico
+          Solicitar orçamento
         </Link>
       </div>
     </AuthShell>

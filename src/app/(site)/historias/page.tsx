@@ -35,11 +35,11 @@ export default async function HistoriasPage() {
         {first && (
           <div>
             <StoryCard story={first} large lang={lang} />
-            <p className="mt-4 max-w-2xl text-[16px] leading-7 text-[#575757]">{first.summary}</p>
+            <p className="mt-4 max-w-2xl text-[16px] leading-7 text-(--eng-mute)">{first.summary}</p>
           </div>
         )}
         {rest.length > 0 && (
-          <ul className="mt-16 grid gap-8 border-t border-black pt-10 md:grid-cols-3">
+          <ul className="mt-16 grid gap-8 border-t border-(--eng-ink) pt-10 md:grid-cols-3">
             {rest.map((s) => (
               <li key={s.slug}>
                 <StoryCard story={s} lang={lang} />
@@ -50,7 +50,7 @@ export default async function HistoriasPage() {
       </EngBand>
       <EngCta
         title={en ? "Your building could be the next case." : "Seu imóvel pode ser o próximo caso."}
-        cta={{ href: "/contato", label: en ? "Request a diagnosis" : "Solicitar diagnóstico" }}
+        cta={{ href: "/contato", label: en ? "Request a quote" : "Solicitar orçamento" }}
         object="fachada"
       />
     </>

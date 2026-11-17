@@ -14,6 +14,8 @@ type Props = {
   /** Giro extra ao longo do progresso (radianos). */
   spin?: number;
   yaw?: number;
+  /** Desenha só uma a cada `step` fatias (ilustrações pequenas ficam legíveis). */
+  step?: number;
 };
 
 const W = 400;
@@ -24,7 +26,7 @@ const H = 400;
  * fatias de baixo para cima, gira de leve e sai apagando de cima para baixo. O desenho é atualizado
  * direto no SVG (sem re-render do React), para ficar fluido.
  */
-export function ContourObject({ names, progress, className, stroke = "currentColor", spin = 0.7, yaw = 0.55 }: Props) {
+export function ContourObject({ names, progress, className, stroke = "currentColor", spin = 0.7, yaw = 0.55, step = 1 }: Props) {
   const svg = useRef<SVGSVGElement>(null);
   const own = useMotionValue(0);
   const inView = useInView(svg, { once: true, margin: "-15% 0px" });
@@ -41,11 +43,11 @@ export function ContourObject({ names, progress, className, stroke = "currentCol
     () =>
       names.map((name) => {
         const h = objectHeight(name);
-        const slices = objectSlices(name);
-        const scale = 230 / Math.max(2.2, h);
-        return { name, slices, h, view: { yaw, pitch: 0.42, scale, cx: W / 2, cy: H / 2 + (h * scale) / 2 - 10 } as View };
+        const slices = objectSlices(name).filter((_, i, all) => i % step === 0 || i === all.length - 1);
+        const scale = (name === "catedral" ? 300 : 290) / Math.max(2.3, h);
+        return { name, slices, h, view: { yaw, pitch: 0.42, scale, cx: W / 2, cy: H / 2 + (h * scale) / 2 - 4 } as View };
       }),
-    [names, yaw],
+    [names, yaw, step],
   );
 
   const draw = (p: number) => {
@@ -87,7 +89,7 @@ export function ContourObject({ names, progress, className, stroke = "currentCol
             continue;
           }
           el.setAttribute("d", ringPath(ring, s.z, view));
-          el.style.opacity = String(0.35 + 0.65 * (si / S));
+          el.style.opacity = String(0.5 + 0.5 * (si / S));
           el.style.strokeDashoffset = String(1 - f);
         }
       });

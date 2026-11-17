@@ -79,17 +79,17 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
             </Link>
           ) : (
             <>
-              <Link href="/login" className="site-login hidden h-[38px] items-center rounded-[8px] px-4 text-[15px] text-[#575757] shadow-[inset_0_0_0_1px_#c7c7c7] transition-colors hover:text-foreground sm:inline-flex">
+              <Link href="/login" className="site-login hidden h-[38px] items-center rounded-[8px] px-4 text-[15px] text-(--eng-mute) shadow-[inset_0_0_0_1px_var(--eng-line2)] transition-colors hover:text-foreground sm:inline-flex">
                 {lang === "en" ? "Log in" : "Entrar"}
               </Link>
               <Link href="/contato" className="a-btn a-btn-sm">
                 <span className="sm:hidden">{lang === "en" ? "Request" : "Solicitar"}</span>
-                <span className="hidden sm:inline">{lang === "en" ? "Request a diagnosis" : "Solicitar diagnóstico"}</span>
+                <span className="hidden sm:inline">{lang === "en" ? "Request a quote" : "Solicitar orçamento"}</span>
               </Link>
             </>
           )}
           <details className="relative lg:hidden">
-            <summary className="grid size-[38px] cursor-pointer list-none place-items-center rounded-[8px] shadow-[inset_0_0_0_1px_#c7c7c7] [&::-webkit-details-marker]:hidden" aria-label={t.menu}>
+            <summary className="grid size-[38px] cursor-pointer list-none place-items-center rounded-[8px] shadow-[inset_0_0_0_1px_var(--eng-line2)] [&::-webkit-details-marker]:hidden" aria-label={t.menu}>
               <Menu className="size-4" />
             </summary>
             <nav className="absolute top-12 right-0 grid max-h-[80svh] w-72 gap-3 overflow-y-auto rounded-[16px] border bg-popover p-3 text-[15px] text-foreground shadow-2xl">

@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from "motion/react";
-import { ArrowLeft, ArrowRight, ChevronDown, Crosshair, Landmark, Building2, HardHat, Scale, ShieldCheck, Ruler, ScrollText, Home } from "lucide-react";
+import { ArrowLeft, ArrowRight, ChevronDown, Landmark, Building2, HardHat, Scale, ShieldCheck, Ruler, ScrollText, Home, Smartphone } from "lucide-react";
 import { ContourObject } from "./contour-object";
+import { Drift, Rise } from "./motion";
 import { topoPaths } from "./topo";
 import type { ObjectName } from "./contour";
 import type { Lang } from "@/lib/site/lang";
@@ -13,86 +14,100 @@ import type { Lang } from "@/lib/site/lang";
 
 const T = {
   pt: {
-    heroTitle: "Diagnóstico de fachadas com precisão de engenharia.",
-    heroSub: "Do vídeo no celular ao laudo assinado: modelo 3D, nuvem de pontos, mapa de danos, quantitativos e orçamento numa única plataforma.",
-    heroCta: "Solicitar diagnóstico",
-    heroCta2: "Ver a tecnologia",
+    heroTitle: "Levantamento 3D e laudo de fachadas, sem laser scanner nem drone.",
+    heroSub: "O Estúdio Restaura vai até o imóvel, levanta a edificação em 3D com tecnologia própria, mapeia cada dano e entrega laudo, orçamento e prioridades. Mais simples, mais rápido e mais acessível.",
+    heroCta: "Solicitar orçamento",
+    heroCta2: "Como funciona",
     scroll: "Role para explorar",
-    heroAfterTitle: "Precisão de engenharia não tem atalho.",
-    heroAfterText: "O ArchRay cobre o diagnóstico inteiro, da gravação da fachada ao laudo assinado, com cada medida rastreável e o profissional no controle de cada decisão.",
+    heroAfterTitle: "Diagnóstico pronto, não dado bruto.",
+    heroAfterText: "Laser scanner e drone entregam uma nuvem de pontos. Nós entregamos o que fazer com ela: mapa de danos, quantitativos, orçamento do tratamento e laudo assinado por profissional habilitado.",
     stages: [
-      { eyebrow: "01 · Captura", title: "Uma fachada inteira, gravada em vídeo pelo celular.", text: "O app guia a gravação em tempo real e guarda só os quadros nítidos. Sem scanner, sem drone, sem software instalado.", cta: "Como capturar", href: "/tecnologia#captura" },
-      { eyebrow: "02 · Modelo 3D e nuvem de pontos", title: "Milhões de pontos medidos, com escala real.", text: "A fotogrametria reconstrói a geometria e o marcador de escala confere a medida sozinho, com a divergência declarada.", cta: "Modelo 3D e nuvem", href: "/tecnologia#captura" },
-      { eyebrow: "03 · Diagnóstico", title: "Danos sugeridos pela IA, confirmados por quem assina.", text: "A visão computacional aponta fissuras, manchas e perdas sobre a fachada em escala. O profissional aceita ou rejeita cada uma.", cta: "Detecção automática", href: "/tecnologia#deteccao" },
-      { eyebrow: "04 · Laudo", title: "Quantitativos, orçamento e laudo saindo do mesmo mapa.", text: "Áreas, comprimentos, prioridades pela matriz GUT e o PDF do laudo, gerados direto do que foi marcado.", cta: "Laudo e pranchas", href: "/tecnologia#laudo" },
+      { eyebrow: "01 · Vistoria", title: "Nossa equipe vai até o imóvel e grava a fachada com o celular.", text: "Um marcador de escala na parede e o nosso app de captura bastam. Sem mobilizar laser scanner, sem drone e sem interromper o uso do edifício.", cta: "Como capturamos", href: "/tecnologia#captura" },
+      { eyebrow: "02 · Levantamento 3D", title: "A gravação vira modelo 3D e nuvem de pontos em escala real.", text: "A fotogrametria reconstrói a edificação e o marcador confere a medida sozinho, com a divergência declarada. Já usa laser? Trabalhamos sobre a sua nuvem.", cta: "Modelo 3D e nuvem", href: "/tecnologia#captura" },
+      { eyebrow: "03 · Diagnóstico", title: "Arquitetos de restauro mapeiam cada dano sobre a fachada em escala.", text: "A IA sugere fissuras, manchas e perdas; quem confirma cada dano é a nossa equipe técnica. Nada entra no laudo sem revisão.", cta: "Como diagnosticamos", href: "/tecnologia#deteccao" },
+      { eyebrow: "04 · Entrega", title: "Você recebe laudo, orçamento e prioridades, prontos para decidir.", text: "Mapa de danos, quantitativos, orçamento do tratamento, matriz GUT, pranchas e DXF, com o laudo assinado pelo responsável técnico.", cta: "O que entregamos", href: "/tecnologia#laudo" },
     ],
-    statement: "Do vídeo ao laudo, cada medida chega com a precisão declarada e cada decisão com a assinatura de quem entende de obra.",
-    galleryA: "Precisão de engenharia para",
-    galleryB: "Do patrimônio tombado ao prédio de escritórios: o mesmo fluxo, medido do mesmo jeito.",
+    statement: "Um celular, um marcador de escala e tecnologia própria no lugar de equipamentos caros. O campo fica mais curto, o orçamento mais acessível, e quem revisa cada dano é um arquiteto de restauro.",
+    galleryA: "Levantamento e laudo para",
+    galleryB: "Do patrimônio tombado ao prédio comercial, o mesmo serviço: vistoria, modelo 3D, mapa de danos e laudo.",
     galleryWords: ["igrejas.", "fachadas.", "casarões.", "condomínios.", "galpões."],
     galleryCta: "Conheça a tecnologia",
-    sectorsTitle: "Feito para quem responde pela obra.",
+    sectorsTitle: "Para quem precisa decidir a obra.",
     sectors: [
-      { icon: Landmark, title: "Arquitetura e restauro", text: "Mapa de danos e diagnóstico de bens históricos, com documentação para órgãos de preservação.", href: "/empresas#arquitetura" },
-      { icon: HardHat, title: "Engenharia e inspeção predial", text: "Inspeções com quantitativos medidos, prioridades e laudo pronto para assinar.", href: "/empresas#engenharia" },
-      { icon: Building2, title: "Construtoras", text: "Levantamento do existente antes da obra e acompanhamento de etapas.", href: "/empresas#construtoras" },
-      { icon: Home, title: "Condomínios", text: "Fachadas inspecionadas com orçamento por prioridade para a assembleia.", href: "/empresas" },
-      { icon: Scale, title: "Perícias e seguros", text: "Registro datado e comparável do estado da edificação.", href: "/empresas#pericias" },
-      { icon: ShieldCheck, title: "Poder público", text: "Gestão de acervo edificado com monitoramento entre vistorias.", href: "/empresas#publico" },
+      { icon: Landmark, title: "Patrimônio e restauro", text: "Levantamento e mapa de danos de igrejas e bens tombados, com a documentação que os órgãos de preservação pedem.", href: "/empresas#arquitetura" },
+      { icon: HardHat, title: "Escritórios de arquitetura e engenharia", text: "Terceirize o levantamento e o diagnóstico: você recebe a base em escala e o mapa de danos para o seu projeto.", href: "/empresas#engenharia" },
+      { icon: Building2, title: "Construtoras e retrofit", text: "Levantamento do existente antes da obra, com quantitativos para orçar a recuperação.", href: "/empresas#construtoras" },
+      { icon: Home, title: "Condomínios", text: "Inspeção da fachada com orçamento por prioridade, pronto para levar à assembleia.", href: "/empresas" },
+      { icon: Scale, title: "Perícias e seguros", text: "Registro datado, medido e comparável do estado da edificação.", href: "/empresas#pericias" },
+      { icon: ShieldCheck, title: "Poder público", text: "Diagnóstico de acervo edificado e monitoramento entre vistorias.", href: "/empresas#publico" },
     ],
-    pillarsTitle: "O rigor que um laudo exige.",
+    pillarsTitle: "Por que contratar o ArchRay.",
     pillars: [
-      { icon: Ruler, title: "Escala verificada", text: "O marcador impresso dá a medida real ao modelo, e medidas independentes se conferem. Divergência alta vira aviso, não número escondido.", href: "/index/escala-fotogrametria-marcador" },
-      { icon: Crosshair, title: "Precisão declarada", text: "A retificação calcula a incerteza em milímetros a partir de pontos de conferência, e ela aparece no laudo.", href: "/tecnologia#retificacao" },
-      { icon: ScrollText, title: "Rastreável do começo ao fim", text: "Cada dano sugerido pela IA é revisado por um profissional, e o laudo registra o método usado.", href: "/compromissos" },
+      { icon: Smartphone, title: "Sem laser scanner, sem drone", text: "Levantamos com celular, marcador de escala e fotogrametria. Menos equipamento em campo, menos mobilização e um orçamento mais acessível.", href: "/tecnologia#captura" },
+      { icon: ScrollText, title: "Diagnóstico, não só dado bruto", text: "Você recebe mapa de danos, quantitativos, orçamento do tratamento e prioridades, prontos para decidir e aprovar.", href: "/tecnologia#laudo" },
+      { icon: Landmark, title: "Feito por arquitetos de restauro", text: "O serviço é do Estúdio Restaura. A tecnologia acelera; cada dano é revisado e o laudo é assinado por profissional habilitado.", href: "/empresa" },
+      { icon: Ruler, title: "Quando o scanner é melhor, dizemos", text: "Se o projeto exige precisão milimétrica ou BIM detalhado, indicamos o laser scanner. Se você já tem a nuvem, trabalhamos sobre ela.", href: "/compromissos" },
     ],
     more: "Saiba mais",
-    latestTitle: "Guias técnicos do Index.",
+    latestTitle: "Do campo ao laudo.",
+    latestTitle2: "O que há de novo no ArchRay.",
     latestCta: "Ver todos os guias",
-    finalTitle: "Sua fachada, medida com rigor.",
-    finalText: "Conte sobre o edifício. Um arquiteto do Estúdio Restaura responde com o caminho do diagnóstico.",
-    finalCta: "Solicitar diagnóstico",
+    guideTag: "Guia",
+    caseTag: "Caso · Patrimônio",
+    caseTitle: "Igreja do Carmo, Horta: do levantamento à prancha em escala.",
+    techTag: "Levantamento 3D",
+    techTitle: "Como um vídeo de celular vira nuvem de pontos em escala.",
+    finalTitle: "Conte qual é o imóvel. Mandamos o orçamento.",
+    finalText: "Um arquiteto do Estúdio Restaura responde com escopo, prazo e orçamento do levantamento e do laudo.",
+    finalCta: "Solicitar orçamento",
   },
   en: {
-    heroTitle: "Façade diagnostics with engineering precision.",
-    heroSub: "From a phone video to a signed report: 3D model, point cloud, damage map, quantities and budget on a single platform.",
-    heroCta: "Request a diagnosis",
-    heroCta2: "See the technology",
+    heroTitle: "3D surveys and façade reports, without laser scanners or drones.",
+    heroSub: "Estúdio Restaura goes to the building, surveys it in 3D with in-house technology, maps every defect and delivers the report, budget and priorities. Simpler, faster and more affordable.",
+    heroCta: "Request a quote",
+    heroCta2: "How it works",
     scroll: "Scroll to explore",
-    heroAfterTitle: "Engineering precision has no shortcuts.",
-    heroAfterText: "ArchRay covers the whole diagnosis, from recording the façade to the signed report, with every measurement traceable and the professional in control of every decision.",
+    heroAfterTitle: "A finished diagnosis, not raw data.",
+    heroAfterText: "Laser scanners and drones deliver a point cloud. We deliver what to do with it: damage map, quantities, treatment budget and a report signed by a licensed professional.",
     stages: [
-      { eyebrow: "01 · Capture", title: "A whole façade, recorded on a phone video.", text: "The app guides the recording in real time and keeps only sharp frames. No scanner, no drone, no installed software.", cta: "How to capture", href: "/tecnologia#captura" },
-      { eyebrow: "02 · 3D model and point cloud", title: "Millions of measured points, at real scale.", text: "Photogrammetry rebuilds the geometry and the scale marker checks the measurement on its own, with the divergence stated.", cta: "3D model and cloud", href: "/tecnologia#captura" },
-      { eyebrow: "03 · Diagnosis", title: "AI-suggested damage, confirmed by whoever signs.", text: "Computer vision points out cracks, stains and losses on the scaled façade. The professional accepts or rejects each one.", cta: "Automatic detection", href: "/tecnologia#deteccao" },
-      { eyebrow: "04 · Report", title: "Quantities, budget and report from the same map.", text: "Areas, lengths, GUT priorities and the PDF report, generated straight from what was marked.", cta: "Reports and sheets", href: "/tecnologia#laudo" },
+      { eyebrow: "01 · Site visit", title: "Our team goes to the building and records the façade on a phone.", text: "A scale marker on the wall and our capture app are enough. No laser scanner, no drone, no disruption to the building.", cta: "How we capture", href: "/tecnologia#captura" },
+      { eyebrow: "02 · 3D survey", title: "The recording becomes a 3D model and point cloud at real scale.", text: "Photogrammetry rebuilds the building and the marker checks the measurement on its own, with the divergence stated. Already have a laser scan? We work on your cloud.", cta: "3D model and cloud", href: "/tecnologia#captura" },
+      { eyebrow: "03 · Diagnosis", title: "Restoration architects map every defect on the scaled façade.", text: "AI suggests cracks, stains and losses; our technical team confirms each one. Nothing reaches the report without review.", cta: "How we diagnose", href: "/tecnologia#deteccao" },
+      { eyebrow: "04 · Delivery", title: "You receive the report, budget and priorities, ready to decide.", text: "Damage map, quantities, treatment budget, GUT matrix, drawings and DXF, with the report signed by the professional in charge.", cta: "What we deliver", href: "/tecnologia#laudo" },
     ],
-    statement: "From video to report, every measurement arrives with its precision stated, and every decision with the signature of someone who knows construction.",
-    galleryA: "Engineering precision for",
-    galleryB: "From listed heritage to office buildings: the same flow, measured the same way.",
+    statement: "A phone, a scale marker and in-house technology instead of expensive equipment. Shorter site work, a more affordable budget, and every defect reviewed by a restoration architect.",
+    galleryA: "Surveys and reports for",
+    galleryB: "From listed heritage to commercial buildings, the same service: site visit, 3D model, damage map and report.",
     galleryWords: ["churches.", "façades.", "mansions.", "condos.", "warehouses."],
     galleryCta: "Discover the technology",
-    sectorsTitle: "Built for those accountable for the work.",
+    sectorsTitle: "For those who must decide the work.",
     sectors: [
-      { icon: Landmark, title: "Architecture and restoration", text: "Damage maps and diagnostics of historic buildings, documented for heritage bodies.", href: "/empresas#arquitetura" },
-      { icon: HardHat, title: "Engineering and inspection", text: "Inspections with measured quantities, priorities and a report ready to sign.", href: "/empresas#engenharia" },
-      { icon: Building2, title: "Builders", text: "Survey the existing building before work and track each stage.", href: "/empresas#construtoras" },
-      { icon: Home, title: "Condominiums", text: "Façades inspected with a budget by priority for the owners' meeting.", href: "/empresas" },
-      { icon: Scale, title: "Forensics and insurance", text: "A dated, comparable record of the building's condition.", href: "/empresas#pericias" },
-      { icon: ShieldCheck, title: "Public sector", text: "Managing built assets with monitoring between surveys.", href: "/empresas#publico" },
+      { icon: Landmark, title: "Heritage and restoration", text: "Surveys and damage maps of churches and listed buildings, with the documentation heritage bodies ask for.", href: "/empresas#arquitetura" },
+      { icon: HardHat, title: "Architecture and engineering firms", text: "Outsource the survey and diagnosis: you get the scaled base and the damage map for your project.", href: "/empresas#engenharia" },
+      { icon: Building2, title: "Builders and retrofit", text: "Survey of the existing building before work, with quantities to price the repair.", href: "/empresas#construtoras" },
+      { icon: Home, title: "Condominiums", text: "Façade inspection with a budget by priority, ready for the owners' meeting.", href: "/empresas" },
+      { icon: Scale, title: "Forensics and insurance", text: "A dated, measured and comparable record of the building's condition.", href: "/empresas#pericias" },
+      { icon: ShieldCheck, title: "Public sector", text: "Diagnosis of built assets and monitoring between surveys.", href: "/empresas#publico" },
     ],
-    pillarsTitle: "The rigour a report demands.",
+    pillarsTitle: "Why hire ArchRay.",
     pillars: [
-      { icon: Ruler, title: "Verified scale", text: "The printed marker gives the model its real size, and independent measurements check each other. High divergence becomes a warning, not a hidden number.", href: "/index/escala-fotogrametria-marcador" },
-      { icon: Crosshair, title: "Stated precision", text: "Rectification computes the uncertainty in millimetres from check points, and it appears in the report.", href: "/tecnologia#retificacao" },
-      { icon: ScrollText, title: "Traceable end to end", text: "Every AI suggestion is reviewed by a professional, and the report records the method used.", href: "/compromissos" },
+      { icon: Smartphone, title: "No laser scanner, no drone", text: "We survey with a phone, a scale marker and photogrammetry. Less equipment on site, less mobilisation and a more affordable budget.", href: "/tecnologia#captura" },
+      { icon: ScrollText, title: "A diagnosis, not just raw data", text: "You receive a damage map, quantities, treatment budget and priorities, ready to decide and approve.", href: "/tecnologia#laudo" },
+      { icon: Landmark, title: "Done by restoration architects", text: "The service belongs to Estúdio Restaura. Technology speeds it up; every defect is reviewed and the report is signed by a licensed professional.", href: "/empresa" },
+      { icon: Ruler, title: "When a scanner is better, we say so", text: "If the project needs millimetre precision or detailed BIM, we recommend a laser scan. If you already have the cloud, we work on it.", href: "/compromissos" },
     ],
     more: "Learn more",
-    latestTitle: "Technical guides from the Index.",
+    latestTitle: "From site to report.",
+    latestTitle2: "What's new at ArchRay.",
     latestCta: "See all guides",
-    finalTitle: "Your façade, measured with rigour.",
-    finalText: "Tell us about the building. An architect from Estúdio Restaura replies with the path to a diagnosis.",
-    finalCta: "Request a diagnosis",
+    guideTag: "Guide",
+    caseTag: "Case · Heritage",
+    caseTitle: "Carmo Church, Horta: from survey to scaled drawing.",
+    techTag: "3D survey",
+    techTitle: "How a phone video becomes a scaled point cloud.",
+    finalTitle: "Tell us about the building. We'll send a quote.",
+    finalText: "An architect from Estúdio Restaura replies with the scope, timeline and budget for the survey and report.",
+    finalCta: "Request a quote",
   },
 };
 
@@ -134,7 +149,8 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
   const k = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
   const sm = (x: number) => x * x * (3 - 2 * x);
   const bg = useTransform(p, (v) => {
-    const c = Math.round(255 * (1 - k(v, 0.02, 0.22)));
+    const dark = typeof document !== "undefined" && document.getElementById("archray-site")?.classList.contains("site-dark");
+    const c = dark ? 0 : Math.round(255 * (1 - k(v, 0.02, 0.22)));
     return `rgb(${c} ${c} ${c})`;
   });
   const scale = useTransform(p, (v) => 1 - 0.5 * sm(k(v, 0.04, 0.42)));
@@ -163,9 +179,9 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
   useEffect(() => () => document.getElementById("archray-site")?.removeAttribute("data-hero-dark"), []);
 
   return (
-    <section ref={ref} className="relative" style={{ height: "280vh" }}>
+    <section ref={ref} className="relative -mt-[68px]" style={{ height: "280vh" }}>
       <motion.div style={{ background: bg }} className="sticky top-0 h-[100svh] overflow-hidden">
-        <div className="absolute inset-x-3 top-[76px] bottom-3 [perspective:1800px] sm:inset-x-6 sm:bottom-6">
+        <div className="absolute inset-x-3 top-[80px] bottom-3 [perspective:1800px] sm:inset-x-6 sm:top-[92px] sm:bottom-6">
           <motion.div style={{ scale, rotateY: rotY, rotateX: rotX, y: lift, transformStyle: "preserve-3d" }} className="relative size-full">
             {/* moldura de trás */}
             <motion.div style={{ opacity: frameO, transform: backZ }} className="pointer-events-none absolute inset-0">
@@ -188,7 +204,7 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
                 <h1 className="max-w-[20ch] text-[clamp(36px,4.6vw,68px)] leading-[1.06] tracking-[-0.02em] [text-shadow:0_2px_24px_rgb(0_0_0/0.45)]">{t.heroTitle}</h1>
                 <p className="mt-5 max-w-[56ch] text-[16px] leading-[1.5] text-white/90 [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-[18px]">{t.heroSub}</p>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <Link href="/contato" className="inline-flex h-12 items-center rounded-[8px] bg-white px-[18px] text-[16px] text-black hover:bg-[#e5e5e5]">
+                  <Link href="/contato" className="eng-light inline-flex h-12 items-center rounded-[8px] bg-(--eng-0) px-[18px] text-[16px] text-(--eng-ink) hover:bg-(--eng-3)">
                     {t.heroCta}
                   </Link>
                   <Link href="/tecnologia" className="inline-flex h-12 items-center rounded-[8px] px-[18px] text-[16px] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.5)] hover:bg-white/10">
@@ -260,7 +276,7 @@ function Stages({ t }: { t: (typeof T)["pt"] }) {
   return (
     <section ref={ref} id="etapas" className="eng-dark relative bg-black text-white" style={{ height: `${n * 100 + 60}vh` }}>
       <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-center overflow-hidden pt-16">
-        <ContourObject names={STAGE_OBJECTS} progress={scrollYProgress} className="h-[38svh] w-auto max-w-[80vw] text-white sm:h-[44svh]" />
+        <ContourObject names={STAGE_OBJECTS} progress={scrollYProgress} className="h-[42svh] w-auto max-w-[88vw] text-white sm:h-[50svh]" />
         <div className="relative mt-8 h-[260px] w-full sm:h-[240px]">
           {t.stages.map((s, i) => (
             <StageText key={s.eyebrow} s={s} i={i} n={n} progress={scrollYProgress} />
@@ -302,6 +318,8 @@ function Statement({ t }: { t: (typeof T)["pt"] }) {
   const radius = useTransform(scrollYProgress, (v) => 24 * (1 - k(v, 0.3, 0.62)));
   const tileY1 = useTransform(scrollYProgress, (v) => 160 - 960 * k(v, 0, 0.4));
   const tileY2 = useTransform(scrollYProgress, (v) => 360 - 960 * k(v, 0, 0.4));
+  // a catedral se traça enquanto o painel está preso (o objeto único termina de entrar em 0,3)
+  const build = useTransform(scrollYProgress, (v) => 0.3 * k(v, 0.32, 0.94));
   const words = t.statement.split(" ");
   return (
     <section ref={ref} className="eng-dark relative bg-black" style={{ height: "260vh" }}>
@@ -312,6 +330,9 @@ function Statement({ t }: { t: (typeof T)["pt"] }) {
               <Word key={i} w={w} i={i} n={words.length} progress={scrollYProgress} />
             ))}
           </p>
+          <div className="absolute right-[2%] bottom-[2%] h-[44%] w-[80%] sm:h-[62%] sm:w-[60%] lg:right-[3%] lg:bottom-[4%] lg:h-[86%] lg:w-[46%]">
+            <ContourObject names={["catedral"]} progress={build} spin={1.1} yaw={0.4} className="size-full text-white/85" />
+          </div>
         </motion.div>
         {/* trechos do vídeo flutuando à esquerda */}
         <motion.div style={{ y: tileY1 }} className="absolute top-[22%] left-4 hidden w-[24vw] max-w-[360px] overflow-hidden rounded-[16px] md:block">
@@ -327,25 +348,30 @@ function Statement({ t }: { t: (typeof T)["pt"] }) {
 
 /* ─────────────────────────── 4. galeria em paralaxe ─────────────────────────── */
 
-const TILES: { kind: "clip" | "obj"; src?: string; obj?: ObjectName; x: string; y: string; w: string; speed: number }[] = [
-  { kind: "clip", src: "terreno", x: "4%", y: "10%", w: "15vw", speed: -60 },
-  { kind: "obj", obj: "torre", x: "20%", y: "62%", w: "10vw", speed: 90 },
-  { kind: "clip", src: "planta", x: "73%", y: "8%", w: "13vw", speed: -110 },
+const TILES: { kind: "clip" | "obj"; src?: string; obj?: ObjectName; x: string; y: string; w: string; mx?: string; my?: string; mw?: string; speed: number }[] = [
+  { kind: "clip", src: "terreno", x: "4%", y: "10%", w: "15vw", mx: "4%", my: "3%", mw: "38vw", speed: -60 },
+  { kind: "obj", obj: "torre", x: "20%", y: "62%", w: "11vw", speed: 90 },
+  { kind: "clip", src: "planta", x: "73%", y: "8%", w: "13vw", mx: "58%", my: "6%", mw: "36vw", speed: -110 },
   { kind: "obj", obj: "fachada", x: "82%", y: "56%", w: "13vw", speed: 60 },
-  { kind: "clip", src: "telhado", x: "8%", y: "72%", w: "11vw", speed: 140 },
-  { kind: "obj", obj: "igreja", x: "64%", y: "70%", w: "9vw", speed: -40 },
+  { kind: "clip", src: "telhado", x: "8%", y: "72%", w: "11vw", mx: "6%", my: "80%", mw: "34vw", speed: 140 },
+  { kind: "obj", obj: "catedral", x: "63%", y: "66%", w: "12vw", mx: "58%", my: "77%", mw: "34vw", speed: -40 },
   { kind: "clip", src: "fachada", x: "30%", y: "4%", w: "9vw", speed: 70 },
 ];
 
 function Tile({ tile, progress }: { tile: (typeof TILES)[number]; progress: MotionValue<number> }) {
-  const y = useTransform(progress, [0, 1], [tile.speed, -tile.speed]);
+  const y = useTransform(progress, (v) => tile.speed * (1 - 2 * v));
+  const mobile = Boolean(tile.mw);
+  const vars = { "--x": tile.x, "--y": tile.y, "--w": tile.w, "--mx": tile.mx ?? tile.x, "--my": tile.my ?? tile.y, "--mw": tile.mw ?? tile.w } as React.CSSProperties;
   return (
-    <motion.div style={{ y, left: tile.x, top: tile.y, width: tile.w }} className="absolute hidden min-w-[110px] md:block">
+    <motion.div
+      style={{ y, ...vars }}
+      className={`absolute top-(--my) left-(--mx) w-(--mw) md:top-(--y) md:left-(--x) md:w-(--w) md:min-w-[110px] ${mobile ? "block" : "hidden md:block"}`}
+    >
       {tile.kind === "clip" ? (
         <video className="aspect-[4/3] w-full rounded-[12px] object-cover" autoPlay muted loop playsInline preload="none" poster={`/site/video/clip-${tile.src}.jpg`} src={`/site/video/clip-${tile.src}.mp4`} aria-hidden />
       ) : (
-        <div className="aspect-square rounded-[12px] bg-white p-3">
-          <ContourObject names={[tile.obj!]} className="size-full text-black" />
+        <div className="aspect-square rounded-[12px] bg-(--eng-0) p-3">
+          <ContourObject names={[tile.obj!]} step={3} className="size-full text-(--eng-ink)" />
         </div>
       )}
     </motion.div>
@@ -361,7 +387,7 @@ function Gallery({ t }: { t: (typeof T)["pt"] }) {
     return () => clearInterval(id);
   }, [t.galleryWords.length]);
   return (
-    <section ref={ref} className="relative overflow-hidden bg-[#eaeaea] py-40 sm:py-56">
+    <section ref={ref} className="relative overflow-hidden bg-(--eng-2) py-[300px] sm:py-56">
       {TILES.map((tile, i) => (
         <Tile key={i} tile={tile} progress={scrollYProgress} />
       ))}
@@ -375,7 +401,7 @@ function Gallery({ t }: { t: (typeof T)["pt"] }) {
             </motion.span>
           </span>
         </h2>
-        <p className="mx-auto mt-6 max-w-[48ch] text-[17px] text-[#575757]">{t.galleryB}</p>
+        <p className="mx-auto mt-6 max-w-[48ch] text-[17px] text-(--eng-mute)">{t.galleryB}</p>
         <Link href="/tecnologia" className="a-btn mt-8">
           {t.galleryCta}
         </Link>
@@ -390,14 +416,14 @@ function Sectors({ t }: { t: (typeof T)["pt"] }) {
   const rail = useRef<HTMLUListElement>(null);
   const go = (d: number) => rail.current?.scrollBy({ left: d * 360, behavior: "smooth" });
   return (
-    <section className="bg-white py-24 sm:py-32">
+    <section className="bg-(--eng-0) py-24 sm:py-32">
       <div className="flex items-end justify-between gap-6 px-4 sm:px-6 lg:px-8">
-        <h2 className="max-w-[20ch] text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.025em]" data-reveal>
-          {t.sectorsTitle}
-        </h2>
+        <Rise>
+          <h2 className="max-w-[20ch] text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.025em]">{t.sectorsTitle}</h2>
+        </Rise>
         <div className="flex gap-2">
           {[-1, 1].map((d) => (
-            <button key={d} onClick={() => go(d)} aria-label={d < 0 ? "Anterior" : "Próximo"} className="grid size-10 place-items-center rounded-[8px] border border-[#e5e5e5] bg-white hover:bg-[#f2f2f2]">
+            <button key={d} onClick={() => go(d)} aria-label={d < 0 ? "Anterior" : "Próximo"} className="grid size-10 place-items-center rounded-[8px] border border-(--eng-line) bg-(--eng-0) hover:bg-(--eng-1)">
               {d < 0 ? <ArrowLeft className="size-4" /> : <ArrowRight className="size-4" />}
             </button>
           ))}
@@ -413,12 +439,12 @@ function Sectors({ t }: { t: (typeof T)["pt"] }) {
             transition={{ duration: 0.9, delay: i * 0.06, ease }}
             className="w-[min(82vw,340px)] shrink-0 snap-start"
           >
-            <Link href={s.href} className="group flex h-[360px] flex-col rounded-[16px] bg-[#f2f2f2] p-8 transition-colors hover:bg-[#eaeaea]">
-              <span className="grid size-11 place-items-center rounded-[8px] bg-[#e5e5e5]">
+            <Link href={s.href} className="group flex h-[360px] flex-col rounded-[16px] bg-(--eng-1) p-8 transition-colors hover:bg-(--eng-2)">
+              <span className="grid size-11 place-items-center rounded-[8px] bg-(--eng-3)">
                 <s.icon className="size-5" strokeWidth={1.4} />
               </span>
               <span className="mt-auto text-[24px] leading-[1.2] tracking-[-0.01em]">{s.title}</span>
-              <span className="mt-3 text-[15px] leading-[1.5] text-[#575757]">{s.text}</span>
+              <span className="mt-3 text-[15px] leading-[1.5] text-(--eng-mute)">{s.text}</span>
               <span className="mt-6 flex items-center gap-1.5 font-mono text-[11px] tracking-[0.05em] uppercase">
                 {t.more} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
               </span>
@@ -434,11 +460,11 @@ function Sectors({ t }: { t: (typeof T)["pt"] }) {
 
 function Pillars({ t }: { t: (typeof T)["pt"] }) {
   return (
-    <section className="bg-[#f2f2f2] px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-      <h2 className="max-w-[18ch] text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.025em]" data-reveal>
-        {t.pillarsTitle}
-      </h2>
-      <div className="mt-12 grid gap-4 lg:grid-cols-3">
+    <section className="relative z-[1] -mt-6 rounded-t-[24px] bg-(--eng-1) px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
+      <Rise>
+        <h2 className="max-w-[18ch] text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.025em]">{t.pillarsTitle}</h2>
+      </Rise>
+      <div className="mt-12 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {t.pillars.map((p, i) => (
           <motion.div
             key={p.title}
@@ -446,14 +472,14 @@ function Pillars({ t }: { t: (typeof T)["pt"] }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-10%" }}
             transition={{ duration: 1, delay: i * 0.1, ease }}
-            className="flex flex-col rounded-[16px] bg-white p-8"
+            className="flex flex-col rounded-[16px] bg-(--eng-0) p-8"
           >
-            <span className="grid size-11 place-items-center rounded-[8px] bg-[#f2f2f2]">
+            <span className="grid size-11 place-items-center rounded-[8px] bg-(--eng-1)">
               <p.icon className="size-5" strokeWidth={1.4} />
             </span>
             <h3 className="mt-16 text-[24px] leading-[1.2]">{p.title}</h3>
-            <p className="mt-3 text-[15px] leading-[1.55] text-[#575757]">{p.text}</p>
-            <Link href={p.href} className="mt-8 inline-flex h-10 w-fit items-center rounded-[8px] px-4 text-[14px] shadow-[inset_0_0_0_1px_#c7c7c7] hover:bg-[#f2f2f2]">
+            <p className="mt-3 text-[15px] leading-[1.55] text-(--eng-mute)">{p.text}</p>
+            <Link href={p.href} className="mt-8 inline-flex h-10 w-fit items-center rounded-[8px] px-4 text-[14px] shadow-[inset_0_0_0_1px_var(--eng-line2)] hover:bg-(--eng-1)">
               {t.more}
             </Link>
           </motion.div>
@@ -465,35 +491,88 @@ function Pillars({ t }: { t: (typeof T)["pt"] }) {
 
 /* ─────────────────────────── 7. últimos guias ─────────────────────────── */
 
+function Tag({ children, light = false }: { children: React.ReactNode; light?: boolean }) {
+  return <span className={`w-fit rounded-[6px] px-2 py-1 font-mono text-[11px] tracking-[0.05em] uppercase ${light ? "bg-white/90 text-black" : "bg-(--eng-3)"}`}>{children}</span>;
+}
+
 function Latest({ t, guides }: { t: (typeof T)["pt"]; guides: GuideCard[] }) {
-  const [first, ...rest] = guides;
-  if (!first) return null;
+  const [a, b, c] = guides;
+  if (!a) return null;
+  const card = "group relative flex overflow-hidden rounded-[16px] p-7 sm:p-8";
+  const title = "max-w-[26ch] leading-[1.18] tracking-[-0.01em] group-hover:underline group-hover:underline-offset-4";
   return (
-    <section className="bg-white px-4 py-24 sm:px-6 sm:py-32 lg:px-8">
-      <div className="flex items-end justify-between gap-6">
-        <h2 className="text-[clamp(32px,4vw,56px)] leading-[1.05] tracking-[-0.025em]" data-reveal>
+    <section className="relative z-[1] -mt-6 rounded-t-[24px] bg-(--eng-0) px-4 py-24 sm:px-6 sm:py-36 lg:px-8">
+      <Rise>
+        <h2 className="mx-auto max-w-[24ch] text-center text-[clamp(34px,4.8vw,76px)] leading-[1.04] tracking-[-0.03em]">
           {t.latestTitle}
+          <br />
+          <span className="text-(--eng-mute)">{t.latestTitle2}</span>
         </h2>
-        <Link href="/index" className="hidden font-mono text-[11px] tracking-[0.05em] uppercase underline-offset-4 hover:underline sm:block">
+      </Rise>
+      <div className="mt-16 grid gap-4 lg:grid-cols-12">
+        {/* claro, com o laudo */}
+        <Drift speed={30} className="lg:col-span-5">
+          <Link href={b ? `/index/${b.slug}` : "/index"} className={`${card} h-[440px] flex-col bg-(--eng-1) hover:bg-(--eng-2)`}>
+            <Tag>
+              {t.guideTag} · {b?.category}
+            </Tag>
+            <h3 className={`${title} mt-5 text-[22px]`}>{b?.title}</h3>
+            <ContourObject names={["laudo"]} step={2} className="pointer-events-none absolute -right-6 -bottom-10 h-[72%] w-auto text-(--eng-ink)" />
+          </Link>
+        </Drift>
+        {/* caso real com imagem */}
+        <Drift speed={-20} className="lg:col-span-7">
+          <Link href="/historias/carmo-da-horta" className={`${card} h-[440px] flex-col justify-between bg-black text-white`}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/site/video/clip-fachada.jpg" alt="" className="absolute inset-0 size-full object-cover opacity-80 transition-transform duration-700 group-hover:scale-[1.03]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+            <span className="relative">
+              <Tag light>{t.caseTag}</Tag>
+            </span>
+            <h3 className={`${title} relative text-[clamp(22px,2.2vw,32px)]`}>{t.caseTitle}</h3>
+          </Link>
+        </Drift>
+        {/* destaque grande verde, com a catedral */}
+        <Drift speed={40} className="lg:col-span-7">
+          <Link href={`/index/${a.slug}`} className={`${card} h-[560px] flex-col justify-end bg-[#193a29] text-white`}>
+            <ContourObject names={["catedral"]} step={2} className="pointer-events-none absolute -top-4 right-[-4%] h-[86%] w-auto text-white/80" />
+            <span className="relative">
+              <Tag light>
+                {t.guideTag} · {a.category}
+              </Tag>
+            </span>
+            <h3 className={`${title} relative mt-4 text-[clamp(26px,2.8vw,40px)]`}>{a.title}</h3>
+            <p className="relative mt-3 max-w-[52ch] text-[15px] leading-[1.55] text-white/70">{a.summary}</p>
+          </Link>
+        </Drift>
+        <div className="grid gap-4 lg:col-span-5">
+          {/* vídeo da tecnologia */}
+          <Drift speed={-30}>
+            <Link href="/tecnologia#captura" className={`${card} h-[272px] flex-col justify-between bg-black text-white`}>
+              <video className="absolute inset-0 size-full object-cover opacity-85" autoPlay muted loop playsInline preload="none" poster="/site/video/clip-planta.jpg" src="/site/video/clip-planta.mp4" aria-hidden />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+              <span className="relative">
+                <Tag light>{t.techTag}</Tag>
+              </span>
+              <h3 className={`${title} relative text-[20px]`}>{t.techTitle}</h3>
+            </Link>
+          </Drift>
+          {/* guia com a torre, em lilás */}
+          <Drift speed={20}>
+            <Link href={c ? `/index/${c.slug}` : "/index"} className={`${card} eng-light h-[272px] flex-col bg-[#d9d1e2]`}>
+              <Tag>
+                {t.guideTag} · {c?.category}
+              </Tag>
+              <h3 className={`${title} mt-4 max-w-[20ch] text-[20px]`}>{c?.title}</h3>
+              <ContourObject names={["torre"]} step={2} className="pointer-events-none absolute -right-2 -bottom-6 h-[90%] w-auto text-black/80" />
+            </Link>
+          </Drift>
+        </div>
+      </div>
+      <div className="mt-12 text-center">
+        <Link href="/index" className="a-btn">
           {t.latestCta}
         </Link>
-      </div>
-      <div className="mt-12 grid gap-4 lg:grid-cols-[1.3fr_1fr]">
-        <Link href={`/index/${first.slug}`} className="group relative flex min-h-[420px] flex-col justify-end overflow-hidden rounded-[16px] bg-[#193a29] p-8 text-white">
-          <ContourObject names={["fachada"]} className="absolute -top-6 right-0 h-[70%] w-auto text-white/70" />
-          <p className="eng-eyebrow relative text-white/60">{first.category}</p>
-          <h3 className="relative mt-3 max-w-[24ch] text-[clamp(24px,2.4vw,34px)] leading-[1.15] group-hover:underline group-hover:underline-offset-4">{first.title}</h3>
-        </Link>
-        <ul className="grid gap-4 sm:grid-cols-2">
-          {rest.slice(0, 4).map((g) => (
-            <li key={g.slug}>
-              <Link href={`/index/${g.slug}`} className="group flex h-full min-h-[200px] flex-col rounded-[16px] bg-[#f2f2f2] p-6 hover:bg-[#eaeaea]">
-                <p className="eng-eyebrow">{g.category}</p>
-                <h3 className="mt-auto pt-8 text-[18px] leading-[1.3] group-hover:underline group-hover:underline-offset-4">{g.title}</h3>
-              </Link>
-            </li>
-          ))}
-        </ul>
       </div>
     </section>
   );
@@ -503,12 +582,12 @@ function Latest({ t, guides }: { t: (typeof T)["pt"]; guides: GuideCard[] }) {
 
 function FinalCta({ t }: { t: (typeof T)["pt"] }) {
   return (
-    <section className="grid items-center gap-10 bg-[#a8927c] px-4 py-24 sm:px-6 sm:py-32 lg:grid-cols-2 lg:px-8">
+    <section className="eng-light relative z-[1] -mt-6 grid items-center gap-10 rounded-t-[24px] bg-[#a8927c] px-4 py-24 sm:px-6 sm:py-32 lg:grid-cols-2 lg:px-8">
       <div className="lg:pl-[8%]">
-        <h2 className="max-w-[14ch] text-[clamp(36px,4.4vw,64px)] leading-[1.05] tracking-[-0.03em] text-black" data-reveal>
+        <h2 className="max-w-[14ch] text-[clamp(36px,4.4vw,64px)] leading-[1.05] tracking-[-0.03em] text-(--eng-ink)" data-reveal>
           {t.finalTitle}
         </h2>
-        <p className="mt-5 max-w-[42ch] text-[18px] leading-[1.5] text-black/75" data-reveal data-reveal-delay={80}>
+        <p className="mt-5 max-w-[42ch] text-[18px] leading-[1.5] text-(--eng-ink)/75" data-reveal data-reveal-delay={80}>
           {t.finalText}
         </p>
         <Link href="/contato" className="mt-8 inline-flex h-12 items-center gap-3 rounded-[8px] bg-black pr-1.5 pl-[18px] text-[16px] text-white" data-reveal data-reveal-delay={160}>
@@ -518,7 +597,9 @@ function FinalCta({ t }: { t: (typeof T)["pt"] }) {
           </span>
         </Link>
       </div>
-      <ContourObject names={["igreja"]} className="mx-auto h-[min(60vw,460px)] w-auto text-black" spin={0} />
+      <Drift speed={-50}>
+        <ContourObject names={["catedral"]} step={2} className="mx-auto h-[min(80vw,560px)] w-auto text-(--eng-ink)" spin={0} />
+      </Drift>
     </section>
   );
 }

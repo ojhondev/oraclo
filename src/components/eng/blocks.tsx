@@ -6,6 +6,7 @@ import { motion, useMotionValueEvent, useScroll, useTransform, type MotionValue 
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ContourObject } from "./contour-object";
+import { Rise } from "./motion";
 import type { ObjectName } from "./contour";
 
 /**
@@ -111,7 +112,7 @@ export function EngHead({ eyebrow, title, text, className, dark }: { eyebrow?: s
         </h2>
       </div>
       {text && (
-        <p className={cn("max-w-[60ch] text-[17px] leading-[1.55] sm:text-[19px]", dark ? "text-white/65" : "text-[#575757]")} data-reveal data-reveal-delay={120}>
+        <p className={cn("max-w-[60ch] text-[17px] leading-[1.55] sm:text-[19px]", dark ? "text-white/65" : "text-(--eng-mute)")} data-reveal data-reveal-delay={120}>
           {text}
         </p>
       )}
@@ -122,16 +123,16 @@ export function EngHead({ eyebrow, title, text, className, dark }: { eyebrow?: s
 /* ─────────────────────────── faixas ─────────────────────────── */
 
 const TONE = {
-  white: "bg-white text-black",
-  mist: "bg-[#f2f2f2] text-black",
-  stone: "bg-[#eaeaea] text-black",
+  white: "bg-(--eng-0) text-(--eng-ink)",
+  mist: "bg-(--eng-1) text-(--eng-ink)",
+  stone: "bg-(--eng-2) text-(--eng-ink)",
   dark: "eng-dark site-ink bg-black text-white",
 };
 
 export function EngBand({ tone = "white", id, className, children }: { tone?: keyof typeof TONE; id?: string; className?: string; children: ReactNode }) {
   return (
     <section id={id} className={cn("scroll-mt-20 px-4 py-24 sm:px-6 sm:py-32 lg:px-8", TONE[tone], className)}>
-      {children}
+      <Rise amount={110}>{children}</Rise>
     </section>
   );
 }
@@ -232,13 +233,14 @@ function Word({ w, i, n, progress }: { w: string; i: number; n: number; progress
 }
 
 /** Painel escuro que cresce até a largura toda; a frase acende palavra a palavra com a rolagem. */
-export function EngStatement({ text, color = "#1e1c28", video }: { text: string; color?: string; video?: string }) {
+export function EngStatement({ text, color = "#1e1c28", video, object = "catedral" }: { text: string; color?: string; video?: string; object?: ObjectName }) {
   const ref = useRef<HTMLElement>(null);
   const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end end"] });
   const k = (v: number, a: number, b: number) => clamp01((v - a) / (b - a));
   const inset = useTransform(scrollYProgress, (v) => `${24 * (1 - k(v, 0.2, 0.55))}%`);
   const radius = useTransform(scrollYProgress, (v) => 24 * (1 - k(v, 0.2, 0.55)));
   const tileY = useTransform(scrollYProgress, (v) => 160 - 900 * k(v, 0, 0.38));
+  const build = useTransform(scrollYProgress, (v) => 0.3 * k(v, 0.22, 0.92));
   const words = text.split(" ");
   return (
     <section ref={ref} className="eng-dark relative bg-black" style={{ height: "230vh" }}>
@@ -249,6 +251,9 @@ export function EngStatement({ text, color = "#1e1c28", video }: { text: string;
               <Word key={i} w={w} i={i} n={words.length} progress={scrollYProgress} />
             ))}
           </p>
+          <div className="absolute right-[2%] bottom-[2%] h-[44%] w-[80%] sm:h-[62%] sm:w-[60%] lg:right-[3%] lg:bottom-[4%] lg:h-[86%] lg:w-[46%]">
+            <ContourObject names={[object]} progress={build} spin={1.1} yaw={0.4} className="size-full text-white/85" />
+          </div>
         </motion.div>
         {video && (
           <motion.div style={{ y: tileY }} className="absolute top-[24%] left-4 hidden w-[19vw] max-w-[300px] overflow-hidden rounded-[16px] md:block">
@@ -269,10 +274,10 @@ export function EngCards({ items, cols = 3, tone = "white" }: { items: { icon?: 
       {items.map((it, i) => {
         const body = (
           <>
-            {it.icon && <span className="grid size-11 place-items-center rounded-[8px] bg-[#e5e5e5]">{it.icon}</span>}
+            {it.icon && <span className="grid size-11 place-items-center rounded-[8px] bg-(--eng-3)">{it.icon}</span>}
             {it.eyebrow && <p className="eng-eyebrow">{it.eyebrow}</p>}
             <h3 className="mt-auto pt-12 text-[22px] leading-[1.2] tracking-[-0.01em]">{it.title}</h3>
-            <p className="mt-3 text-[15px] leading-[1.55] text-[#575757]">{it.text}</p>
+            <p className="mt-3 text-[15px] leading-[1.55] text-(--eng-mute)">{it.text}</p>
             {it.href && (
               <span className="mt-6 flex items-center gap-1.5 font-mono text-[11px] tracking-[0.05em] uppercase">
                 {it.more ?? "Saiba mais"} <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-1" />
@@ -280,7 +285,7 @@ export function EngCards({ items, cols = 3, tone = "white" }: { items: { icon?: 
             )}
           </>
         );
-        const cls = cn("group flex min-h-[300px] flex-col rounded-[16px] p-8 transition-colors", tone === "white" ? "bg-white" : "bg-[#f2f2f2]", it.href && (tone === "white" ? "hover:bg-[#fafafa]" : "hover:bg-[#eaeaea]"));
+        const cls = cn("group flex min-h-[300px] flex-col rounded-[16px] p-8 transition-colors", tone === "white" ? "bg-(--eng-0)" : "bg-(--eng-1)", it.href && (tone === "white" ? "hover:bg-(--eng-h)" : "hover:bg-(--eng-2)"));
         return (
           <motion.div key={it.title} initial={{ opacity: 0, y: 26 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: "-10%" }} transition={{ duration: 0.9, delay: (i % cols) * 0.08, ease }}>
             {it.href ? (
@@ -301,13 +306,13 @@ export function EngCards({ items, cols = 3, tone = "white" }: { items: { icon?: 
 
 export function EngCta({ title, text, cta, object = "igreja" }: { title: string; text?: string; cta: Cta; object?: ObjectName }) {
   return (
-    <section className="grid items-center gap-10 bg-[#a8927c] px-4 py-24 sm:px-6 sm:py-32 lg:grid-cols-2 lg:px-8">
+    <section className="eng-light grid items-center gap-10 bg-[#a8927c] px-4 py-24 sm:px-6 sm:py-32 lg:grid-cols-2 lg:px-8">
       <div className="lg:pl-[8%]">
-        <h2 className="max-w-[16ch] text-[clamp(34px,4.2vw,62px)] leading-[1.05] tracking-[-0.03em] text-black" data-reveal>
+        <h2 className="max-w-[16ch] text-[clamp(34px,4.2vw,62px)] leading-[1.05] tracking-[-0.03em] text-(--eng-ink)" data-reveal>
           {title}
         </h2>
         {text && (
-          <p className="mt-5 max-w-[44ch] text-[18px] leading-[1.5] text-black/75" data-reveal data-reveal-delay={80}>
+          <p className="mt-5 max-w-[44ch] text-[18px] leading-[1.5] text-(--eng-ink)/75" data-reveal data-reveal-delay={80}>
             {text}
           </p>
         )}
@@ -318,7 +323,7 @@ export function EngCta({ title, text, cta, object = "igreja" }: { title: string;
           </span>
         </Link>
       </div>
-      <ContourObject names={[object]} className="mx-auto h-[min(60vw,440px)] w-auto text-black" spin={0} />
+      <ContourObject names={[object]} step={2} className="mx-auto h-[min(76vw,540px)] w-auto text-(--eng-ink)" spin={0} />
     </section>
   );
 }
@@ -344,7 +349,7 @@ export function EngStickyIndex({ items, label }: { items: { id: string; label: s
       <ul className="mt-5 grid gap-1">
         {items.map((it, i) => (
           <li key={it.id}>
-            <a href={`#${it.id}`} className={cn("flex items-baseline gap-3 rounded-[8px] py-1.5 text-[15px] transition-colors", active === it.id ? "text-black" : "text-black/40 hover:text-black/70")}>
+            <a href={`#${it.id}`} className={cn("flex items-baseline gap-3 rounded-[8px] py-1.5 text-[15px] transition-colors", active === it.id ? "text-(--eng-ink)" : "text-(--eng-ink)/40 hover:text-(--eng-ink)/70")}>
               <span className="font-mono text-[11px]">{String(i + 1).padStart(2, "0")}</span>
               {it.label}
             </a>

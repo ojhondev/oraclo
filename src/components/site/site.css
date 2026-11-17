@@ -696,3 +696,35 @@ html.lenis body {
   background: #ffffff;
   color: #000000;
 }
+
+/* ═════════════════════════════════════════════════════════════════════════════
+ * Tokens de superfície do v2 (claro/escuro). As páginas usam bg-(--eng-0) etc. em vez de cores fixas.
+ * .eng-light força a versão clara (faixas areia e botões brancos sobre o vídeo).
+ * ═════════════════════════════════════════════════════════════════════════════ */
+.site-theme,
+.site-theme .eng-light,
+.site-theme.site-dark .eng-light {
+  --eng-0: #ffffff;
+  --eng-h: #fafafa;
+  --eng-1: #f2f2f2;
+  --eng-2: #eaeaea;
+  --eng-3: #e5e5e5;
+  --eng-ink: #000000;
+  --eng-mute: #575757;
+  --eng-line: #e5e5e5;
+  --eng-line2: #c7c7c7;
+}
+.site-theme.site-dark {
+  --eng-0: #000000;
+  --eng-h: #0d0d0d;
+  --eng-1: #111111;
+  --eng-2: #0b0b0b;
+  --eng-3: #1c1c1c;
+  --eng-ink: #ffffff;
+  --eng-mute: #a3a3a3;
+  --eng-line: #262626;
+  --eng-line2: #3a3a3a;
+}
+.site-theme .eng-light {
+  color: #000;
+}

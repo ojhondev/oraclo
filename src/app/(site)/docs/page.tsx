@@ -25,7 +25,7 @@ const T = {
     readyTitle: "Pronto para praticar?",
     readyText: "A demonstração guiada repete todas estas etapas num caso real, em 13 missões — e pode ser refeita do zero quantas vezes você quiser.",
     readyCta: "Começar a demonstração",
-    readySignup: "Solicitar diagnóstico",
+    readySignup: "Solicitar orçamento",
   },
   en: {
     title: "Docs",
@@ -44,7 +44,7 @@ const T = {
     readyTitle: "Ready to practise?",
     readyText: "The guided demo repeats all of these steps on a real case, in 13 missions — and you can start over from scratch as many times as you like.",
     readyCta: "Start the demo",
-    readySignup: "Request a diagnosis",
+    readySignup: "Request a quote",
   },
 };
 

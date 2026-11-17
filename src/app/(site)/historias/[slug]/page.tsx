@@ -39,7 +39,7 @@ const T = {
     afterCap: "2021 — restaurada e reaberta ao culto.",
     sources: "Fontes e créditos",
     wiki: "História do imóvel: Wikipedia (pt), “Igreja de Nossa Senhora do Carmo (Horta)”.",
-    cta: "Solicitar diagnóstico do seu imóvel",
+    cta: "Solicitar orçamento para o seu imóvel",
   },
   en: {
     back: "Cases",
@@ -69,7 +69,7 @@ const T = {
     afterCap: "2021 — restored and reopened for worship.",
     sources: "Sources and credits",
     wiki: "Building history: Wikipedia (pt), “Igreja de Nossa Senhora do Carmo (Horta)”.",
-    cta: "Request a diagnosis of your building",
+    cta: "Request a quote for your building",
   },
 };
 

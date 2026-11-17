@@ -26,7 +26,7 @@ const pt = {
       {
         label: "Tecnologia",
         items: [
-          { href: "/tecnologia", label: "Nossa Tecnologia", hint: "Método, matemática e diferenciais" },
+          { href: "/tecnologia", label: "Nossa Tecnologia", hint: "O que está por trás do serviço" },
           { href: "/tecnologia#captura", label: "Modelo 3D e Nuvem de Pontos" },
           { href: "/tecnologia#retificacao", label: "Retificação" },
           { href: "/tecnologia#deteccao", label: "Detecção Automática" },
@@ -60,7 +60,7 @@ const pt = {
       {
         label: "Acessar",
         items: [
-          { href: "/contato", label: "Solicitar diagnóstico", hint: "Um arquiteto responde" },
+          { href: "/contato", label: "Solicitar orçamento", hint: "Um arquiteto responde" },
           { href: "/login", label: "Área do cliente", hint: "Projetos, mapas e laudos" },
         ],
       },
@@ -71,10 +71,10 @@ const pt = {
   },
 
   home: {
-    metaTitle: "ArchRay — Laudo com Mapa de Danos com IA assistida",
+    metaTitle: "ArchRay — Levantamento 3D e laudo de fachadas sem laser scanner nem drone",
     metaDescription:
-      "O ArchRay converte fotos de fachada em desenho técnico em escala, mede cada patologia e entrega orçamento e laudo. Tecnologia própria do Estúdio Restaura.",
-    lead: "Nuvem de Pontos, 3D, Mapa de Danos com IA e laudo pronto em minutos.",
+      "Serviço do Estúdio Restaura: levantamento 3D da edificação, mapa de danos, orçamento e laudo de fachadas com tecnologia própria, sem laser scanner nem drone. Mais simples, rápido e acessível.",
+    lead: "Levantamento 3D, mapa de danos, orçamento e laudo, sem laser scanner nem drone.",
     manifesto:
       "Vistoriamos, retificamos e mapeamos cada dano de fachadas com tecnologia própria — e entregamos quantitativos, orçamento do tratamento e laudo com prioridades, prontos para decidir, aprovar e começar a obra.",
     featureTitle: "Reinventamos o mapa de danos",
@@ -129,11 +129,11 @@ const pt = {
   tech: {
     metaTitle: "Nossa Tecnologia",
     title: "Nossa Tecnologia",
-    headline: "Do vídeo da fachada ao laudo pronto.",
+    headline: "A tecnologia própria por trás do nosso serviço.",
     statement:
-      "O ArchRay transforma um vídeo gravado no celular em modelo 3D, nuvem de pontos, imagem em escala, mapa de danos, orçamento e laudo. Tudo em um só fluxo, com cada número rastreável.",
+      "Onde o levantamento tradicional mobiliza laser scanner e drone com LiDAR, nós gravamos a fachada com o celular. O ArchRay, nosso software interno, transforma esse vídeo em modelo 3D, nuvem de pontos, imagem em escala, mapa de danos, orçamento e laudo, com cada número rastreável. Você contrata o serviço; a tecnologia é o que o torna mais simples, rápido e acessível.",
     sectionsLabel: "Fundamentos técnicos",
-    sectionsTitle: "O que roda por trás de cada etapa",
+    sectionsTitle: "O que roda por trás de cada etapa do serviço",
     sectionsHint: "Passe o mouse ou toque em um cartão para ver como funciona.",
     moreLabel: "Ver detalhes",
     closeLabel: "Fechar",
@@ -223,9 +223,9 @@ const pt = {
 
   company: {
     metaTitle: "Empresa",
-    title: "Diagnóstico de edificações com tecnologia própria",
+    title: "Um serviço de diagnóstico de edificações, com tecnologia própria",
     lead:
-      "O ArchRay é um braço de serviço escalável do Estúdio Restaura, que leva tecnologia e inovação com IA a um setor tradicional como a Arquitetura e a Engenharia.",
+      "O ArchRay é o serviço de levantamento e diagnóstico do Estúdio Restaura. Desenvolvemos a nossa própria tecnologia para entregar levantamento 3D, mapa de danos e laudo sem depender de laser scanner nem drone, de forma mais simples, rápida e acessível.",
     cta: "Fale com a gente",
     founder: {
       label: "Quem está por trás",
@@ -244,13 +244,13 @@ const pt = {
       ["Medir com rigor", "Toda área e todo comprimento vêm de uma vista em escala, com a margem de erro declarada."],
       ["Tecnologia a serviço do restauro", "Desenvolvemos o motor dentro de um escritório que vive a obra, para resolver os problemas reais do diagnóstico."],
       ["O arquiteto decide", "A IA sugere e acelera; quem valida cada dano e assina o laudo é o profissional."],
-      ["Leve e acessível", "O processamento roda no navegador, sem servidores caros nem cobrança por fachada processada."],
+      ["Simples e acessível", "Celular e marcador de escala no lugar de laser scanner e drone: menos mobilização em campo e um orçamento que cabe em mais obras."],
     ],
     teamTitle: "Como trabalhamos",
     teamText: "Do primeiro contato ao laudo, cada etapa tem método e ferramenta própria.",
     team: [
-      ["Vistoria", "Levantamento fotográfico em campo e medidas de referência para a escala."],
-      ["Retificação", "Cada fachada vira um plano em escala, com a precisão registrada."],
+      ["Vistoria", "Nossa equipe grava a fachada com o celular, com o marcador de escala na parede."],
+      ["Levantamento 3D", "A gravação vira modelo 3D, nuvem de pontos e vistas em escala, com a precisão registrada."],
       ["Mapeamento", "Danos desenhados, sugeridos pela IA e revisados por arquitetos de restauro."],
       ["Laudo", "Quantitativos, orçamento, prioridades GUT, pranchas e DXF."],
     ],
@@ -263,8 +263,8 @@ const pt = {
       ["Construir o que falta.", "Quando a ferramenta certa não existe, nós a desenvolvemos."],
       ["Cuidar do patrimônio e dos dados.", "Imagens e informações do cliente são tratadas com sigilo e só com consentimento."],
     ],
-    finalTitle: "Conte qual é o imóvel. Um arquiteto responde.",
-    finalCta: "Solicitar diagnóstico",
+    finalTitle: "Conte qual é o imóvel. Mandamos o orçamento.",
+    finalCta: "Solicitar orçamento",
   },
 
   commitments: {
@@ -301,7 +301,7 @@ const pt = {
 
   footer: {
     blurb:
-      "O ArchRay é o braço de diagnóstico do Estúdio Restaura: laudo com mapa de danos, orçamento e pranchas, com tecnologia própria.",
+      "O ArchRay é o serviço de levantamento e diagnóstico do Estúdio Restaura: modelo 3D, mapa de danos, orçamento e laudo de fachadas, sem laser scanner nem drone.",
   },
 };
 
@@ -314,7 +314,7 @@ const en: Copy = {
       {
         label: "Technology",
         items: [
-          { href: "/tecnologia", label: "Our Technology", hint: "Method, mathematics and differentiators" },
+          { href: "/tecnologia", label: "Our Technology", hint: "What's behind the service" },
           { href: "/tecnologia#captura", label: "3D Model and Point Cloud" },
           { href: "/tecnologia#retificacao", label: "Rectification" },
           { href: "/tecnologia#deteccao", label: "Automatic Detection" },
@@ -348,7 +348,7 @@ const en: Copy = {
       {
         label: "Access",
         items: [
-          { href: "/contato", label: "Request a diagnosis", hint: "An architect replies" },
+          { href: "/contato", label: "Request a quote", hint: "An architect replies" },
           { href: "/login", label: "Client area", hint: "Projects, maps and reports" },
         ],
       },
@@ -359,10 +359,10 @@ const en: Copy = {
   },
 
   home: {
-    metaTitle: "ArchRay — Condition reports with AI-assisted damage mapping",
+    metaTitle: "ArchRay — 3D surveys and façade reports without laser scanners or drones",
     metaDescription:
-      "ArchRay turns facade photos into scaled technical drawings, measures every defect and delivers the budget and the report. In-house technology by Estúdio Restaura.",
-    lead: "Point cloud, 3D, AI damage map and a finished report in minutes.",
+      "A service by Estúdio Restaura: 3D building survey, damage map, budget and façade report with in-house technology, without laser scanners or drones. Simpler, faster and more affordable.",
+    lead: "3D survey, damage map, budget and report, without laser scanners or drones.",
     manifesto:
       "We survey, rectify and map every damage on facades with in-house technology — and deliver quantities, a treatment budget and a prioritised report, ready to decide, approve and start the works.",
     featureTitle: "We reinvented the damage map",
@@ -417,11 +417,11 @@ const en: Copy = {
   tech: {
     metaTitle: "Our Technology",
     title: "Our Technology",
-    headline: "From a facade video to a finished report.",
+    headline: "The in-house technology behind our service.",
     statement:
-      "ArchRay turns a phone video into a 3D model, point cloud, scaled image, damage map, budget and report. All in one flow, with every number traceable.",
+      "Where a traditional survey mobilises a laser scanner and a LiDAR drone, we record the façade on a phone. ArchRay, our in-house software, turns that video into a 3D model, point cloud, scaled image, damage map, budget and report, with every number traceable. You hire the service; the technology is what makes it simpler, faster and more affordable.",
     sectionsLabel: "Technical foundations",
-    sectionsTitle: "What runs behind each step",
+    sectionsTitle: "What runs behind each step of the service",
     sectionsHint: "Hover over or tap a card to see how it works.",
     moreLabel: "See details",
     closeLabel: "Close",
@@ -511,9 +511,9 @@ const en: Copy = {
 
   company: {
     metaTitle: "Company",
-    title: "Building diagnosis with in-house technology",
+    title: "A building diagnosis service, with in-house technology",
     lead:
-      "ArchRay is a scalable service arm of Estúdio Restaura, bringing technology and AI innovation to a traditional sector such as Architecture and Engineering.",
+      "ArchRay is Estúdio Restaura's survey and diagnosis service. We built our own technology to deliver 3D surveys, damage maps and reports without relying on laser scanners or drones, in a simpler, faster and more affordable way.",
     cta: "Talk to us",
     founder: {
       label: "Who is behind it",
@@ -532,13 +532,13 @@ const en: Copy = {
       ["Measure rigorously", "Every area and length comes from a scaled view, with the error margin stated."],
       ["Technology serving restoration", "We develop the engine inside a studio that lives on site, to solve diagnosis's real problems."],
       ["The architect decides", "AI suggests and speeds things up; the professional validates each damage and signs the report."],
-      ["Light and accessible", "Processing runs in the browser, with no expensive servers and no per-facade fees."],
+      ["Simple and affordable", "A phone and a scale marker instead of a laser scanner and drone: less mobilisation on site and a budget that fits more projects."],
     ],
     teamTitle: "How we work",
     teamText: "From first contact to the report, each step has its own method and tool.",
     team: [
-      ["Survey", "On-site photography and reference measurements for scale."],
-      ["Rectification", "Each facade becomes a scaled plane, with its precision recorded."],
+      ["Site visit", "Our team records the façade on a phone, with the scale marker on the wall."],
+      ["3D survey", "The recording becomes a 3D model, point cloud and scaled views, with the precision recorded."],
       ["Mapping", "Damage drawn, suggested by AI and reviewed by restoration architects."],
       ["Report", "Quantities, budget, GUT priorities, sheets and DXF."],
     ],
@@ -551,8 +551,8 @@ const en: Copy = {
       ["Build what's missing.", "When the right tool doesn't exist, we develop it."],
       ["Care for heritage and data.", "Client images and information are kept confidential and used only with consent."],
     ],
-    finalTitle: "Tell us about the building. An architect will reply.",
-    finalCta: "Request a diagnosis",
+    finalTitle: "Tell us about the building. We'll send a quote.",
+    finalCta: "Request a quote",
   },
 
   commitments: {
@@ -588,7 +588,7 @@ const en: Copy = {
   },
 
   footer: {
-    blurb: "ArchRay is Estúdio Restaura's diagnosis arm: condition reports with damage mapping, budgets and drawings, built on in-house technology.",
+    blurb: "ArchRay is Estúdio Restaura's survey and diagnosis service: 3D model, damage map, budget and façade report, without laser scanners or drones.",
   },
 };
 

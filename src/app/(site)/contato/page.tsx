@@ -6,31 +6,31 @@ import { ContourObject } from "@/components/eng/contour-object";
 
 const T = {
   pt: {
-    title: "Solicitar diagnóstico",
-    description: "Peça um diagnóstico de danos do seu imóvel ao ArchRay, o braço de diagnóstico do Estúdio Restaura.",
-    kicker: "Solicitar diagnóstico",
-    h1: "Conte qual é o imóvel. Um arquiteto responde.",
-    lead: "Quem lê e responde é um especialista do Estúdio Restaura, não um robô. Depois do briefing, enviamos o orçamento do diagnóstico, sem compromisso.",
+    title: "Solicitar orçamento",
+    description: "Peça o orçamento de levantamento 3D, mapa de danos e laudo do seu imóvel ao ArchRay, serviço do Estúdio Restaura.",
+    kicker: "Solicitar orçamento",
+    h1: "Conte qual é o imóvel. Mandamos o orçamento.",
+    lead: "Quem lê e responde é um arquiteto do Estúdio Restaura, não um robô. Depois do briefing, enviamos escopo, prazo e orçamento do levantamento e do laudo, sem compromisso.",
     nextTitle: "O que acontece depois",
     next: [
       "Um arquiteto lê o pedido e responde pelo e-mail informado.",
       "Fazemos o briefing técnico: objetivo, fachadas, acesso e entregas.",
-      "Você recebe o escopo e o orçamento do diagnóstico.",
-      "Aprovado, agendamos a vistoria em campo.",
+      "Você recebe escopo, prazo e orçamento do levantamento e do laudo.",
+      "Aprovado, nossa equipe agenda a vistoria e grava o imóvel com o celular.",
     ],
   },
   en: {
-    title: "Request a diagnosis",
-    description: "Request a damage diagnosis of your building from ArchRay, Estúdio Restaura's diagnosis arm.",
-    kicker: "Request a diagnosis",
-    h1: "Tell us about the building. An architect will reply.",
-    lead: "The person who reads and replies is an Estúdio Restaura specialist, not a bot. After the briefing, we send a quote for the diagnosis, with no obligation.",
+    title: "Request a quote",
+    description: "Request a quote for a 3D survey, damage map and report of your building from ArchRay, a service by Estúdio Restaura.",
+    kicker: "Request a quote",
+    h1: "Tell us about the building. We'll send a quote.",
+    lead: "The person who reads and replies is an Estúdio Restaura architect, not a bot. After the briefing, we send the scope, timeline and quote for the survey and report, with no obligation.",
     nextTitle: "What happens next",
     next: [
       "An architect reads your request and replies to the email you provided.",
       "We hold the technical briefing: goal, facades, access and deliverables.",
-      "You receive the scope and the quote for the diagnosis.",
-      "Once approved, we schedule the site survey.",
+      "You receive the scope, timeline and quote for the survey and report.",
+      "Once approved, our team schedules the visit and records the building on a phone.",
     ],
   },
 };
@@ -65,9 +65,9 @@ export default async function ContatoPage() {
               <Check className="size-3.5" /> ArchRay · Estúdio Restaura
             </p>
           </div>
-          <ContourObject names={["celular"]} className="mt-10 hidden h-[220px] w-auto text-white/80 lg:block" />
+          <ContourObject names={["celular"]} step={2} className="mt-10 hidden h-[220px] w-auto text-white/80 lg:block" />
         </div>
-        <div className="self-start rounded-[16px] bg-white p-2 text-black sm:p-3">
+        <div className="self-start rounded-[16px] bg-(--eng-0) p-2 text-(--eng-ink) sm:p-3">
           <LeadForm lang={lang} />
         </div>
       </div>

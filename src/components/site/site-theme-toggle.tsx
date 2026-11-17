@@ -4,7 +4,7 @@ import { Moon, Sun } from "lucide-react";
 
 import { SITE_THEME_COOKIE } from "@/lib/site/theme";
 
-/** Alterna o site entre claro (padrão) e escuro; guarda a escolha num cookie de 1 ano. */
+/** Alterna o site entre escuro (padrão) e claro; guarda a escolha num cookie de 1 ano. */
 export function SiteThemeToggle({ rootId }: { rootId: string }) {
   function toggle() {
     const root = document.getElementById(rootId);

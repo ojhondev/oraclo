@@ -15,10 +15,10 @@ const ROOT_ID = "archray-site";
 const eng = Geist({ variable: "--font-eng", subsets: ["latin"], weight: ["400", "500", "600"], display: "swap" });
 const engMono = Geist_Mono({ variable: "--font-eng-mono", subsets: ["latin"], weight: ["400", "500"], display: "swap" });
 
-/** Invólucro do site público: tema próprio (claro por padrão), cabeçalho, rodapé e movimento. */
+/** Invólucro do site público: tema próprio (escuro por padrão, claro como opção), cabeçalho, rodapé e movimento. */
 export async function SiteShell({ children }: { children: React.ReactNode }) {
-  // claro (marfim) por padrão; escuro só se a pessoa escolheu
-  const dark = (await cookies()).get(SITE_THEME_COOKIE)?.value === "escuro";
+  // escuro é o tema principal; claro só se a pessoa escolheu no botão
+  const dark = (await cookies()).get(SITE_THEME_COOKIE)?.value !== "claro";
   const lang = await getLang();
   return (
     <div id={ROOT_ID} lang={lang === "en" ? "en" : "pt-BR"} className={cn("site-theme flex min-h-svh flex-col", eng.variable, engMono.variable, dark && "site-dark")}>

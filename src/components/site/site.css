@@ -1,7 +1,7 @@
 /*
  * Site público do ArchRay — linguagem visual inspirada na Anthropic: fundo marfim, grafite,
  * cartões bege, títulos sem serifa em negrito, manchetes-manifesto em serifa, o lilás da marca como
- * destaque e rodapé quase preto. Claro por padrão; .site-dark liga a variante escura quente.
+ * destaque e rodapé quase preto. Escuro por padrão (.site-dark); claro só por escolha no botão de tema.
  * Os tokens valem só dentro de .site-theme (independem do tema escolhido no app).
  */
 
@@ -727,4 +727,9 @@ html.lenis body {
 }
 .site-theme .eng-light {
   color: #000;
+}
+
+/* no tema escuro a primeira dobra já nasce preta (sem piscar branco antes da hidratação) */
+.site-theme.site-dark .eng-hero-bg {
+  background: #000 !important;
 }

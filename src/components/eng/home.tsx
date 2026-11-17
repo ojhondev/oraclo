@@ -166,7 +166,7 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
 
   return (
     <section ref={ref} className="relative -mt-[68px]" style={{ height: "280vh" }}>
-      <motion.div style={{ background: bg }} className="sticky top-0 h-[100svh] overflow-hidden">
+      <motion.div style={{ background: bg }} className="eng-hero-bg sticky top-0 h-[100svh] overflow-hidden">
         <div className="absolute inset-x-3 top-[80px] bottom-3 [perspective:1800px] sm:inset-x-6 sm:top-[92px] sm:bottom-6">
           <motion.div style={{ scale, rotateY: rotY, rotateX: rotX, y: lift, transformStyle: "preserve-3d" }} className="relative size-full">
             {/* moldura de trás */}

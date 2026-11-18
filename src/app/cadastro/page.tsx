@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { whatsappUrl } from "@/lib/site/whatsapp";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
@@ -26,8 +27,8 @@ export default async function SignupPage() {
       <div className="grid gap-3 text-center text-[14.5px] leading-6">
         <p className="text-muted-foreground">Recebeu um convite? Abra o link que chegou por e-mail ou WhatsApp para criar a sua senha.</p>
         <p className="text-muted-foreground">Quer um diagnóstico do seu imóvel? Fale com um arquiteto do Estúdio Restaura.</p>
-        <Link href="/contato" className="mt-2 inline-flex h-11 items-center justify-center rounded-[10px] bg-foreground px-5 font-medium text-background hover:opacity-85">
-          Solicitar orçamento
+        <Link href={whatsappUrl("pt")} target="_blank" rel="noreferrer" className="mt-2 inline-flex h-11 items-center justify-center rounded-[10px] bg-foreground px-5 font-medium text-background hover:opacity-85">
+          Orçamento no WhatsApp
         </Link>
       </div>
     </AuthShell>

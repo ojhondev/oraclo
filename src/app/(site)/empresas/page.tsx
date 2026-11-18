@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WHATSAPP_LABEL, whatsappUrl } from "@/lib/site/whatsapp";
 import Link from "next/link";
 import { getStories } from "@/lib/site/stories";
 import { getLang } from "@/lib/site/get-lang";
@@ -321,7 +322,7 @@ export default async function EmpresasPage() {
   const stories = getStories(lang);
   return (
     <>
-      <EngPageHero eyebrow={t.kicker} title={t.h1} text={t.lead} object="torre" video="planta" ctas={[{ href: "/contato", label: t.cta }, { href: "/tecnologia", label: t.cta2 }]} />
+      <EngPageHero eyebrow={t.kicker} title={t.h1} text={t.lead} object="torre" video="planta" ctas={[{ href: whatsappUrl(lang), label: WHATSAPP_LABEL[lang] }, { href: "/tecnologia", label: t.cta2 }]} />
 
       {/* setores: índice preso à esquerda, cada setor em bloco largo */}
       <EngBand tone="white">
@@ -407,7 +408,7 @@ export default async function EmpresasPage() {
         </ul>
       </EngBand>
 
-      <EngCta title={t.finalTitle} text={t.finalText} cta={{ href: "/contato", label: t.finalCta }} object="torre" />
+      <EngCta title={t.finalTitle} text={t.finalText} cta={{ href: whatsappUrl(lang), label: WHATSAPP_LABEL[lang] }} object="torre" />
     </>
   );
 }

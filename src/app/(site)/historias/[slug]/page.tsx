@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WHATSAPP_LABEL, externalProps, whatsappUrl } from "@/lib/site/whatsapp";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -235,9 +236,9 @@ export default async function StoryPage({ params }: PageProps<"/historias/[slug]
           ))}
           <li>{t.wiki}</li>
         </ul>
-        <Link href="/contato" className="mt-10 a-btn">
-          {t.cta}
-        </Link>
+        <a href={whatsappUrl(lang)} {...externalProps("http")} className="mt-10 a-btn">
+          {WHATSAPP_LABEL[lang]}
+        </a>
       </footer>
     </article>
   );

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WHATSAPP_LABEL, whatsappUrl } from "@/lib/site/whatsapp";
 import Link from "next/link";
 import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
@@ -49,7 +50,7 @@ export default async function TechPage() {
         object="notebook"
         video="fachada"
         ctas={[
-          { href: "/contato", label: en ? "Request a quote" : "Solicitar orçamento" },
+          { href: whatsappUrl(lang), label: WHATSAPP_LABEL[lang] },
           { href: "/docs", label: en ? "Documentation" : "Documentação" },
         ]}
       />
@@ -126,7 +127,7 @@ export default async function TechPage() {
       <EngCta
         title={en ? "See it working on your façade." : "Veja funcionando na sua fachada."}
         text={en ? "Tell us about the building. An architect from Estúdio Restaura replies with the path to a diagnosis." : "Conte sobre o edifício. Um arquiteto do Estúdio Restaura responde com o caminho do diagnóstico."}
-        cta={{ href: "/contato", label: en ? "Request a quote" : "Solicitar orçamento" }}
+        cta={{ href: whatsappUrl(lang), label: WHATSAPP_LABEL[lang] }}
         object="fachada"
       />
     </>

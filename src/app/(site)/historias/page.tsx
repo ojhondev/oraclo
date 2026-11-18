@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WHATSAPP_LABEL, whatsappUrl } from "@/lib/site/whatsapp";
 import { getStories } from "@/lib/site/stories";
 import { getLang } from "@/lib/site/get-lang";
 import { StoryCard } from "@/components/site/blocks";
@@ -50,7 +51,7 @@ export default async function HistoriasPage() {
       </EngBand>
       <EngCta
         title={en ? "Your building could be the next case." : "Seu imóvel pode ser o próximo caso."}
-        cta={{ href: "/contato", label: en ? "Request a quote" : "Solicitar orçamento" }}
+        cta={{ href: whatsappUrl(lang), label: WHATSAPP_LABEL[lang] }}
         object="fachada"
       />
     </>

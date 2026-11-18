@@ -7,6 +7,7 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ContourObject } from "./contour-object";
 import { Rise } from "./motion";
+import { externalProps } from "@/lib/site/whatsapp";
 import type { ObjectName } from "./contour";
 
 /**
@@ -73,11 +74,11 @@ export function EngPageHero({
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1.2, delay: 0.32, ease }} className="mt-9 flex flex-wrap gap-3">
               {ctas.map((c, i) =>
                 i === 0 ? (
-                  <Link key={c.href} href={c.href} className="a-btn">
+                  <Link key={c.href} href={c.href} {...externalProps(c.href)} className="a-btn">
                     {c.label}
                   </Link>
                 ) : (
-                  <Link key={c.href} href={c.href} className="inline-flex h-12 items-center rounded-[8px] px-[18px] text-[16px] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.4)] transition-colors hover:bg-white/10">
+                  <Link key={c.href} href={c.href} {...externalProps(c.href)} className="inline-flex h-12 items-center rounded-[8px] px-[18px] text-[16px] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.4)] transition-colors hover:bg-white/10">
                     {c.label}
                   </Link>
                 ),
@@ -206,7 +207,7 @@ export function EngPinnedSteps({ steps, eyebrow, title, id }: { steps: Step[]; e
             ))}
           </div>
         </div>
-        <div className="absolute right-4 bottom-8 left-4 sm:right-6 sm:left-6 lg:right-8 lg:left-8">
+        <div className="relative mt-4 sm:absolute sm:right-6 sm:bottom-8 sm:left-6 sm:mt-0 lg:right-8 lg:left-8">
           <div className="grid gap-3 font-mono text-[11px] tracking-[0.05em] text-white/40 uppercase" style={{ gridTemplateColumns: `repeat(${n}, minmax(0, 1fr))` }}>
             {steps.map((s, i) => (
               <span key={s.eyebrow} className={cn("truncate", i === active && "text-white")}>
@@ -316,7 +317,7 @@ export function EngCta({ title, text, cta, object = "igreja" }: { title: string;
             {text}
           </p>
         )}
-        <Link href={cta.href} className="mt-8 inline-flex h-12 items-center gap-3 rounded-[8px] bg-black pr-1.5 pl-[18px] text-[16px] text-white" data-reveal data-reveal-delay={160}>
+        <Link href={cta.href} {...externalProps(cta.href)} className="mt-8 inline-flex h-12 items-center gap-3 rounded-[8px] bg-black pr-1.5 pl-[18px] text-[16px] text-white" data-reveal data-reveal-delay={160}>
           {cta.label}
           <span className="grid size-9 place-items-center rounded-[6px] bg-white/15">
             <ArrowRight className="size-4" />

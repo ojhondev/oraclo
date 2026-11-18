@@ -7,7 +7,13 @@ import { EngHome } from "@/components/eng/home";
 // Servida em "/" para quem não está logado (reescrita em src/proxy.ts).
 export async function generateMetadata(): Promise<Metadata> {
   const t = SITE[await getLang()].home;
-  return { title: { absolute: t.metaTitle }, description: t.metaDescription, alternates: { canonical: "/" } };
+  return {
+    title: { absolute: t.metaTitle },
+    description: t.metaDescription,
+    alternates: { canonical: "/" },
+    openGraph: { title: t.metaTitle, description: t.metaDescription, url: "/" },
+    twitter: { title: t.metaTitle, description: t.metaDescription },
+  };
 }
 
 /** Home do site (v2, 2026-11-17): linguagem de engenharia, rolagem contínua e ilustrações em curvas de nível. */

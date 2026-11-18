@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WHATSAPP_LABEL, externalProps, whatsappUrl } from "@/lib/site/whatsapp";
 import Link from "next/link";
 import { ArrowRight, ChevronRight, Lightbulb, Play, Wrench } from "lucide-react";
 import { getUser } from "@/lib/auth";
@@ -25,7 +26,7 @@ const T = {
     readyTitle: "Pronto para praticar?",
     readyText: "A demonstração guiada repete todas estas etapas num caso real, em 13 missões — e pode ser refeita do zero quantas vezes você quiser.",
     readyCta: "Começar a demonstração",
-    readySignup: "Solicitar orçamento",
+    readySignup: WHATSAPP_LABEL.pt,
   },
   en: {
     title: "Docs",
@@ -44,7 +45,7 @@ const T = {
     readyTitle: "Ready to practise?",
     readyText: "The guided demo repeats all of these steps on a real case, in 13 missions — and you can start over from scratch as many times as you like.",
     readyCta: "Start the demo",
-    readySignup: "Request a quote",
+    readySignup: WHATSAPP_LABEL.en,
   },
 };
 
@@ -201,7 +202,7 @@ export default async function DocsPage() {
             <p className="mx-auto mt-3 max-w-[520px] text-[16px] leading-7 text-muted-foreground">
               {t.readyText}
             </p>
-            <Link href={user ? demoHref : "/contato"} className="mt-7 a-btn">
+            <Link href={user ? demoHref : whatsappUrl(lang)} {...externalProps(user ? demoHref : "http")} className="mt-7 a-btn">
               <Play className="size-4" /> {user ? t.readyCta : t.readySignup}
             </Link>
           </section>

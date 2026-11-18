@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { whatsappUrl } from "@/lib/site/whatsapp";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getUser } from "@/lib/auth";
@@ -17,8 +18,8 @@ export default async function LoginPage() {
       footer={
         <>
           Acesso só por convite.{" "}
-          <Link href="/contato" className="font-medium text-foreground underline underline-offset-4">
-            Solicitar orçamento
+          <Link href={whatsappUrl("pt")} target="_blank" rel="noreferrer" className="font-medium text-foreground underline underline-offset-4">
+            Orçamento no WhatsApp
           </Link>
         </>
       }

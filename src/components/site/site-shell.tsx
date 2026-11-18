@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { SiteMotion } from "./site-motion";
+import { SiteNotice } from "./site-notice";
 import { SITE_THEME_COOKIE } from "@/lib/site/theme";
 import { getLang } from "@/lib/site/get-lang";
 import "./site.css";
@@ -30,6 +31,7 @@ export async function SiteShell({ children }: { children: React.ReactNode }) {
       <SiteFooter lang={lang} />
       <SiteMotion rootId={ROOT_ID} />
       <SmoothScroll />
+      <SiteNotice lang={lang} />
     </div>
   );
 }

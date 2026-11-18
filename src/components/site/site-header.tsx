@@ -4,6 +4,7 @@ import { BrandLogo, BrandMark } from "@/components/brand";
 import { getUser } from "@/lib/auth";
 import { SITE } from "@/lib/site/site-copy";
 import { SiteThemeToggle } from "./site-theme-toggle";
+import { WHATSAPP_LABEL, whatsappUrl } from "@/lib/site/whatsapp";
 import { SiteLangToggle } from "./site-lang-toggle";
 import type { Lang } from "@/lib/site/lang";
 
@@ -82,10 +83,10 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
               <Link href="/login" className="site-login hidden h-[38px] items-center rounded-[8px] px-4 text-[15px] text-(--eng-mute) shadow-[inset_0_0_0_1px_var(--eng-line2)] transition-colors hover:text-foreground sm:inline-flex">
                 {lang === "en" ? "Log in" : "Entrar"}
               </Link>
-              <Link href="/contato" className="a-btn a-btn-sm">
-                <span className="sm:hidden">{lang === "en" ? "Request" : "Solicitar"}</span>
-                <span className="hidden sm:inline">{lang === "en" ? "Request a quote" : "Solicitar orçamento"}</span>
-              </Link>
+              <a href={whatsappUrl(lang)} target="_blank" rel="noreferrer" className="a-btn a-btn-sm">
+                <span className="sm:hidden">WhatsApp</span>
+                <span className="hidden sm:inline">{WHATSAPP_LABEL[lang]}</span>
+              </a>
             </>
           )}
           <details className="relative lg:hidden">

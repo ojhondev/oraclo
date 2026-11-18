@@ -1,12 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useMotionValueEvent, type MotionValue } from "motion/react";
 import { ArrowRight, ChevronDown, Landmark, Building2, HardHat, Scale, ShieldCheck, Home } from "lucide-react";
 import { ContourObject } from "./contour-object";
 import { Drift, Rise } from "./motion";
-import { topoPaths } from "./topo";
+import { WHATSAPP_LABEL, whatsappUrl } from "@/lib/site/whatsapp";
+import { DamageOverlay } from "./damage-overlay";
 import type { ObjectName } from "./contour";
 import type { Lang } from "@/lib/site/lang";
 
@@ -16,7 +17,8 @@ const T = {
   pt: {
     heroTitle: "Levantamento 3D e nuvem de pontos com tecnologia própria: sem laser scanner nem drone.",
     heroSub: "O Estúdio Restaura vai até o imóvel, levanta a edificação em 3D com tecnologia própria, mapeia cada dano e entrega laudo, orçamento e prioridades. Mais simples, mais rápido e mais acessível.",
-    heroCta: "Solicitar orçamento",
+    heroCta: WHATSAPP_LABEL.pt,
+    wa: whatsappUrl("pt"),
     heroCta2: "Como funciona",
     scroll: "Role para explorar",
     heroAfterTitle: "Aplicativo próprio com tecnologia LiDAR e IA embutida.",
@@ -52,12 +54,13 @@ const T = {
     techTitle: "Como um vídeo de celular vira nuvem de pontos em escala.",
     finalTitle: "Conte qual é o imóvel. Mandamos o orçamento.",
     finalText: "Um arquiteto do Estúdio Restaura responde com escopo, prazo e orçamento do levantamento e do laudo.",
-    finalCta: "Solicitar orçamento",
+    finalCta: WHATSAPP_LABEL.pt,
   },
   en: {
     heroTitle: "3D surveys and point clouds with in-house technology: no laser scanner, no drone.",
     heroSub: "Estúdio Restaura goes to the building, surveys it in 3D with in-house technology, maps every defect and delivers the report, budget and priorities. Simpler, faster and more affordable.",
-    heroCta: "Request a quote",
+    heroCta: WHATSAPP_LABEL.en,
+    wa: whatsappUrl("en"),
     heroCta2: "How it works",
     scroll: "Scroll to explore",
     heroAfterTitle: "Our own app, with LiDAR technology and built-in AI.",
@@ -93,7 +96,7 @@ const T = {
     techTitle: "How a phone video becomes a scaled point cloud.",
     finalTitle: "Tell us about the building. We'll send a quote.",
     finalText: "An architect from Estúdio Restaura replies with the scope, timeline and budget for the survey and report.",
-    finalCta: "Request a quote",
+    finalCta: WHATSAPP_LABEL.en,
   },
 };
 
@@ -115,12 +118,22 @@ function DeviceFrame({ dotted = false }: { dotted?: boolean }) {
             <path d={`M-60 ${y} L${180 + i * 40} ${y + (i % 2 ? 14 : -10)}`} strokeWidth="1" strokeDasharray="2 6" vectorEffect="non-scaling-stroke" />
             <path d={`M-66 ${y - 6} l10 6 l-10 6 z`} fill="white" stroke="none" />
             <path d={`M${860 - i * 24} ${y + 20} L1060 ${y + 30}`} strokeWidth="1" strokeDasharray="2 6" vectorEffect="non-scaling-stroke" />
-            <text x="1072" y={y + 34} fill="white" stroke="none" fontSize="16" fontFamily="monospace" opacity="0.8">
-              {["1101", "0110", "1011", "1110", "0101"][i]}
-            </text>
           </g>
         ))}
     </svg>
+  );
+}
+
+/** Siglas na ponta das linhas pontilhadas da moldura, em HTML para não esticar com o SVG. */
+function FrameCodes() {
+  return (
+    <>
+      {["FIS-01", "BIO-02", "TRI-03", "DES-04", "UMA-05"].map((c, i) => (
+        <span key={c} style={{ top: `${((70 + i * 80 + 30) / 500) * 100}%` }} className="absolute left-[107.5%] -translate-y-1/2 whitespace-nowrap font-mono text-[9px] tracking-[0.05em] text-white/80 sm:text-[12px]">
+          {c}
+        </span>
+      ))}
+    </>
   );
 }
 
@@ -135,8 +148,8 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
   const k = (v: number, a: number, b: number) => Math.min(1, Math.max(0, (v - a) / (b - a)));
   const sm = (x: number) => x * x * (3 - 2 * x);
   const bg = useTransform(p, (v) => {
-    const dark = typeof document !== "undefined" && document.getElementById("archray-site")?.classList.contains("site-dark");
-    const c = dark ? 0 : Math.round(255 * (1 - k(v, 0.02, 0.22)));
+    // no tema escuro o CSS (.site-dark .eng-hero-bg) mantém o fundo preto
+    const c = Math.round(255 * (1 - k(v, 0.02, 0.22)));
     return `rgb(${c} ${c} ${c})`;
   });
   const scale = useTransform(p, (v) => 1 - 0.5 * sm(k(v, 0.04, 0.42)));
@@ -148,14 +161,14 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
   const frameO = useTransform(p, (v) => k(v, 0.22, 0.4));
   const backZ = useTransform(p, (v) => `translateZ(${-140 * k(v, 0.22, 0.45)}px) translateX(${-6 * k(v, 0.22, 0.45)}%)`);
   const frontZ = useTransform(p, (v) => `translateZ(${110 * k(v, 0.22, 0.45)}px) translateX(${5 * k(v, 0.22, 0.45)}%)`);
-  const topoClip = useTransform(p, (v) => `inset(0 ${100 - 100 * k(v, 0.32, 0.55)}% 0 0)`);
+  // o mapa de danos se desenha enquanto o vídeo vira o aparelho
+  const damage = useTransform(p, (v) => k(v, 0.3, 0.62));
   const videoDim = useTransform(p, (v) => 0.62 - 0.12 * k(v, 0.3, 0.55));
   // véu escuro forte enquanto o título está na tela; some quando o vídeo vira o aparelho
   const veil = useTransform(p, (v) => 1 - 0.6 * k(v, 0.05, 0.3));
   const textO = useTransform(p, (v) => k(v, 0.45, 0.6));
   const textY = useTransform(p, (v) => 30 * (1 - k(v, 0.45, 0.6)));
   const promptO = useTransform(p, (v) => 1 - k(v, 0, 0.06));
-  const paths = useMemo(() => topoPaths({ w: 1000, h: 500, levels: 11, cols: 90, seed: 11 }), []);
 
   // o cabeçalho fica escuro enquanto o fundo da primeira dobra está escuro
   useMotionValueEvent(p, "change", (v) => {
@@ -180,17 +193,13 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
                 <source src="/site/video/hero-1280.mp4" type="video/mp4" />
               </motion.video>
               <motion.div style={{ opacity: veil }} className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,rgb(0_0_0/0.72),rgb(0_0_0/0.45))]" />
-              {/* curvas de nível desenhadas por cima do vídeo */}
-              <motion.svg style={{ clipPath: topoClip }} viewBox="0 0 1000 500" preserveAspectRatio="none" className="absolute inset-0 size-full" fill="none" stroke="white" aria-hidden>
-                {paths.map((d, i) => (
-                  <path key={i} d={d} strokeWidth="1" strokeOpacity={0.35 + 0.05 * i} vectorEffect="non-scaling-stroke" />
-                ))}
-              </motion.svg>
+              {/* mapa de danos (siglas da biblioteca) desenhado por cima do vídeo */}
+              <DamageOverlay progress={damage} className="absolute inset-0 size-full" />
               <motion.div style={{ opacity: titleO }} className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center text-white">
                 <h1 className="max-w-[20ch] text-[clamp(36px,4.6vw,68px)] leading-[1.06] tracking-[-0.02em] [text-shadow:0_2px_24px_rgb(0_0_0/0.45)]">{t.heroTitle}</h1>
                 <p className="mt-5 max-w-[56ch] text-[16px] leading-[1.5] text-white/90 [text-shadow:0_1px_12px_rgb(0_0_0/0.6)] sm:text-[18px]">{t.heroSub}</p>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <Link href="/contato" className="eng-light inline-flex h-12 items-center rounded-[8px] bg-(--eng-0) px-[18px] text-[16px] text-(--eng-ink) hover:bg-(--eng-3)">
+                  <Link href={t.wa} target="_blank" rel="noreferrer" className="eng-light inline-flex h-12 items-center rounded-[8px] bg-(--eng-0) px-[18px] text-[16px] text-(--eng-ink) hover:bg-(--eng-3)">
                     {t.heroCta}
                   </Link>
                   <Link href="/tecnologia" className="inline-flex h-12 items-center rounded-[8px] px-[18px] text-[16px] text-white shadow-[inset_0_0_0_1px_rgb(255_255_255/0.5)] hover:bg-white/10">
@@ -208,6 +217,7 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
             {/* moldura da frente, com as linhas pontilhadas e os rótulos */}
             <motion.div style={{ opacity: frameO, transform: frontZ }} className="pointer-events-none absolute inset-0">
               <DeviceFrame dotted />
+              <FrameCodes />
             </motion.div>
           </motion.div>
         </div>
@@ -262,14 +272,14 @@ function Stages({ t }: { t: (typeof T)["pt"] }) {
   return (
     <section ref={ref} id="etapas" className="eng-dark relative bg-black text-white" style={{ height: `${n * 100 + 60}vh` }}>
       <div className="sticky top-0 flex h-[100svh] flex-col items-center justify-center overflow-hidden pt-16">
-        <ContourObject names={STAGE_OBJECTS} progress={scrollYProgress} className="h-[42svh] w-auto max-w-[88vw] text-white sm:h-[50svh]" />
-        <div className="relative mt-8 h-[260px] w-full sm:h-[240px]">
+        <ContourObject names={STAGE_OBJECTS} progress={scrollYProgress} className="h-[30svh] w-auto max-w-[88vw] text-white sm:h-[50svh]" />
+        <div className="relative mt-6 h-[340px] w-full sm:mt-8 sm:h-[250px]">
           {t.stages.map((s, i) => (
             <StageText key={s.eyebrow} s={s} i={i} n={n} progress={scrollYProgress} />
           ))}
         </div>
         {/* marcador das etapas */}
-        <div className="absolute bottom-8 left-1/2 w-[min(520px,86vw)] -translate-x-1/2">
+        <div className="relative mt-4 w-[min(520px,86vw)] sm:absolute sm:bottom-8 sm:left-1/2 sm:mt-0 sm:-translate-x-1/2">
           <div className="grid grid-cols-4 gap-3 font-mono text-[11px] tracking-[0.05em] text-white/40 uppercase">
             {t.stages.map((s, i) => (
               <span key={s.eyebrow} className={i === active ? "text-white" : ""}>
@@ -508,7 +518,7 @@ function Latest({ t, guides }: { t: (typeof T)["pt"]; guides: GuideCard[] }) {
             <Tag>
               {t.guideTag} · {b?.category}
             </Tag>
-            <h3 className={`${title} mt-5 text-[22px]`}>{b?.title}</h3>
+            <h3 className={`${title} relative z-[1] mt-5 max-w-[70%] text-[22px] text-balance`}>{b?.title}</h3>
             <ContourObject names={["laudo"]} step={2} className="pointer-events-none absolute -right-6 -bottom-10 h-[72%] w-auto text-(--eng-ink)" />
           </Link>
         </Drift>
@@ -528,13 +538,15 @@ function Latest({ t, guides }: { t: (typeof T)["pt"]; guides: GuideCard[] }) {
         <Drift speed={40} className="lg:col-span-7">
           <Link href={`/index/${a.slug}`} className={`${card} h-[560px] flex-col justify-end bg-[#193a29] text-white`}>
             <ContourObject names={["catedral"]} step={2} className="pointer-events-none absolute -top-4 right-[-4%] h-[86%] w-auto text-white/80" />
+            {/* sombreado: a ilustração apaga atrás do texto */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-[72%] bg-gradient-to-t from-[#0c1f15] via-[#0c1f15]/85 to-transparent" />
             <span className="relative">
               <Tag light>
                 {t.guideTag} · {a.category}
               </Tag>
             </span>
-            <h3 className={`${title} relative mt-4 text-[clamp(26px,2.8vw,40px)]`}>{a.title}</h3>
-            <p className="relative mt-3 max-w-[52ch] text-[15px] leading-[1.55] text-white/70">{a.summary}</p>
+            <h3 className={`${title} relative mt-4 text-[clamp(26px,2.8vw,40px)] [text-shadow:0_2px_18px_rgb(0_0_0/0.55)]`}>{a.title}</h3>
+            <p className="relative mt-3 max-w-[52ch] text-[15px] leading-[1.55] text-white/80 [text-shadow:0_1px_10px_rgb(0_0_0/0.6)]">{a.summary}</p>
           </Link>
         </Drift>
         <div className="grid gap-4 lg:col-span-5">
@@ -555,8 +567,8 @@ function Latest({ t, guides }: { t: (typeof T)["pt"]; guides: GuideCard[] }) {
               <Tag>
                 {t.guideTag} · {c?.category}
               </Tag>
-              <h3 className={`${title} mt-4 max-w-[20ch] text-[20px]`}>{c?.title}</h3>
-              <ContourObject names={["torre"]} step={2} className="pointer-events-none absolute -right-2 -bottom-6 h-[90%] w-auto text-black/80" />
+              <h3 className={`${title} relative z-[1] mt-4 max-w-[60%] text-[20px] text-balance`}>{c?.title}</h3>
+              <ContourObject names={["torre"]} step={2} className="pointer-events-none absolute right-0 -bottom-4 h-[68%] w-auto text-black/70" />
             </Link>
           </Drift>
         </div>
@@ -582,7 +594,7 @@ function FinalCta({ t }: { t: (typeof T)["pt"] }) {
         <p className="mt-5 max-w-[42ch] text-[18px] leading-[1.5] text-(--eng-ink)/75" data-reveal data-reveal-delay={80}>
           {t.finalText}
         </p>
-        <Link href="/contato" className="mt-8 inline-flex h-12 items-center gap-3 rounded-[8px] bg-black pr-1.5 pl-[18px] text-[16px] text-white" data-reveal data-reveal-delay={160}>
+        <Link href={t.wa} target="_blank" rel="noreferrer" className="mt-8 inline-flex h-12 items-center gap-3 rounded-[8px] bg-black pr-1.5 pl-[18px] text-[16px] text-white" data-reveal data-reveal-delay={160}>
           {t.finalCta}
           <span className="grid size-9 place-items-center rounded-[6px] bg-white/15">
             <ArrowRight className="size-4" />

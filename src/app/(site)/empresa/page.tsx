@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { WHATSAPP_LABEL, whatsappUrl } from "@/lib/site/whatsapp";
 import Image from "next/image";
 import { getLang } from "@/lib/site/get-lang";
 import { SITE } from "@/lib/site/site-copy";
@@ -25,7 +26,7 @@ export default async function CompanyPage() {
   }));
   return (
     <>
-      <EngPageHero eyebrow={t.metaTitle} title={t.title} text={t.lead} object="igreja" video="telhado" ctas={[{ href: "/contato", label: t.cta }]} />
+      <EngPageHero eyebrow={t.metaTitle} title={t.title} text={t.lead} object="igreja" video="telhado" ctas={[{ href: whatsappUrl(lang), label: WHATSAPP_LABEL[lang] }]} />
 
       {/* propósito em quatro colunas */}
       <EngBand tone="white">
@@ -87,7 +88,7 @@ export default async function CompanyPage() {
         </div>
       </EngBand>
 
-      <EngCta title={t.finalTitle} cta={{ href: "/contato", label: t.finalCta }} object="igreja" />
+      <EngCta title={t.finalTitle} cta={{ href: whatsappUrl(lang), label: WHATSAPP_LABEL[lang] }} object="igreja" />
     </>
   );
 }

@@ -51,22 +51,22 @@ export function SiteFooter({ lang }: { lang: Lang }) {
       {/* frase gigante em caixa-alta, de ponta a ponta (padrão do Scale) */}
       <Rise amount={90} className="mt-24 border-t border-white/15 pt-10 sm:mt-28">
         <p className="font-mono text-[11px] tracking-[0.05em] text-white/50 uppercase">{en ? "A service by Estúdio Restaura" : "Um serviço do Estúdio Restaura"}</p>
-        <p aria-hidden className="mt-6 text-[12.4vw] leading-[0.86] font-medium tracking-[-0.045em] text-white uppercase sm:text-[9.6vw] lg:text-[8.3vw]">
+        <p aria-hidden className="mt-6 text-[8.4vw] leading-[0.9] font-medium tracking-[-0.045em] text-white uppercase sm:text-[7.6vw] lg:text-[7.2vw]">
           {en ? (
             <>
-              No laser.
+              Damage maps.
               <br />
-              No drone.
+              Point clouds.
               <br />
-              <span className="text-white/45">Report ready.</span>
+              <span className="text-white/45">AI in restoration.</span>
             </>
           ) : (
             <>
-              Sem laser.
+              Mapa de danos.
               <br />
-              Sem drone.
+              Nuvem de pontos.
               <br />
-              <span className="text-white/45">Laudo pronto.</span>
+              <span className="text-white/45">IA no restauro.</span>
             </>
           )}
         </p>

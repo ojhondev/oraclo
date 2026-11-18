@@ -4,6 +4,7 @@
  * Regra: só afirmar o que o produto faz de verdade — nada de métricas, prazos ou clientes inventados.
  */
 import type { Lang } from "./lang";
+import { WHATSAPP_LABEL, whatsappUrl } from "./whatsapp";
 import type { IlloName } from "@/components/site/illo";
 
 type Link = { href: string; label: string; hint?: string };
@@ -59,7 +60,7 @@ const pt = {
       {
         label: "Acessar",
         items: [
-          { href: "/contato", label: "Solicitar orçamento", hint: "Um arquiteto responde" },
+          { href: whatsappUrl("pt"), label: WHATSAPP_LABEL.pt, hint: "Um arquiteto responde" },
           { href: "/login", label: "Área do cliente", hint: "Projetos, mapas e laudos" },
         ],
       },
@@ -70,9 +71,9 @@ const pt = {
   },
 
   home: {
-    metaTitle: "ArchRay — Levantamento 3D e laudo de fachadas sem laser scanner nem drone",
+    metaTitle: "Levantamento 3D, Mapa de Danos e Nuvem de Pontos para Arquitetos, Engenheiros e Patrimônio | ArchRay",
     metaDescription:
-      "Serviço do Estúdio Restaura: levantamento 3D da edificação, mapa de danos, orçamento e laudo de fachadas com tecnologia própria, sem laser scanner nem drone. Mais simples, rápido e acessível.",
+      "Levantamento 3D, mapa de danos e nuvem de pontos para arquitetos, engenheiros e patrimônio histórico. Serviço do Estúdio Restaura com tecnologia própria e IA: laudo, orçamento e prioridades, sem laser scanner nem drone.",
     lead: "Levantamento 3D, mapa de danos, orçamento e laudo, sem laser scanner nem drone.",
     manifesto:
       "Vistoriamos, retificamos e mapeamos cada dano de fachadas com tecnologia própria — e entregamos quantitativos, orçamento do tratamento e laudo com prioridades, prontos para decidir, aprovar e começar a obra.",
@@ -261,7 +262,7 @@ const pt = {
       ["Cuidar do patrimônio e dos dados.", "Imagens e informações do cliente são tratadas com sigilo e só com consentimento."],
     ],
     finalTitle: "Conte qual é o imóvel. Mandamos o orçamento.",
-    finalCta: "Solicitar orçamento",
+    finalCta: WHATSAPP_LABEL.pt,
   },
 
   commitments: {
@@ -344,7 +345,7 @@ const en: Copy = {
       {
         label: "Access",
         items: [
-          { href: "/contato", label: "Request a quote", hint: "An architect replies" },
+          { href: whatsappUrl("en"), label: WHATSAPP_LABEL.en, hint: "An architect replies" },
           { href: "/login", label: "Client area", hint: "Projects, maps and reports" },
         ],
       },
@@ -355,9 +356,9 @@ const en: Copy = {
   },
 
   home: {
-    metaTitle: "ArchRay — 3D surveys and façade reports without laser scanners or drones",
+    metaTitle: "3D Surveys, Damage Maps and Point Clouds for Architects, Engineers and Heritage | ArchRay",
     metaDescription:
-      "A service by Estúdio Restaura: 3D building survey, damage map, budget and façade report with in-house technology, without laser scanners or drones. Simpler, faster and more affordable.",
+      "3D surveys, damage maps and point clouds for architects, engineers and heritage buildings. A service by Estúdio Restaura with in-house technology and AI: report, budget and priorities, without laser scanners or drones.",
     lead: "3D survey, damage map, budget and report, without laser scanners or drones.",
     manifesto:
       "We survey, rectify and map every damage on facades with in-house technology — and deliver quantities, a treatment budget and a prioritised report, ready to decide, approve and start the works.",
@@ -546,7 +547,7 @@ const en: Copy = {
       ["Care for heritage and data.", "Client images and information are kept confidential and used only with consent."],
     ],
     finalTitle: "Tell us about the building. We'll send a quote.",
-    finalCta: "Request a quote",
+    finalCta: WHATSAPP_LABEL.en,
   },
 
   commitments: {

@@ -32,7 +32,7 @@ function Ruler() {
 }
 
 const Sheet = ({ children }: { children: React.ReactNode }) => (
-  <div className="relative mx-auto mb-6 h-[297mm] w-[210mm] overflow-hidden bg-white text-black shadow-sm break-after-page print:mb-0 print:shadow-none">{children}</div>
+  <div className="relative mx-auto mb-6 h-[297mm] w-[210mm] overflow-hidden bg-white text-black shadow-sm break-after-page last:break-after-auto print:mb-0 print:shadow-none">{children}</div>
 );
 
 /**

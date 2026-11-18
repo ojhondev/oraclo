@@ -53,3 +53,4 @@ next-env.d.ts
 /public/ort/
 # decodificador Draco (scripts/copy-ort.mjs)
 /public/draco/
+impressao/

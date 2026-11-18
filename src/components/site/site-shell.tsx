@@ -1,4 +1,3 @@
-import { cookies } from "next/headers";
 import { Geist, Geist_Mono } from "next/font/google";
 import { SmoothScroll } from "@/components/eng/smooth-scroll";
 import { cn } from "@/lib/utils";
@@ -18,11 +17,15 @@ const engMono = Geist_Mono({ variable: "--font-eng-mono", subsets: ["latin"], we
 
 /** Invólucro do site público: tema próprio (escuro por padrão, claro como opção), cabeçalho, rodapé e movimento. */
 export async function SiteShell({ children }: { children: React.ReactNode }) {
-  // escuro é o tema principal; claro só se a pessoa escolheu no botão
-  const dark = (await cookies()).get(SITE_THEME_COOKIE)?.value !== "claro";
   const lang = await getLang();
   return (
-    <div id={ROOT_ID} lang={lang === "en" ? "en" : "pt-BR"} className={cn("site-theme flex min-h-svh flex-col", eng.variable, engMono.variable, dark && "site-dark")}>
+    <div id={ROOT_ID} lang="pt-BR" suppressHydrationWarning className={cn("site-theme flex min-h-svh flex-col", eng.variable, engMono.variable, "site-dark")}>
+      {/* escuro é o padrão; quem escolheu o claro no botão volta para ele antes de pintar (sem ler cookie no servidor) */}
+      <script
+        dangerouslySetInnerHTML={{
+          __html: `try{if(document.cookie.indexOf("${SITE_THEME_COOKIE}=claro")>-1)document.currentScript.parentElement.classList.remove("site-dark")}catch(e){}`,
+        }}
+      />
       {/* Satoshi (Fontshare, licença livre): a grotesca geométrica gratuita mais próxima da Aeonik do Scale */}
       <link rel="preconnect" href="https://api.fontshare.com" crossOrigin="" />
       <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700&display=swap" precedence="default" />

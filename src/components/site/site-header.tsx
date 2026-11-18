@@ -1,11 +1,9 @@
 import Link from "next/link";
-import { ArrowUpRight, ChevronDown, Menu } from "lucide-react";
+import { ChevronDown, Menu } from "lucide-react";
 import { BrandLogo, BrandMark } from "@/components/brand";
-import { getUser } from "@/lib/auth";
 import { SITE } from "@/lib/site/site-copy";
 import { SiteThemeToggle } from "./site-theme-toggle";
 import { WHATSAPP_LABEL, whatsappUrl } from "@/lib/site/whatsapp";
-import { SiteLangToggle } from "./site-lang-toggle";
 import type { Lang } from "@/lib/site/lang";
 
 type Item = { href: string; label: string; hint?: string };
@@ -55,8 +53,7 @@ function NavPill({ menu, align = "left" }: { menu: MenuDef; align?: "left" | "ri
  * login contornado e ação principal preta à direita. Sobre a primeira dobra escura da home fica
  * transparente com texto branco, e ganha fundo branco ao rolar (ver .site-header em site.css).
  */
-export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang }) {
-  const user = await getUser();
+export function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang }) {
   const t = SITE[lang].nav;
   const menus = [...t.left, ...t.right.filter((m) => m.label !== "Acessar" && m.label !== "Access")];
   return (
@@ -72,14 +69,9 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <SiteLangToggle lang={lang} className="hidden sm:flex" />
           <SiteThemeToggle rootId={rootId} />
-          {user ? (
-            <Link href="/" className="a-btn a-btn-sm">
-              {t.open} <ArrowUpRight className="size-3.5" />
-            </Link>
-          ) : (
-            <>
+          {/* sem consultar a sessão (página estática): quem já está logado é levado ao app pelo /login */}
+          <>
               <Link href="/login" className="site-login hidden h-[38px] items-center rounded-[8px] px-4 text-[15px] text-(--eng-mute) shadow-[inset_0_0_0_1px_var(--eng-line2)] transition-colors hover:text-foreground sm:inline-flex">
                 {lang === "en" ? "Log in" : "Entrar"}
               </Link>
@@ -87,8 +79,7 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
                 <span className="sm:hidden">WhatsApp</span>
                 <span className="hidden sm:inline">{WHATSAPP_LABEL[lang]}</span>
               </a>
-            </>
-          )}
+          </>
           <details className="relative lg:hidden">
             <summary className="grid size-[38px] cursor-pointer list-none place-items-center rounded-[8px] shadow-[inset_0_0_0_1px_var(--eng-line2)] [&::-webkit-details-marker]:hidden" aria-label={t.menu}>
               <Menu className="size-4" />
@@ -110,10 +101,6 @@ export async function SiteHeader({ rootId, lang }: { rootId: string; lang: Lang 
                   </Link>
                 ),
               )}
-              <div className="flex items-center justify-between border-t px-2 pt-2.5 text-[13px] text-muted-foreground">
-                {t.language}
-                <SiteLangToggle lang={lang} />
-              </div>
             </nav>
           </details>
         </div>

@@ -28,12 +28,15 @@ export function DamageOverlay({ progress, className }: Props) {
     if (!box) return;
     items.forEach((_, i) => {
       // janelas escalonadas: cada dano começa um pouco depois do anterior
-      const a = (i / N) * 0.62;
-      const f = clamp((p - a) / 0.3);
-      const tag = clamp((p - a - 0.18) / 0.16);
+      const a = (i / N) * 0.55;
+      const f = clamp((p - a) / 0.32);
+      const tag = clamp((p - a - 0.22) / 0.18);
       box.querySelectorAll<HTMLElement | SVGElement>(`[data-d="${i}"]`).forEach((el) => {
         const role = el.dataset.role;
-        if (role === "stroke") el.style.strokeDashoffset = String(1 - f);
+        if (role === "stroke") {
+          el.style.strokeDashoffset = String(1 - f);
+          el.style.opacity = f > 0.001 ? "1" : "0";
+        }
         else if (role === "fill") el.style.opacity = String(f * 0.9);
         else if (role === "tag") {
           el.style.opacity = String(tag);
@@ -128,12 +131,12 @@ function Item({ it, i }: { it: OverlayItem; i: number }) {
       {it.kind === "area" && (
         <>
           <path data-d={i} data-role="fill" d={it.d} fill={`url(#dmg-${it.pattern})`} style={{ opacity: 0 }} />
-          <path data-d={i} data-role="stroke" d={it.d} stroke="white" strokeWidth="1.4" pathLength={1} strokeDasharray="1 1" style={{ strokeDashoffset: 1 }} vectorEffect="non-scaling-stroke" />
+          <path data-d={i} data-role="stroke" d={it.d} stroke="white" strokeWidth="0.9" pathLength={1} strokeDasharray="1 1" style={{ strokeDashoffset: 1, opacity: 0 }} />
         </>
       )}
       {it.kind === "linha" &&
         it.lines!.map((d, k) => (
-          <path key={k} data-d={i} data-role="stroke" d={d} stroke="white" strokeWidth={k === 0 ? 1.8 : 1} strokeLinecap="round" strokeLinejoin="round" pathLength={1} strokeDasharray="1 1" style={{ strokeDashoffset: 1 }} vectorEffect="non-scaling-stroke" />
+          <path key={k} data-d={i} data-role="stroke" d={d} stroke="white" strokeWidth={k === 0 ? 1.3 : 0.8} strokeLinejoin="round" pathLength={1} strokeDasharray="1 1" style={{ strokeDashoffset: 1, opacity: 0 }} />
         ))}
       {/* linha de chamada até a etiqueta */}
       <g data-d={i} data-role="tag" style={{ opacity: 0 }}>

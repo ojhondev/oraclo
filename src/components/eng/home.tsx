@@ -162,7 +162,7 @@ function Hero({ t }: { t: (typeof T)["pt"] }) {
   const backZ = useTransform(p, (v) => `translateZ(${-140 * k(v, 0.22, 0.45)}px) translateX(${-6 * k(v, 0.22, 0.45)}%)`);
   const frontZ = useTransform(p, (v) => `translateZ(${110 * k(v, 0.22, 0.45)}px) translateX(${5 * k(v, 0.22, 0.45)}%)`);
   // o mapa de danos se desenha enquanto o vídeo vira o aparelho
-  const damage = useTransform(p, (v) => k(v, 0.3, 0.62));
+  const damage = useTransform(p, (v) => k(v, 0.2, 0.58));
   const videoDim = useTransform(p, (v) => 0.62 - 0.12 * k(v, 0.3, 0.55));
   // véu escuro forte enquanto o título está na tela; some quando o vídeo vira o aparelho
   const veil = useTransform(p, (v) => 1 - 0.6 * k(v, 0.05, 0.3));

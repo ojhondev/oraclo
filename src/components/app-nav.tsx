@@ -14,6 +14,7 @@ import {
   PanelLeft,
   Plus,
   Video,
+  CloudUpload,
   Search,
   Sparkles,
   GraduationCap,
@@ -39,11 +40,13 @@ import { logout } from "@/app/login/actions";
 import type { SessionUser } from "@/lib/auth";
 import type { Recent } from "@/lib/recent";
 import { ProjectItem } from "@/components/project-item";
+import { usePendingUploads } from "@/lib/use-pending-uploads";
 
 
 const ITEMS: { href: string; label: string; icon: React.ElementType; match: (p: string) => boolean; beta?: boolean }[] = [
   { href: "/", label: "Projetos", icon: Building2, match: (p: string) => p === "/" || (p.startsWith("/bens") && !p.includes("/ortofotos/") && !p.includes("/modelos/")) },
   { href: "/capturar", label: "Capturar", icon: Video, match: (p: string) => p.startsWith("/capturar") },
+  { href: "/envios", label: "Envios", icon: CloudUpload, match: (p: string) => p.startsWith("/envios") },
   { href: "/mapas", label: "Mapas de danos", icon: ImageIcon, match: (p: string) => p.startsWith("/mapas") || p.includes("/ortofotos/") },
   { href: "/modelos", label: "Modelo 3D", icon: Box, beta: true, match: (p: string) => p.startsWith("/modelos") || p.includes("/modelos/") },
   { href: "/biblioteca", label: "Danos e preços", icon: Layers, match: (p: string) => p.startsWith("/biblioteca") },
@@ -179,6 +182,7 @@ function NavContent({
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
+  const { total: pendingUploads } = usePendingUploads();
   return (
     <div className="flex h-full flex-col">
       <div className={cn(`flex items-center px-3 pt-3.5 pb-4 [@media(max-height:860px)]:pt-2.5 [@media(max-height:860px)]:pb-2`, collapsed ? "flex-col gap-2" : "justify-between")}>
@@ -238,11 +242,19 @@ function NavContent({
                 collapsed && "justify-center px-0",
               )}
             >
-              <Icon className={cn("size-[18px]", active ? "text-brand" : "text-sidebar-foreground/80")} />
+              <span className="relative">
+                <Icon className={cn("size-[18px]", active ? "text-brand" : "text-sidebar-foreground/80")} />
+                {href === "/envios" && pendingUploads > 0 && collapsed && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-brand" />}
+              </span>
               {!collapsed && (
                 <>
                   <span className="flex-1">{label}</span>
                   {beta && <BetaBadge />}
+                  {href === "/envios" && pendingUploads > 0 && (
+                    <span className="rounded-full bg-brand px-1.5 text-[11px] leading-[18px] font-medium text-white tabular-nums" title="Quadros guardados neste aparelho, esperando envio">
+                      {pendingUploads}
+                    </span>
+                  )}
                 </>
               )}
             </Link>

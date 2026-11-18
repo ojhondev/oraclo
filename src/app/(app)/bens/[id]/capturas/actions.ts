@@ -269,3 +269,20 @@ export async function deleteOutput(siteId: string, captureId: string, outputId: 
   if (o?.url) await deleteUrls([o.url]).catch(() => {});
   refresh(siteId, captureId);
 }
+
+/**
+ * Tela Envios: de quais projetos são as capturas que ainda estão guardadas no aparelho. Só devolve
+ * as da organização de quem pede (o resto da fila local fica de fora).
+ */
+export async function pendingCaptures(ids: string[]) {
+  const user = await requireUser(capturers);
+  const list = z.array(z.string().uuid()).max(200).parse(ids);
+  if (!list.length) return { orgId: user.orgId, items: [] };
+  const rows = await db
+    .select({ captureId: captures.id, siteId: sites.id, siteName: sites.name, city: sites.city, date: campaigns.date })
+    .from(captures)
+    .innerJoin(campaigns, eq(campaigns.id, captures.campaignId))
+    .innerJoin(sites, eq(sites.id, campaigns.siteId))
+    .where(and(inArray(captures.id, list), eq(sites.orgId, user.orgId)));
+  return { orgId: user.orgId, items: rows };
+}

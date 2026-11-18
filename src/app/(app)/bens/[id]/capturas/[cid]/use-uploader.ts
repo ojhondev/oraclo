@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { upload } from "@/lib/upload-client";
 import { queue, newId, persistStorage, type QueuedPhoto } from "@/lib/capture-queue";
 import { registerFile } from "../actions";
+import { useWakeLock } from "@/lib/use-wake-lock";
 
 const CONCURRENCY = 2;
 
@@ -11,7 +12,8 @@ type Meta = Omit<QueuedPhoto, "id" | "captureId" | "attempts">;
 
 /**
  * Envio em lote das fotos guardadas no aparelho: 2 de cada vez, com novas tentativas
- * (espera crescente), retomando sozinho quando a conexão volta ou a página reabre.
+ * (espera crescente), retomando sozinho quando a conexão volta ou a página reabre. Enquanto houver
+ * pendência, a tela fica acesa sozinha (Wake Lock).
  */
 export function useUploader({ siteId, orgId, captureId }: { siteId: string; orgId: string; captureId: string }) {
   const [pending, setPending] = useState<QueuedPhoto[]>([]);
@@ -132,5 +134,7 @@ export function useUploader({ siteId, orgId, captureId }: { siteId: string; orgI
   );
 
   const pendingBytes = pending.reduce((a, p) => a + p.blob.size, 0);
+  // a tela fica acesa sozinha enquanto há o que enviar (ninguém precisa ficar tocando nela)
+  useWakeLock(pending.length > 0 && online);
   return { add, pending: pending.length, pendingBytes, uploaded, active, progress, error, online, retry: () => ((stopped.current = false), void pump()) };
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -145,8 +146,12 @@ export function CaptureWorkspace({
         {up.pending > 0 && (
           <p className="mt-1 text-[12px] text-muted-foreground">
             {up.online
-              ? "Enviando — mantenha esta página aberta e a tela ligada."
-              : "Sem conexão — as fotos estão guardadas no aparelho e o envio continua quando o sinal voltar."}
+              ? "Enviando. A tela fica acesa sozinha. Se precisar sair, pode fechar: o que faltar fica guardado no celular e você termina em "
+              : "Sem conexão. Está tudo guardado no celular: continue gravando e envie depois, com Wi-Fi, em "}
+            <Link href="/envios" className="font-medium text-foreground underline underline-offset-2">
+              Envios
+            </Link>
+            .
           </p>
         )}
         {up.error && (

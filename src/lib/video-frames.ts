@@ -12,7 +12,9 @@ export const FRAME_WINDOW_MS = 800;
 export const MAX_FRAMES = 240;
 /** Abaixo disso a fotogrametria não tem material para reconstruir uma fachada. */
 export const MIN_FRAMES = 20;
-const JPEG_QUALITY = 0.85;
+// 0,78: ~20% menos bytes que 0,85 em fachadas reais (medido em .cache/medir-quadros2.mjs), sem mudar a
+// resolução (2560 px), que é o que o motor usa para achar os pontos e montar a nuvem.
+const JPEG_QUALITY = 0.78;
 /** Maior lado guardado: reduz o envio, o armazenamento e o processamento. */
 const MAX_SIDE = 2560;
 /** Diferença média (0–255) abaixo da qual a imagem é a mesma: o celular está parado. */

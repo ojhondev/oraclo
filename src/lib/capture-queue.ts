@@ -45,7 +45,34 @@ async function tx<T>(mode: IDBTransactionMode, fn: (s: IDBObjectStore) => IDBReq
   });
 }
 
+/** Pendências por captura: quantidade e bytes, percorrendo a fila sem montar uma lista. */
+export type QueueSummary = Record<string, { count: number; bytes: number }>;
+
+async function summary(): Promise<QueueSummary> {
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const out: QueueSummary = {};
+    const t = db.transaction(STORE, "readonly");
+    const req = t.objectStore(STORE).openCursor();
+    req.onsuccess = () => {
+      const c = req.result;
+      if (!c) return;
+      const p = c.value as QueuedPhoto;
+      const row = (out[p.captureId] ??= { count: 0, bytes: 0 });
+      row.count++;
+      row.bytes += p.blob?.size ?? 0;
+      c.continue();
+    };
+    req.onerror = () => reject(req.error);
+    t.oncomplete = () => {
+      db.close();
+      resolve(out);
+    };
+  });
+}
+
 export const queue = {
+  summary,
   add: (p: QueuedPhoto) => tx("readwrite", (s) => s.put(p)),
   put: (p: QueuedPhoto) => tx("readwrite", (s) => s.put(p)),
   remove: (id: string) => tx("readwrite", (s) => s.delete(id)),

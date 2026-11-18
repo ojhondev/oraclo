@@ -9,13 +9,13 @@ const KEY = "archray_aviso_analise";
 
 const TEXT: Record<Lang, { msg: string; talk: string; close: string }> = {
   pt: {
-    msg: "Todo projeto passa por uma análise prévia: edificações muito altas, complexas ou que exigem precisão milimétrica podem pedir laser scanner, e nesses casos indicamos por laser scanner convencional.",
-    talk: "Fale com nosso time para saber mais.",
+    msg: "Todo projeto passa por análise prévia. Edificações muito altas, complexas ou que exigem precisão milimétrica podem demandar laser scanner. Nesses casos, indicamos o método convencional.",
+    talk: "Fale com nosso time",
     close: "Fechar aviso",
   },
   en: {
-    msg: "Every project goes through a prior assessment: very tall or complex buildings, or ones that need millimetre precision, may call for a laser scan, and in those cases we recommend a conventional laser scanner.",
-    talk: "Talk to our team to learn more.",
+    msg: "Every project goes through a prior assessment. Very tall or complex buildings, or ones that need millimetre precision, may require a laser scanner. In those cases, we recommend the conventional method.",
+    talk: "Talk to our team",
     close: "Close notice",
   },
 };

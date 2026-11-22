@@ -6,6 +6,7 @@
  */
 import type { Box } from "./analyze";
 import { ncc, type Gray } from "./complete";
+import { frameSupport, snapBox, type Edges } from "./refine";
 
 export type Match = Box & { score: number; seed?: boolean };
 
@@ -45,7 +46,7 @@ const iou = (a: Box, b: Box) => {
  * Procura na área `within` vãos parecidos com `seed`. `scales` = variações de largura e altura
  * aceitas (vãos da mesma família com tamanho um pouco diferente). Devolve o semente + os achados.
  */
-export function findSimilar(g: Gray, seed: Box, within: Box, opts: { minScore?: number; scales?: number[] } = {}): Match[] {
+export function findSimilar(g: Gray, seed: Box, within: Box, opts: { minScore?: number; scales?: number[]; edges?: Edges; minFrame?: number } = {}): Match[] {
   const minScore = opts.minScore ?? 0.5;
   const scales = opts.scales ?? [0.85, 1, 1.18];
   const gw = 20, gh = 28;
@@ -67,7 +68,24 @@ export function findSimilar(g: Gray, seed: Box, within: Box, opts: { minScore?: 
     }
   // supressão: fica o melhor de cada grupo que se sobrepõe
   cand.sort((a, b) => b.score - a.score);
-  const out: Match[] = [{ ...seed, score: 1, seed: true }];
-  for (const c of cand) if (out.every((o) => iou(o, c) < 0.25)) out.push({ ...c, score: Math.round(c.score * 100) / 100 });
+  const first: Match[] = [];
+  for (const c of cand) if (iou(seed, c) < 0.25 && first.every((o) => iou(o, c) < 0.25)) first.push(c);
+  const e = opts.edges;
+  if (!e) return [{ ...seed, score: 1, seed: true }, ...first.map((c) => ({ ...c, score: Math.round(c.score * 100) / 100 }))];
+
+  // com bordas: cada caixa encaixa na moldura real e só fica se tiver moldura nos quatro lados
+  const seedBox = snapBox(e, seed);
+  const seedFrame = frameSupport(e, seedBox);
+  const minFrame = opts.minFrame ?? Math.max(0.3, seedFrame.min * 0.55);
+  const out: Match[] = [{ ...seedBox, score: 1, seed: true }];
+  const refined = first
+    .map((c) => {
+      const b = snapBox(e, c);
+      const fr = frameSupport(e, b);
+      return { ...b, score: Math.round(c.score * (0.6 + 0.4 * fr.mean) * 100) / 100, frame: fr.min };
+    })
+    .filter((c) => c.frame >= minFrame && c.score >= minScore)
+    .sort((a, b) => b.score - a.score);
+  for (const c of refined) if (out.every((o) => iou(o, c) < 0.3)) out.push({ x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1, score: c.score });
   return out;
 }

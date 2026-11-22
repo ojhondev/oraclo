@@ -26,9 +26,9 @@ function synthetic(w = 400, h = 300, cols = [60, 170, 280], rows = [40, 170], ww
 }
 
 describe("levantamento cadastral: limpeza pela lógica da fachada", () => {
-  it("alinha verga e peitoril na fiada, iguala larguras parecidas e alinha os eixos", () => {
+  it("alinha verga e peitoril na fiada, iguala larguras parecidas e alinha os eixos (ruído de medição pequeno)", () => {
     const r = regularize(
-      [vao(10, 20, 30, 61), vao(50, 22, 71, 60), vao(90, 19, 109, 62), vao(11, 100, 31, 141), vao(49, 101, 70, 139), vao(91, 99, 110, 142)],
+      [vao(10, 20, 30, 61), vao(50, 21, 70.8, 60), vao(90, 19.5, 109.4, 61.5), vao(11, 100, 31, 141), vao(49.5, 101, 70, 140), vao(90.5, 99.5, 110, 141.5)],
       { x0: 0, y0: 0, x1: 120, y1: 160 },
     );
     expect(r.rows).toHaveLength(2);
@@ -54,6 +54,18 @@ describe("levantamento cadastral: limpeza pela lógica da fachada", () => {
   it("andares saem das faixas, ignorando faixas coladas", () => {
     const f = floorsOf([{ y: 100, strength: 1 }, { y: 104, strength: 1 }, { y: 200, strength: 1 }], { x0: 0, y0: 0, x1: 100, y1: 300 });
     expect(f).toHaveLength(3);
+  });
+
+  it("não deforma: diferença grande de tamanho não é igualada", () => {
+    const r = regularize([vao(10, 20, 30, 60), vao(50, 20, 75, 60)], { x0: 0, y0: 0, x1: 100, y1: 100 });
+    const ws = r.vaos.map((v) => v.x1 - v.x0).sort((a, b) => a - b);
+    expect(ws).toEqual([20, 25]);
+  });
+
+  it("junta as folhas empilhadas de uma janela alta", () => {
+    const r = regularize([vao(10, 10, 30, 40), vao(10.5, 42, 30.5, 72)], { x0: 0, y0: 0, x1: 100, y1: 100 });
+    expect(r.vaos).toHaveLength(1);
+    expect(r.vaos[0]!.y1 - r.vaos[0]!.y0).toBeGreaterThan(60);
   });
 });
 

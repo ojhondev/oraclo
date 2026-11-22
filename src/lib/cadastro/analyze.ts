@@ -130,37 +130,6 @@ function blobs(m: Uint8Array, w: number, h: number, minN: number): Blob[] {
   return out;
 }
 
-/**
- * Junta peças cujas caixas se tocam ou ficam a até `gap` px e que se sobrepõem bastante no outro
- * eixo (vidros de uma mesma janela separados pelo caixilho). Repete até estabilizar.
- */
-function mergeNear(items: Blob[], gap: number): Blob[] {
-  const list = items.map((b) => ({ ...b, px: [...b.px] }));
-  let changed = true;
-  while (changed) {
-    changed = false;
-    outer: for (let i = 0; i < list.length; i++)
-      for (let j = i + 1; j < list.length; j++) {
-        const a = list[i]!, b = list[j]!;
-        const gx = Math.max(0, Math.max(a.x0, b.x0) - Math.min(a.x1, b.x1));
-        const gy = Math.max(0, Math.max(a.y0, b.y0) - Math.min(a.y1, b.y1));
-        const ox = Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0);
-        const oy = Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0);
-        const minW = Math.min(a.x1 - a.x0, b.x1 - b.x0), minH = Math.min(a.y1 - a.y0, b.y1 - b.y0);
-        const sideBySide = gx <= gap && oy > minH * 0.6;
-        const stacked = gy <= gap && ox > minW * 0.6;
-        if (sideBySide || stacked) {
-          a.x0 = Math.min(a.x0, b.x0); a.y0 = Math.min(a.y0, b.y0); a.x1 = Math.max(a.x1, b.x1); a.y1 = Math.max(a.y1, b.y1);
-          a.n += b.n; for (const p of b.px) a.px.push(p);
-          list.splice(j, 1);
-          changed = true;
-          break outer;
-        }
-      }
-  }
-  return list;
-}
-
 /** Fração preenchida de uma faixa horizontal da caixa (usada para reconhecer arco no topo). */
 function rowFill(b: Blob, w: number, f0: number, f1: number) {
   const ya = b.y0 + Math.floor((b.y1 - b.y0 + 1) * f0);

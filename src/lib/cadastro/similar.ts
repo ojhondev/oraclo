@@ -89,3 +89,32 @@ export function findSimilar(g: Gray, seed: Box, within: Box, opts: { minScore?: 
   for (const c of refined) if (out.every((o) => iou(o, c) < 0.3)) out.push({ x0: c.x0, y0: c.y0, x1: c.x1, y1: c.y1, score: c.score });
   return out;
 }
+
+/** Semelhança (−1..1) entre dois recortes da mesma imagem, reamostrados no mesmo tamanho. */
+export function similarity(g: Gray, a: Box, b: Box): number {
+  const gw = 20, gh = 28;
+  const pa = new Float32Array(gw * gh), pb = new Float32Array(gw * gh);
+  if (!patchAt(g, a.x0, a.y0, a.x1 - a.x0, a.y1 - a.y0, gw, gh, pa)) return 0;
+  if (!patchAt(g, b.x0, b.y0, b.x1 - b.x0, b.y1 - b.y0, gw, gh, pb)) return 0;
+  return ncc(pa, pb);
+}
+
+/**
+ * Tipo de cada vão: o modelo (semente) mais parecido com ele. Resolve o caso de um vão achado por
+ * duas sementes, em que as notas de busca não são comparáveis entre si.
+ */
+export function assignFamilies<T extends Box & { family?: number }>(g: Gray, vaos: T[], models: Box[]): T[] {
+  return vaos.map((v) => {
+    let best = v.family ?? 0, bs = -2;
+    models.forEach((m, i) => {
+      // peso pelo tamanho: um vão bem maior ou menor que o modelo dificilmente é do mesmo tipo
+      const size = Math.min((v.x1 - v.x0) / (m.x1 - m.x0), (m.x1 - m.x0) / (v.x1 - v.x0));
+      const s = similarity(g, v, m) * (0.7 + 0.3 * size);
+      if (s > bs) {
+        bs = s;
+        best = i;
+      }
+    });
+    return { ...v, family: best };
+  });
+}

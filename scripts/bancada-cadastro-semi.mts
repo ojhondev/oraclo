@@ -5,8 +5,9 @@ import sharp from "sharp";
 import { analyzeFacade } from "../src/lib/cadastro/analyze";
 import { regularize } from "../src/lib/cadastro/regularize";
 import { toGray } from "../src/lib/cadastro/complete";
-import { findSimilar } from "../src/lib/cadastro/similar";
+import { assignFamilies, findSimilar } from "../src/lib/cadastro/similar";
 import { edgesOf } from "../src/lib/cadastro/refine";
+import { detailWindow } from "../src/lib/cadastro/detail";
 import { buildDrawing, drawingDxf, drawingSvg } from "../src/lib/cadastro/drawing";
 
 const [file, mmArg, boxArg, outArg] = process.argv.slice(2);
@@ -49,7 +50,15 @@ for (const [i, r] of reg.rows.entries()) console.log(`  fiada ${i + 1}: ${r.coun
 fs.writeFileSync(`${out}-dados.json`, JSON.stringify({ facade: a.facade, bands: a.bands, vaos: reg.vaos, rows: reg.rows, mmPerPixel: mmPx }, null, 1));
 
 // desenho técnico: DXF em metros + prévia
-const drawing = buildDrawing({ facade: a.facade, bands: a.bands, vaos: reg.vaos, mmPerPixel: mmPx });
+// tipo de cada vão = o modelo mais parecido (as sementes já encaixadas na moldura)
+const models = matches.filter((mt) => mt.seed).sort((p, q) => (p as {family:number}).family - (q as {family:number}).family);
+reg.vaos = assignFamilies(gray, reg.vaos, models);
+// detalhe de cada tipo a partir da janela-semente (já encaixada na moldura)
+const details = Object.fromEntries(
+  matches.filter((mt) => mt.seed).map((mt) => [(mt as { family: number }).family, detailWindow(gray, edges, mt)]),
+);
+for (const [fam, d] of Object.entries(details)) console.log(`tipo ${String.fromCharCode(65 + Number(fam))}: ${d.mullionsX.length} montantes, ${d.mullionsY.length} travessas, moldura ${d.frame.top || d.frame.left ? "sim" : "não"}, arco ${d.arch ? "sim" : "não"}`);
+const drawing = buildDrawing({ facade: a.facade, bands: a.bands, vaos: reg.vaos, mmPerPixel: mmPx, details });
 fs.writeFileSync(`${out}.dxf`, drawingDxf(drawing));
 await sharp(Buffer.from(drawingSvg(drawing))).png().toFile(`${out}-desenho.png`);
 console.log(`desenho: ${drawing.width.toFixed(2)} × ${drawing.height.toFixed(2)} m · ${drawing.segs.length} linhas · ${drawing.labels.length} textos → ${out}.dxf`);

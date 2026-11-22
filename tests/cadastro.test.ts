@@ -3,6 +3,7 @@ import { regularize } from "@/lib/cadastro/regularize";
 import { findSimilar } from "@/lib/cadastro/similar";
 import { floorsOf, toGray } from "@/lib/cadastro/complete";
 import { buildDrawing, drawingDxf } from "@/lib/cadastro/drawing";
+import { profileLines } from "@/lib/cadastro/detail";
 import type { Vao } from "@/lib/cadastro/analyze";
 
 const vao = (x0: number, y0: number, x1: number, y1: number): Vao => ({ x0, y0, x1, y1, arched: false, score: 0.9 });
@@ -87,5 +88,36 @@ describe("levantamento cadastral: desenho técnico", () => {
     expect(d.labels.some((l) => l.text === "1,00 × 1,50")).toBe(true);
     const dxf = drawingDxf(d);
     for (const layer of ["CAD-CONTORNO", "CAD-FAIXAS", "CAD-VAOS", "CAD-COTAS"]) expect(dxf).toContain(layer);
+  });
+});
+
+describe("levantamento cadastral: detalhamento das janelas", () => {
+  it("acha os montantes num perfil de caixilho (claro sobre vidro escuro)", () => {
+    // 60 px de largura, vidro escuro (50) com caixilho claro (230) em 20 e 40
+    const p = Array.from({ length: 61 }, (_, i) => (Math.abs(i - 20) <= 1 || Math.abs(i - 40) <= 1 ? 230 : 50));
+    const lines = profileLines(p, 6);
+    expect(lines).toHaveLength(2);
+    expect(lines[0]!).toBeCloseTo(20 / 60, 1);
+    expect(lines[1]!).toBeCloseTo(40 / 60, 1);
+  });
+
+  it("vidro liso não inventa montante", () => {
+    expect(profileLines(Array.from({ length: 60 }, () => 80), 6)).toHaveLength(0);
+  });
+
+  it("cada tipo de janela vira um bloco no DXF, inserido em todos os vãos do tipo", () => {
+    const d = buildDrawing({
+      facade: { x0: 0, y0: 0, x1: 1000, y1: 500 },
+      bands: [],
+      vaos: [{ ...vao(100, 100, 200, 250), family: 0 }, { ...vao(400, 100, 500, 250), family: 0 }],
+      mmPerPixel: 10,
+      details: { 0: { mullionsX: [0.5], mullionsY: [0.5], frame: { top: 0.1, bottom: 0.1, left: 0.1, right: 0.1 }, arch: { cy: -0.2, r: 0.6, inner: 0.45 } } },
+    });
+    expect(d.blocks).toHaveLength(1);
+    expect(d.inserts).toHaveLength(2);
+    expect(d.arcs.length).toBe(4); // arco externo e interno em cada vão
+    const dxf = drawingDxf(d);
+    expect(dxf).toContain("JANELA-A");
+    for (const layer of ["CAD-ESQUADRIAS", "CAD-MOLDURAS", "CAD-ARCOS"]) expect(dxf).toContain(layer);
   });
 });

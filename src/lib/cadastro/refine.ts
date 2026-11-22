@@ -35,7 +35,7 @@ export function edgesOf(g: Gray): Edges {
 }
 
 /** Fração de um segmento horizontal (y fixo) com borda horizontal forte a até ±2 px. */
-function hSupport(e: Edges, y: number, x0: number, x1: number) {
+export function hSupport(e: Edges, y: number, x0: number, x1: number) {
   const yy = Math.round(y);
   let n = 0, tot = 0;
   for (let x = Math.round(x0); x <= Math.round(x1); x++) {
@@ -52,7 +52,7 @@ function hSupport(e: Edges, y: number, x0: number, x1: number) {
 }
 
 /** Fração de um segmento vertical (x fixo) com borda vertical forte a até ±2 px. */
-function vSupport(e: Edges, x: number, y0: number, y1: number) {
+export function vSupport(e: Edges, x: number, y0: number, y1: number) {
   const xx = Math.round(x);
   let n = 0, tot = 0;
   for (let y = Math.round(y0); y <= Math.round(y1); y++) {

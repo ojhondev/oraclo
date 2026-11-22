@@ -29,9 +29,9 @@ function patchAt(g: Gray, x0: number, y0: number, bw: number, bh: number, gw: nu
     sq += d * d;
   }
   const sd = Math.sqrt(sq / out.length);
-  if (sd < 6) return false;
+  if (sd < 6) return 0;
   for (let k = 0; k < out.length; k++) out[k] = out[k]! / sd;
-  return true;
+  return sd;
 }
 
 const iou = (a: Box, b: Box) => {
@@ -46,22 +46,32 @@ const iou = (a: Box, b: Box) => {
  * Procura na área `within` vãos parecidos com `seed`. `scales` = variações de largura e altura
  * aceitas (vãos da mesma família com tamanho um pouco diferente). Devolve o semente + os achados.
  */
-export function findSimilar(g: Gray, seed: Box, within: Box, opts: { minScore?: number; scales?: number[]; edges?: Edges; minFrame?: number } = {}): Match[] {
+export function findSimilar(g: Gray, seedIn: Box, within: Box, opts: { minScore?: number; scales?: number[]; edges?: Edges; minFrame?: number } = {}): Match[] {
   const minScore = opts.minScore ?? 0.5;
+  // Vão com caixilho: o modelo é o retângulo marcado. Vão liso (miolo sem variação, sem caixilho):
+  // encaixa na borda real e o modelo ganha uma margem igual em volta, para o contraste com a parede
+  // entrar na comparação (senão o recorte é só uma mancha uniforme).
+  const probe = new Float32Array(20 * 28);
+  const iw = seedIn.x1 - seedIn.x0, ih = seedIn.y1 - seedIn.y0;
+  const plain = patchAt(g, seedIn.x0 + iw * 0.2, seedIn.y0 + ih * 0.2, iw * 0.6, ih * 0.6, 20, 28, probe) < 12;
+  const seed = plain && opts.edges ? snapBox(opts.edges, snapBox(opts.edges, seedIn, 0.2), 0.08) : seedIn;
   const scales = opts.scales ?? [0.85, 1, 1.18];
   const gw = 20, gh = 28;
   const tpl = new Float32Array(gw * gh);
   const sw = seed.x1 - seed.x0, sh = seed.y1 - seed.y0;
-  if (!patchAt(g, seed.x0, seed.y0, sw, sh, gw, gh, tpl)) return [{ ...seed, score: 1, seed: true }];
+  const M = plain ? 0.15 : 0;
+  const mx = sw * M, my = sh * M;
+  if (!patchAt(g, seed.x0 - mx, seed.y0 - my, sw + 2 * mx, sh + 2 * my, gw, gh, tpl)) return [{ ...seed, score: 1, seed: true }];
   const buf = new Float32Array(gw * gh);
   const cand: Match[] = [];
   for (const sx of scales)
     for (const sy of scales) {
       const bw = sw * sx, bh = sh * sy;
-      const step = Math.max(2, Math.round(Math.min(bw, bh) * 0.06));
+      const step = Math.max(2, Math.round(Math.min(bw, bh) * (plain ? 0.04 : 0.06)));
+      const ex = bw * M, ey = bh * M;
       for (let y0 = within.y0; y0 + bh <= within.y1; y0 += step)
         for (let x0 = within.x0; x0 + bw <= within.x1; x0 += step) {
-          if (!patchAt(g, x0, y0, bw, bh, gw, gh, buf)) continue;
+          if (!patchAt(g, x0 - ex, y0 - ey, bw + 2 * ex, bh + 2 * ey, gw, gh, buf)) continue;
           const s = ncc(tpl, buf);
           if (s >= minScore) cand.push({ x0, y0, x1: x0 + bw, y1: y0 + bh, score: s });
         }
@@ -74,7 +84,7 @@ export function findSimilar(g: Gray, seed: Box, within: Box, opts: { minScore?: 
   if (!e) return [{ ...seed, score: 1, seed: true }, ...first.map((c) => ({ ...c, score: Math.round(c.score * 100) / 100 }))];
 
   // com bordas: cada caixa encaixa na moldura real e só fica se tiver moldura nos quatro lados
-  const seedBox = snapBox(e, seed);
+  const seedBox = plain ? seed : snapBox(e, seed);
   const seedFrame = frameSupport(e, seedBox);
   const minFrame = opts.minFrame ?? Math.max(0.3, seedFrame.min * 0.55);
   const out: Match[] = [{ ...seedBox, score: 1, seed: true }];

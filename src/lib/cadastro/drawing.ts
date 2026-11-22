@@ -9,7 +9,7 @@ import type { WindowDetail } from "./detail";
 
 export type Seg = { a: [number, number]; b: [number, number] };
 export type Label = { at: [number, number]; text: string; size: number; layer: Layer; rotate?: number };
-export type Layer = "CONTORNO" | "FAIXAS" | "VAOS" | "COTAS" | "TEXTOS" | "ESQUADRIAS" | "MOLDURAS" | "ARCOS";
+export type Layer = "CONTORNO" | "FAIXAS" | "VAOS" | "COTAS" | "TEXTOS" | "ESQUADRIAS" | "MOLDURAS" | "ARCOS" | "ORNAMENTOS";
 export type Arc = { c: [number, number]; r: number; a0: number; a1: number; layer: Layer };
 /** Bloco de um tipo de janela: geometria relativa ao canto inferior esquerdo do vão-modelo (metros). */
 export type BlockDef = { name: string; w: number; h: number; segs: (Seg & { layer: Layer })[]; arcs: Arc[] };
@@ -41,7 +41,7 @@ export function detailGeometry(d: WindowDetail, w: number, h: number): { segs: (
   return { segs, arcs };
 }
 
-const fmt = (m: number) => m.toFixed(2).replace(".", ",");
+export const fmt = (m: number) => m.toFixed(2).replace(".", ",");
 
 /**
  * `mmPerPixel` da imagem analisada. Vãos já regularizados. As cotas em cadeia ficam acima de cada
@@ -102,7 +102,17 @@ export function buildDrawing(input: { facade: Box; bands: Band[]; vaos: (Box & {
     labels.push({ at: [(v.x0 + v.x1) / 2, v.y0 - txt * 1.6], text: `${fmt(v.x1 - v.x0)} × ${fmt(v.y1 - v.y0)}`, size: txt * 0.8, layer: "TEXTOS" });
   }
 
-  // cota em cadeia horizontal: marca, traço e texto centralizado
+  addDimensions(segs, labels, vaos, bandYs, W, H, txt);
+
+  return { width: W, height: H, segs, arcs, labels, vaos: vaos.map((v) => ({ x0: v.x0, y0: v.y0, x1: v.x1, y1: v.y1 })), blocks, inserts };
+}
+
+/**
+ * Cotas em cadeia: acima de cada fiada (vãos e panos entre eles), total embaixo e níveis das faixas
+ * à esquerda. Vãos em metros, y para cima.
+ */
+export function addDimensions(segs: Drawing["segs"], labels: Label[], vaos: Box[], bandYs: number[], W: number, H: number, txt: number) {
+  const line = (a: [number, number], b: [number, number], layer: Layer) => segs.push({ a, b, layer });
   const tick = txt * 0.5;
   const dimH = (xs: number[], y: number) => {
     line([xs[0]!, y], [xs[xs.length - 1]!, y], "COTAS");
@@ -113,21 +123,17 @@ export function buildDrawing(input: { facade: Box; bands: Band[]; vaos: (Box & {
     for (let i = 0; i < xs.length - 1; i++) if (xs[i + 1]! - xs[i]! > txt * 2.2) labels.push({ at: [(xs[i]! + xs[i + 1]!) / 2, y + txt * 0.5], text: fmt(xs[i + 1]! - xs[i]!), size: txt, layer: "COTAS" });
   };
   // fiadas: vãos com a base parecida (até 30 cm) formam uma fiada
-  const rows: typeof vaos[] = [];
-  for (const v of [...vaos].sort((a, b) => a.y0 - b.y0)) {
+  const rows: Box[][] = [];
+  for (const v of [...vaos].sort((p, q) => p.y0 - q.y0)) {
     const r = rows.find((g) => Math.abs(g[0]!.y0 - v.y0) < 0.3);
     if (r) r.push(v);
     else rows.push([v]);
   }
   for (const r of rows) {
-    const xs = [0, ...r.flatMap((v) => [v.x0, v.x1]), W].sort((a, b) => a - b);
-    const top = Math.max(...r.map((v) => v.y1));
-    dimH(xs, top + txt * 2.2);
+    const xs = [0, ...r.flatMap((v) => [v.x0, v.x1]), W].sort((p, q) => p - q);
+    dimH(xs, Math.max(...r.map((v) => v.y1)) + txt * 2.2);
   }
-  // total embaixo
   dimH([0, W], -txt * 3);
-
-  // níveis à esquerda (cota vertical em cadeia das faixas)
   const xL = -txt * 3;
   const ys = [0, ...bandYs, H];
   line([xL, 0], [xL, H], "COTAS");
@@ -136,11 +142,9 @@ export function buildDrawing(input: { facade: Box; bands: Band[]; vaos: (Box & {
     line([xL - tick, y], [xL + tick, y], "COTAS");
   }
   for (let i = 0; i < ys.length - 1; i++) if (ys[i + 1]! - ys[i]! > txt * 2.2) labels.push({ at: [xL - txt * 0.6, (ys[i]! + ys[i + 1]!) / 2], text: fmt(ys[i + 1]! - ys[i]!), size: txt, layer: "COTAS", rotate: 90 });
-
-  return { width: W, height: H, segs, arcs, labels, vaos: vaos.map((v) => ({ x0: v.x0, y0: v.y0, x1: v.x1, y1: v.y1 })), blocks, inserts };
 }
 
-const COLORS: Record<Layer, number> = { CONTORNO: 7, FAIXAS: 2, VAOS: 4, COTAS: 1, TEXTOS: 7, ESQUADRIAS: 5, MOLDURAS: 8, ARCOS: 6 };
+const COLORS: Record<Layer, number> = { CONTORNO: 7, FAIXAS: 2, VAOS: 4, COTAS: 1, TEXTOS: 7, ESQUADRIAS: 5, MOLDURAS: 8, ARCOS: 6, ORNAMENTOS: 3 };
 const DETAIL: Layer[] = ["ESQUADRIAS", "MOLDURAS", "ARCOS"];
 
 /** DXF em metros, com uma camada por tipo (CAD-CONTORNO, CAD-FAIXAS, CAD-VAOS, CAD-COTAS, CAD-TEXTOS). */
@@ -176,8 +180,8 @@ export function drawingSvg(d: Drawing, pxPerM = 40): string {
   const H = (d.height + pad * 2) * pxPerM;
   const sx = (x: number) => (x + pad) * pxPerM;
   const sy = (y: number) => (d.height + pad - y) * pxPerM;
-  const stroke: Record<Layer, string> = { CONTORNO: "#111", FAIXAS: "#8a6d00", VAOS: "#0a66c2", COTAS: "#c0392b", TEXTOS: "#333", ESQUADRIAS: "#3b5bdb", MOLDURAS: "#555", ARCOS: "#6741d9" };
-  const width: Record<Layer, number> = { CONTORNO: 2, FAIXAS: 1.2, VAOS: 1.6, COTAS: 0.8, TEXTOS: 1, ESQUADRIAS: 0.9, MOLDURAS: 1.2, ARCOS: 1.3 };
+  const stroke: Record<Layer, string> = { CONTORNO: "#111", FAIXAS: "#8a6d00", VAOS: "#0a66c2", COTAS: "#c0392b", TEXTOS: "#333", ESQUADRIAS: "#3b5bdb", MOLDURAS: "#555", ARCOS: "#6741d9", ORNAMENTOS: "#2b8a3e" };
+  const width: Record<Layer, number> = { CONTORNO: 2, FAIXAS: 1.2, VAOS: 1.6, COTAS: 0.8, TEXTOS: 1, ESQUADRIAS: 0.9, MOLDURAS: 1.2, ARCOS: 1.3, ORNAMENTOS: 1.2 };
   const lines = d.segs.map((s) => `<line x1="${sx(s.a[0]).toFixed(1)}" y1="${sy(s.a[1]).toFixed(1)}" x2="${sx(s.b[0]).toFixed(1)}" y2="${sy(s.b[1]).toFixed(1)}" stroke="${stroke[s.layer]}" stroke-width="${width[s.layer]}"/>`).join("");
   const arcsSvg = d.arcs
     .map((a) => {

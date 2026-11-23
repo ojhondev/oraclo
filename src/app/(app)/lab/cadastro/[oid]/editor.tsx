@@ -184,6 +184,13 @@ export function CadastroEditor({ vista }: { vista: Vista }) {
   };
 
   const onDown = (e: React.MouseEvent) => {
+    // botão da roda: sempre move o desenho (sem a rolagem automática do navegador)
+    if (e.button === 1) {
+      e.preventDefault();
+      pan.current = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+      return;
+    }
+    if (e.button !== 0) return;
     const [px, py] = ponto(e);
     if (tool === "modelo") return setDrag({ x0: px, y0: py, x1: px, y1: py });
     if (tool === "selecionar") {
@@ -200,7 +207,10 @@ export function CadastroEditor({ vista }: { vista: Vista }) {
       const svg = svgRef.current!;
       const r = svg.getBoundingClientRect();
       const scale = Math.max(view.w / r.width, view.h / r.height);
-      setView((v) => ({ ...v, x: pan.current!.vx - (e.clientX - pan.current!.x) * scale, y: pan.current!.vy - (e.clientY - pan.current!.y) * scale }));
+      // calcula já: se o botão for solto antes de o React aplicar, pan.current vira null
+      const p0 = pan.current;
+      const nx = p0.vx - (e.clientX - p0.x) * scale, ny = p0.vy - (e.clientY - p0.y) * scale;
+      if (Number.isFinite(nx) && Number.isFinite(ny)) setView((v) => ({ ...v, x: nx, y: ny }));
     }
   };
   const onUp = (e: React.MouseEvent) => {

@@ -15,6 +15,7 @@ import {
   Plus,
   Video,
   CloudUpload,
+  FlaskConical,
   Search,
   Sparkles,
   GraduationCap,
@@ -223,6 +224,10 @@ function NavContent({
         </Link>
         {[
           ...ITEMS,
+          // laboratório (módulos experimentais, como o levantamento cadastral): só admin
+          ...(user.role === "admin"
+            ? [{ href: "/lab/cadastro", label: "Laboratório", icon: FlaskConical, match: (p: string) => p.startsWith("/lab"), beta: true }]
+            : []),
           // pedidos de diagnóstico do site: só para a equipe do ArchRay
           ...(user.platformRole === "operador"
             ? [{ href: "/solicitacoes", label: "Solicitações", icon: Inbox, match: (p: string) => p.startsWith("/solicitacoes"), beta: false }]

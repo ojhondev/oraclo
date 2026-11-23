@@ -2,6 +2,8 @@
  * ArchRay CAD (laboratório): formato do desenho. Unidade = metro, Y para cima (convenção de CAD).
  * Puro e serializável (vai inteiro para o banco em JSON).
  */
+import type { Sheet } from "./sheets";
+
 export type P = [number, number];
 
 type Base = { id: string; layer: string };
@@ -56,6 +58,8 @@ export type CadDoc = {
   entities: Entity[];
   /** Tipos de bloco do desenho (janelas, portas). */
   blockTypes?: BlockType[];
+  /** Pranchas (folha, escala, enquadramento e carimbo). */
+  sheets?: Sheet[];
 };
 
 export type Box = { x0: number; y0: number; x1: number; y1: number };

@@ -292,3 +292,63 @@ describe("ArchRay CAD: IA assistente (sugestões)", () => {
     expect(suggestionIds(d)).toEqual([]);
   });
 });
+
+import { clipSeg, fitScale, graphicScale, newSheet, paperDrawing, sheetLayout, sheetPaper } from "@/lib/cad/sheets";
+import { sheetsToPdf } from "@/lib/cad/sheets-pdf";
+
+describe("ArchRay CAD: pranchas", () => {
+  const doc = () => {
+    const d = newDoc({ url: "x.jpg", w: 10, h: 8 });
+    const l = d.layers.find((x) => x.name === "Contorno")!.id, c = d.layers.find((x) => x.name === "Cotas")!.id;
+    d.entities.push(rect("r", 0, 0, 10, 8) as Entity, { ...line("x", [-100, 4], [100, 4]) }, { id: "d", layer: c, t: "dim", a: [0, 0], b: [10, 0], off: -1 });
+    for (const e of d.entities) if (e.t !== "image" && e.layer === "L") e.layer = l;
+    return d;
+  };
+
+  it("folha ABNT: A3 paisagem, margem esquerda de 25 mm, carimbo de 175 mm embaixo à direita", () => {
+    const L = sheetLayout({ size: "A3", orient: "paisagem" });
+    expect([L.w, L.h]).toEqual([420, 297]);
+    expect(L.frame.x0).toBe(25);
+    expect(L.stamp.x1 - L.stamp.x0).toBe(175);
+    expect(L.view.y0).toBeGreaterThan(L.stamp.y1);
+    expect(sheetLayout({ size: "A4", orient: "retrato" }).w).toBe(210);
+  });
+
+  it("escala técnica: a menor em que o desenho cabe", () => {
+    const d = doc();
+    d.entities = d.entities.filter((e) => e.id !== "x");
+    const f = fitScale(d, { size: "A3", orient: "paisagem", hidden: [] });
+    expect(f.scale).toBe(50);
+    expect(f.center[0]).toBeCloseTo(5);
+    expect(graphicScale(50)).toMatchObject({ meters: 2, mm: 40 });
+  });
+
+  it("recorte à janela, foto e sugestões de fora, cota com texto", () => {
+    expect(clipSeg([-5, 5], [15, 5], { x0: 0, y0: 0, x1: 10, y1: 10 })).toEqual([[0, 5], [10, 5]]);
+    expect(clipSeg([-5, 50], [15, 50], { x0: 0, y0: 0, x1: 10, y1: 10 })).toBeNull();
+    const d = doc();
+    const s = newSheet(d, "s1", 1);
+    expect(s.hidden).toContain(d.layers.find((l) => l.name === "Foto")!.id);
+    const p = paperDrawing(d, s);
+    const L = sheetLayout(s);
+    for (const g of p.segs) for (const q of [g.a, g.b]) expect(q[0]).toBeGreaterThanOrEqual(L.view.x0 - 1e-6);
+    expect(p.image).toBeUndefined();
+    expect(p.texts.map((t) => t.s)).toContain("10,00");
+    expect(paperDrawing(d, { ...s, photo: true }).image?.url).toBe("x.jpg");
+  });
+
+  it("carimbo com escala e título; PDF com uma página por prancha", async () => {
+    const d = doc();
+    const s = { ...newSheet(d, "s1", 1), name: "Fachada principal", stamp: { projeto: "Igreja do Carmo", local: "Horta", autor: "Ana", data: "23/11/2026", numero: "01", obs: "" } };
+    const texts = sheetPaper(d, s).texts.map((t) => t.s);
+    expect(texts).toContain(`1:${s.scale}`);
+    expect(s.scale).toBeGreaterThan(50); // a linha de 200 m entra no enquadramento
+    expect(texts).toContain("Fachada principal");
+    const bytes = await sheetsToPdf(d, [s, { ...s, id: "s2", size: "A4" }]);
+    expect(new TextDecoder().decode(bytes.slice(0, 5))).toBe("%PDF-");
+    const { PDFDocument } = await import("pdf-lib");
+    const pdf = await PDFDocument.load(bytes);
+    expect(pdf.getPageCount()).toBe(2);
+    expect(Math.round(pdf.getPage(0).getWidth())).toBe(Math.round((420 * 72) / 25.4));
+  });
+});

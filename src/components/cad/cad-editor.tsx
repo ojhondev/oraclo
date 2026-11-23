@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft, Circle, Copy, DoorOpen, CopyPlus, Download, FlipHorizontal2, Maximize, Minus, MousePointer2, Move, Redo2, Ruler, Spline, Square, Type, Undo2, CircleDashed,
+  ArrowLeft, Circle, Copy, DoorOpen, CopyPlus, LayoutTemplate, Download, FlipHorizontal2, Maximize, Minus, MousePointer2, Move, Redo2, Ruler, Spline, Square, Type, Undo2, CircleDashed,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ import { renameDrawing, saveDrawing } from "@/app/(editor)/editor/actions";
 import { LayersPanel, PropertiesPanel } from "./panels";
 import { BlocksPanel } from "./block-panels";
 import { SuggestPanel } from "./suggest-panel";
+import { SheetsView } from "./sheets-view";
 import { SUGGEST_LAYER, acceptSuggestions, backgroundImage, blockToImage, ensureSuggestLayer, suggestionIds, suggestionsFrom } from "@/lib/cad/suggest";
 import { runSuggest } from "@/lib/cad/suggest-client";
 import { expandBlock } from "@/lib/cad/blocks";
@@ -622,6 +623,7 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
   const clipboard = useRef<Entity[]>([]);
   useEffect(() => {
     const onKey = (ev: KeyboardEvent) => {
+      if (sheetsOpenRef.current) return; // tela das pranchas aberta: atalhos do desenho desligados
       const el = ev.target as HTMLElement;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT" || el.isContentEditable)) return;
       const k = ev.key;
@@ -746,6 +748,12 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
 
   // ── IA assistente ─────────────────────────────────────────────────────
   const [busy, setBusy] = useState<string | null>(null);
+  const [sheetsOpen, setSheetsOpenState] = useState(false);
+  const sheetsOpenRef = useRef(false);
+  const setSheetsOpen = (v: boolean) => {
+    setRef(sheetsOpenRef, v);
+    setSheetsOpenState(v);
+  };
   const searchSimilar = async () => {
     const d = docRef.current;
     const img = backgroundImage(d);
@@ -857,6 +865,9 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
               {currentLayer?.name}
             </span>
           </span>
+          <button onClick={() => setSheetsOpen(true)} className="flex h-8 items-center gap-1.5 rounded-md border px-3 text-[13px] hover:bg-muted">
+            <LayoutTemplate className="size-4" /> Pranchas{doc.sheets?.length ? ` (${doc.sheets.length})` : ""}
+          </button>
           <button onClick={exportDxf} className="flex h-8 items-center gap-1.5 rounded-md bg-foreground px-3 text-[13px] text-background hover:opacity-90">
             <Download className="size-4" /> DXF
           </button>
@@ -864,6 +875,7 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
 
         {/* área de desenho */}
         <div ref={wrapRef} className="relative min-h-0 flex-1 overflow-hidden">
+          {sheetsOpen && <SheetsView doc={doc} name={name} newId={uid} onChange={(sheets) => commit({ ...docRef.current, sheets })} onClose={() => setSheetsOpen(false)} />}
           <canvas
             ref={canvasRef}
             className={cn("absolute inset-0 touch-none", tool === "select" ? "cursor-default" : "cursor-crosshair")}

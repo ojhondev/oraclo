@@ -222,6 +222,7 @@ export function render(ctx: CanvasRenderingContext2D, r: RenderState) {
   for (const layer of r.doc.layers) {
     if (!layer.visible) continue;
     ctx.globalAlpha = layer.opacity;
+    ctx.setLineDash(layer.name === "Sugestões" ? [7, 5] : []); // sugestões da IA: tracejadas até serem aceitas
     for (const e of r.doc.entities) {
       if (e.layer !== layer.id) continue;
       ctx.lineWidth = layer.weight * (r.hover === e.id ? 2 : 1);
@@ -230,6 +231,7 @@ export function render(ctx: CanvasRenderingContext2D, r: RenderState) {
     }
   }
   ctx.globalAlpha = 1;
+  ctx.setLineDash([]);
 
   // seleção: traço destacado e alças
   const sel = r.doc.entities.filter((e) => r.selected.has(e.id));

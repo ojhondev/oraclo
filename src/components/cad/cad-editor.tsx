@@ -8,7 +8,7 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/brand";
-import type { CadDoc, Entity, Layer, P } from "@/lib/cad/types";
+import type { Block, CadDoc, Entity, Layer, P } from "@/lib/cad/types";
 import {
   addBlockType, makeBlock, removeBlockType, resetBlockToType, updateBlockOwn, updateBlockType,
   addEntities, addLayer, arrayEntities, copyEntities, editable, mirrorEntities, moveEntities, removeEntities, removeLayer, setEntitiesLayer, uid, updateEntity, updateLayer,
@@ -20,6 +20,9 @@ import { cadToDxf } from "@/lib/cad/dxf";
 import { renameDrawing, saveDrawing } from "@/app/(editor)/editor/actions";
 import { LayersPanel, PropertiesPanel } from "./panels";
 import { BlocksPanel } from "./block-panels";
+import { SuggestPanel } from "./suggest-panel";
+import { SUGGEST_LAYER, acceptSuggestions, backgroundImage, blockToImage, ensureSuggestLayer, suggestionIds, suggestionsFrom } from "@/lib/cad/suggest";
+import { runSuggest } from "@/lib/cad/suggest-client";
 import { expandBlock } from "@/lib/cad/blocks";
 import { fmtM } from "./fields";
 
@@ -741,6 +744,45 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
     URL.revokeObjectURL(a.href);
   };
 
+  // ── IA assistente ─────────────────────────────────────────────────────
+  const [busy, setBusy] = useState<string | null>(null);
+  const searchSimilar = async () => {
+    const d = docRef.current;
+    const img = backgroundImage(d);
+    if (!img) return void toast.error("Este desenho não tem foto de fundo.");
+    const sugLayer = d.layers.find((l) => l.name === SUGGEST_LAYER)?.id;
+    const blocks = d.entities.filter((e): e is Block => e.t === "block" && e.layer !== sugLayer);
+    let seeds = blocks.filter((b) => selRef.current.has(b.id));
+    if (!seeds.length) seeds = [...new Map(blocks.map((b) => [b.type, b])).values()].reverse();
+    const inside = (n: ReturnType<typeof blockToImage>) => n.x0 >= -0.01 && n.y0 >= -0.01 && n.x1 <= 1.01 && n.y1 <= 1.01 && n.x1 > n.x0 && n.y1 > n.y0;
+    seeds = seeds.filter((b) => inside(blockToImage(b, img)));
+    if (!seeds.length) return void toast.info("Coloque primeiro um bloco (janela ou porta) em cima de uma janela da foto.");
+    setBusy("Começando…");
+    try {
+      const r = await runSuggest({ url: img.url, seeds: seeds.map((b) => blockToImage(b, img)) }, setBusy);
+      const L = ensureSuggestLayer(docRef.current, uid);
+      const existing = L.doc.entities.filter((e): e is Block => e.t === "block");
+      const sug = suggestionsFrom(r.found, seeds, img, existing, L.id, uid);
+      if (!sug.length) toast.info("A IA não achou outras parecidas. Ajuste o bloco-modelo ao vão da foto e tente de novo.");
+      else {
+        commit(addEntities(L.doc, sug));
+        toast.success(`${sug.length} ${sug.length === 1 ? "sugestão" : "sugestões"} em ${(r.ms / 1000).toFixed(1).replace(".", ",")} s. Revise antes de aceitar.`);
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Falha ao procurar parecidas.");
+    } finally {
+      setBusy(null);
+    }
+  };
+  const sugIds = useMemo(() => new Set(suggestionIds(doc)), [doc]);
+  const selSug = [...selected].filter((id) => sugIds.has(id));
+  const reviewSuggestions = (accept: boolean, scope: "sel" | "todas") => {
+    const ids = new Set(scope === "sel" ? selSug : sugIds);
+    if (!ids.size) return;
+    commit(accept ? acceptSuggestions(docRef.current, ids, layerFor("block")) : removeEntities(docRef.current, ids));
+    setSelected(new Set([...selRef.current].filter((id) => !ids.has(id))));
+  };
+
   const selectedEntities = useMemo(() => doc.entities.filter((e) => selected.has(e.id)), [doc.entities, selected]);
   const currentLayer = doc.layers.find((l) => l.id === doc.current);
 
@@ -915,6 +957,15 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
             commit(removeLayer(docRef.current, id));
             setSelected(new Set());
           }}
+        />
+        <SuggestPanel
+          hasImage={!!backgroundImage(doc)}
+          busy={busy}
+          total={sugIds.size}
+          selected={selSug.length}
+          onSearch={searchSimilar}
+          onAccept={(scope) => reviewSuggestions(true, scope)}
+          onReject={(scope) => reviewSuggestions(false, scope)}
         />
         <BlocksPanel
           doc={doc}

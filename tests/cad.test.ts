@@ -241,3 +241,54 @@ describe("ArchRay CAD: deslocar (offset)", () => {
     expect(inner.x0).toBeCloseTo(0.1);
   });
 });
+
+import { acceptSuggestions, backgroundImage, blockToImage, ensureSuggestLayer, imageToWorld, suggestionIds, suggestionsFrom } from "@/lib/cad/suggest";
+
+describe("ArchRay CAD: IA assistente (sugestões)", () => {
+  const img = { id: "i", layer: "F", t: "image" as const, url: "x.jpg", p: [0, 0] as P, w: 20, h: 10 };
+  const janela = BLOCK_PRESETS.find((p) => p.key === "janela")!.params;
+
+  it("bloco ↔ foto: fração da imagem com Y para baixo, ida e volta", () => {
+    const b: Block = { id: "b", layer: "L", t: "block", type: "T", p: [2, 5], params: { ...janela, w: 1, h: 2 } };
+    const n = blockToImage(b, img);
+    for (const [k, v] of Object.entries({ x0: 0.1, x1: 0.15, y0: 0.3, y1: 0.5 })) expect(n[k as keyof typeof n]).toBeCloseTo(v);
+    const w = imageToWorld(n, img);
+    expect(w.x0).toBeCloseTo(2);
+    expect(w.y0).toBeCloseTo(5);
+    expect(w.y1).toBeCloseTo(7);
+  });
+
+  it("achados viram blocos do tipo do modelo, centrados, sem repetir o que já existe", () => {
+    let id = 0;
+    const nid = () => `s${id++}`;
+    const seed: Block = { id: "b", layer: "L", t: "block", type: "T", p: [2, 5], params: { ...janela, w: 1, h: 2 } };
+    const found = [
+      { ...blockToImage(seed, img), family: 0, score: 0.9 }, // o próprio modelo
+      { x0: 0.3, x1: 0.36, y0: 0.3, y1: 0.5, family: 0, score: 0.8 }, // outra, um pouco maior
+      { x0: 0.301, x1: 0.359, y0: 0.3, y1: 0.5, family: 0, score: 0.7 }, // duplicada
+    ];
+    const out = suggestionsFrom(found, [seed], img, [seed], "SUG", nid);
+    expect(out).toHaveLength(1);
+    expect(out[0]!.type).toBe("T");
+    expect(out[0]!.params.w).toBe(1);
+    expect(out[0]!.p[0]).toBeCloseTo(6.6 - 0.5);
+    expect(out[0]!.layer).toBe("SUG");
+    // bem maior que o modelo: vem com a medida achada, como medida própria
+    const big = suggestionsFrom([{ x0: 0.5, x1: 0.6, y0: 0.2, y1: 0.5, family: 0, score: 0.8 }], [seed], img, [seed], "SUG", nid)[0]!;
+    expect(big.own).toBe(true);
+    expect(big.params.w).toBeCloseTo(2);
+    expect(big.params.h).toBeCloseTo(3);
+  });
+
+  it("camada Sugestões: cria uma vez, aceitar leva para a camada de destino", () => {
+    let d = newDoc({ url: "x.jpg", w: 20, h: 10 });
+    expect(backgroundImage(d)!.url).toBe("x.jpg");
+    const r = ensureSuggestLayer(d, () => "SUG");
+    d = r.doc;
+    expect(ensureSuggestLayer(d, () => "outra").id).toBe("SUG");
+    d = { ...d, entities: [...d.entities, { id: "s1", layer: "SUG", t: "block", type: "T", p: [0, 0], params: janela }] };
+    expect(suggestionIds(d)).toEqual(["s1"]);
+    d = acceptSuggestions(d, new Set(["s1"]), "ESQ");
+    expect(suggestionIds(d)).toEqual([]);
+  });
+});

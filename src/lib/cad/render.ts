@@ -3,6 +3,7 @@
  * Desenha grade, camadas (com opacidade), imagem de fundo, seleção com alças, prévia da ferramenta,
  * marcador de encaixe e caixa de seleção. Só roda no navegador.
  */
+import { expandBlock } from "./blocks";
 import { arcPoint, dimGeometry, entitySnaps, type Snap } from "./geometry";
 import type { Box, CadDoc, Entity, P } from "./types";
 
@@ -123,6 +124,12 @@ function strokeEntity(ctx: CanvasRenderingContext2D, e: Entity, S: (p: P) => P, 
     return;
   }
   if (e.t === "dim") return drawDim(ctx, e, S, color);
+  if (e.t === "block") {
+    ctx.beginPath();
+    for (const c of expandBlock(e)) pathEntity(ctx, c, S, s);
+    ctx.stroke();
+    return;
+  }
   ctx.beginPath();
   pathEntity(ctx, e, S, s);
   ctx.stroke();

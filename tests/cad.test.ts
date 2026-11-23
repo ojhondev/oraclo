@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { arcFrom3, atDistance, bbox, dimGeometry, distanceTo, findSnap, mirror, ortho, selectInBox, translate } from "@/lib/cad/geometry";
 import { arrayEntities, copyEntities, editable, mirrorEntities, moveEntities, newDoc, normalizeDoc, removeLayer, updateLayer } from "@/lib/cad/doc";
-import type { Entity, Line, Poly } from "@/lib/cad/types";
+import type { Entity, Line, P, Poly } from "@/lib/cad/types";
 
 const line = (id: string, a: [number, number], b: [number, number]): Line => ({ id, layer: "L", t: "line", a, b });
 const rect = (id: string, x: number, y: number, w: number, h: number): Poly => ({ id, layer: "L", t: "poly", closed: true, pts: [[x, y], [x + w, y], [x + w, y + h], [x, y + h]] });
@@ -157,5 +157,87 @@ describe("ArchRay CAD: DXF", () => {
     expect(s).toContain("2,00");
     expect(s).not.toContain("x.jpg");
     expect(dxfLayerName("Cotas de nível")).toBe("COTAS-DE-NIVEL");
+  });
+});
+
+import { BLOCK_PRESETS, blockPieces, expandBlock, riseOf } from "@/lib/cad/blocks";
+import { addBlockType, makeBlock, removeBlockType, resetBlockToType, updateBlockOwn, updateBlockType } from "@/lib/cad/doc";
+import { offsetEntity } from "@/lib/cad/geometry";
+import type { Block } from "@/lib/cad/types";
+
+describe("ArchRay CAD: blocos (janela e porta)", () => {
+  const janela = BLOCK_PRESETS.find((p) => p.key === "janela")!.params;
+
+  it("janela reta: vão, moldura, peitoril, caixilho e divisões; caixa inclui moldura e peitoril", () => {
+    const b: Block = { id: "b", layer: "L", t: "block", type: "T", p: [10, 5], params: janela };
+    const box = bbox(b);
+    expect(box.x0).toBeCloseTo(10 - janela.moldura - 0.04);
+    expect(box.x1).toBeCloseTo(10 + janela.w + janela.moldura + 0.04);
+    expect(box.y0).toBeCloseTo(5 - janela.peitoril);
+    expect(box.y1).toBeCloseTo(5 + janela.h + janela.moldura);
+    // 1 montante (2 colunas) + 2 travessas (3 linhas) entre as peças
+    expect(blockPieces(janela).filter((q) => q.t === "line").length).toBeGreaterThanOrEqual(4 + 3 + 4 + 4 + 3);
+    // clicar dentro do vão pega o bloco
+    expect(distanceTo(b, [10.6, 5.7])).toBe(0);
+  });
+
+  it("arco pleno: raio = meia largura, arcos concêntricos (vão, moldura, caixilho) e bandeira", () => {
+    const p = { ...janela, top: "pleno" as const, w: 1, h: 2 };
+    expect(riseOf(p)).toBe(0.5);
+    const arcs = blockPieces(p).filter((q) => q.t === "arc") as { c: P; r: number }[];
+    expect(arcs.map((a) => a.r).sort()).toEqual([0.5 - p.frame, 0.5, 0.5 + p.moldura].sort());
+    for (const a of arcs) expect(a.c).toEqual([0.5, 1.5]);
+    const abatido = blockPieces({ ...p, top: "abatido", rise: 0.2 }).filter((q) => q.t === "arc")[0] as { r: number };
+    expect(abatido.r).toBeCloseTo((0.5 * 0.5 + 0.2 * 0.2) / (2 * 0.2));
+  });
+
+  it("mudar o tipo muda todas as cópias, menos a que tem medida própria; voltar ao tipo", () => {
+    let d = newDoc();
+    const r = addBlockType(d, "janela");
+    d = r.doc;
+    const a = makeBlock(d, r.id, [0, 0], d.current)!, b = makeBlock(d, r.id, [3, 0], d.current)!;
+    d = { ...d, entities: [a, b] };
+    d = updateBlockOwn(d, b.id, { w: 0.8 });
+    d = updateBlockType(d, r.id, { params: { w: 1.5 }, name: "J1" });
+    const [A, B] = d.entities as Block[];
+    expect(A!.params.w).toBe(1.5);
+    expect(B!.params.w).toBe(0.8);
+    expect(d.blockTypes![0]!.name).toBe("J1");
+    d = resetBlockToType(d, b.id);
+    expect((d.entities[1] as Block).params.w).toBe(1.5);
+    expect(removeBlockType(d, r.id).entities).toHaveLength(0);
+    // nomes automáticos não se repetem
+    expect(addBlockType(addBlockType(newDoc(), "janela").doc, "janela").doc.blockTypes!.map((t) => t.name)).toEqual(["Janela A", "Janela B"]);
+  });
+
+  it("mover e espelhar bloco; DXF com BLOCK e INSERT", () => {
+    const b: Block = { id: "b", layer: "L", t: "block", type: "T", p: [1, 0], params: janela };
+    expect(translate(b, 2, 1).p).toEqual([3, 1]);
+    expect(mirror(b, [0, 0], [0, 1]).p[0]).toBeCloseTo(-1 - janela.w);
+    expect(expandBlock(b).every((e) => e.layer === "L")).toBe(true);
+    const d = newDoc();
+    const r = addBlockType(d, "janela");
+    const doc = { ...r.doc, entities: [makeBlock(r.doc, r.id, [0, 0], d.current)!, makeBlock(r.doc, r.id, [3, 0], d.current)!] };
+    const s = cadToDxf(doc);
+    expect(s).toContain("JANELA-A");
+    expect(s.match(/\nINSERT\r?\n/g)?.length).toBe(2);
+  });
+});
+
+describe("ArchRay CAD: deslocar (offset)", () => {
+  it("linha para o lado do clique, círculo para dentro/fora, retângulo cresce por igual", () => {
+    expect(offsetEntity(line("a", [0, 0], [10, 0]), 0.5, [3, -2])).toMatchObject({ a: [0, -0.5], b: [10, -0.5] });
+    const c = { id: "c", layer: "L", t: "circle" as const, c: [0, 0] as P, r: 2 };
+    expect(offsetEntity(c, 0.5, [0.2, 0])).toMatchObject({ r: 1.5 });
+    expect(offsetEntity(c, 0.5, [5, 0])).toMatchObject({ r: 2.5 });
+    expect(offsetEntity(c, 3, [0.2, 0])).toBeNull();
+    const r = offsetEntity(rect("r", 0, 0, 2, 1), 0.1, [-1, 0.5]) as Poly;
+    const b = bbox(r);
+    expect(b.x0).toBeCloseTo(-0.1);
+    expect(b.x1).toBeCloseTo(2.1);
+    expect(b.y0).toBeCloseTo(-0.1);
+    expect(b.y1).toBeCloseTo(1.1);
+    const inner = bbox(offsetEntity(rect("r", 0, 0, 2, 1), 0.1, [1, 0.5])!);
+    expect(inner.x0).toBeCloseTo(0.1);
   });
 });

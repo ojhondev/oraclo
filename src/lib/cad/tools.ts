@@ -8,8 +8,8 @@ import { uid } from "./doc";
 import type { Entity, P } from "./types";
 
 export type DrawTool = "line" | "poly" | "rect" | "circle" | "arc" | "text" | "dim";
-export type EditTool = "move" | "copy" | "mirror";
-export type ToolId = "select" | DrawTool | EditTool;
+export type EditTool = "move" | "copy" | "mirror" | "offset";
+export type ToolId = "select" | DrawTool | EditTool | "block";
 
 /** Prompt mostrado na barra de status para cada ferramenta e etapa. */
 export function prompt(tool: ToolId, n: number): string {
@@ -34,6 +34,10 @@ export function prompt(tool: ToolId, n: number): string {
       return n ? "Destino da cópia (repete até Esc)." : "Ponto base da cópia.";
     case "mirror":
       return n ? "Segundo ponto do eixo de espelho." : "Primeiro ponto do eixo de espelho.";
+    case "offset":
+      return ["Digite a distância do deslocamento e Enter (ex.: 0,15).", "Clique na linha, polilinha, círculo ou arco.", "Clique no lado para onde deslocar."][n] ?? "";
+    case "block":
+      return "Clique onde fica o canto inferior esquerdo do vão (repete até Esc). Medidas no painel Blocos.";
     default:
       return "Clique para selecionar · arraste para a direita (janela) ou para a esquerda (cruzamento) · duplo clique edita.";
   }
@@ -114,6 +118,9 @@ export function preview(tool: ToolId, pts: P[], cur: P, layer: string): Entity[]
     case "copy":
     case "mirror":
       return [{ id, layer, t: "line", a: pts[pts.length - 1]!, b: cur }];
+    case "offset":
+    case "block":
+      return [];
     default:
       return [];
   }
@@ -169,4 +176,6 @@ export const COMMANDS: Record<string, ToolId | "erase" | "undo" | "redo" | "exte
   E: "erase", DEL: "erase", APAGAR: "erase",
   U: "undo", Z: "extents", ZE: "extents", AR: "array", MATRIZ: "array",
   S: "select", SEL: "select",
+  B: "block", BLOCO: "block", JANELA: "block", PORTA: "block",
+  O: "offset", OF: "offset", OFFSET: "offset", DESLOCAR: "offset",
 };

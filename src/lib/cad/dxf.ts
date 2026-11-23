@@ -4,6 +4,7 @@
  * iguais em qualquer CAD). Roda no navegador. Testado em tests/cad.test.ts.
  */
 import { DxfWriter, LWPolylineFlags, TextHorizontalAlignment, Units, point3d } from "@tarikjabiri/dxf";
+import { blockPieces, paramsKey } from "./blocks";
 import { dimGeometry } from "./geometry";
 import type { CadDoc } from "./types";
 
@@ -47,6 +48,28 @@ export function cadToDxf(doc: CadDoc): string {
     names.set(l.id, n);
     dxf.addLayer(n, nearestAci(l.color), "CONTINUOUS");
   }
+  // blocos: uma definição por tipo (e por medida própria diferente), inserida em cada posição
+  const defs = new Map<string, string>();
+  const usedBlocks = new Set<string>();
+  for (const e of doc.entities) {
+    if (e.t !== "block") continue;
+    const key = `${e.type}|${paramsKey(e.params)}`;
+    if (defs.has(key)) continue;
+    const typeName = doc.blockTypes?.find((t) => t.id === e.type)?.name ?? e.params.kind;
+    let n = dxfLayerName(typeName);
+    if (usedBlocks.has(n)) {
+      let i = 2;
+      while (usedBlocks.has(`${n}-${i}`)) i++;
+      n = `${n}-${i}`;
+    }
+    usedBlocks.add(n);
+    defs.set(key, n);
+    const blk = dxf.addBlock(n);
+    for (const q of blockPieces(e.params)) {
+      if (q.t === "line") blk.addLine(point3d(q.a[0], q.a[1], 0), point3d(q.b[0], q.b[1], 0), { layerName: "0" });
+      else blk.addArc(point3d(q.c[0], q.c[1], 0), q.r, deg(q.a0), deg(q.a1), { layerName: "0" });
+    }
+  }
   for (const e of doc.entities) {
     const layerName = names.get(e.layer) ?? "0";
     const o = { layerName };
@@ -80,6 +103,9 @@ export function cadToDxf(doc: CadDoc): string {
         dxf.addText(at, h, fmt(g.length), { ...o, rotation: rot, horizontalAlignment: TextHorizontalAlignment.Center, secondAlignmentPoint: at });
         break;
       }
+      case "block":
+        dxf.addInsert(defs.get(`${e.type}|${paramsKey(e.params)}`)!, point3d(e.p[0], e.p[1], 0), o);
+        break;
       default:
         break; // imagem de fundo não vai para o DXF
     }

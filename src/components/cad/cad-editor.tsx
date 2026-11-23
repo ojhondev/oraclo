@@ -3,21 +3,24 @@
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ArrowLeft, Circle, Copy, Download, FlipHorizontal2, Maximize, Minus, MousePointer2, Move, Redo2, Ruler, Spline, Square, Type, Undo2, CircleDashed,
+  ArrowLeft, Circle, Copy, DoorOpen, CopyPlus, Download, FlipHorizontal2, Maximize, Minus, MousePointer2, Move, Redo2, Ruler, Spline, Square, Type, Undo2, CircleDashed,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/brand";
 import type { CadDoc, Entity, Layer, P } from "@/lib/cad/types";
 import {
+  addBlockType, makeBlock, removeBlockType, resetBlockToType, updateBlockOwn, updateBlockType,
   addEntities, addLayer, arrayEntities, copyEntities, editable, mirrorEntities, moveEntities, removeEntities, removeLayer, setEntitiesLayer, uid, updateEntity, updateLayer,
 } from "@/lib/cad/doc";
-import { distanceTo, extents, findSnap, ortho, selectInBox, translate, type Snap, type SnapKind } from "@/lib/cad/geometry";
+import { distanceTo, extents, findSnap, offsetEntity, ortho, selectInBox, translate, type Snap, type SnapKind } from "@/lib/cad/geometry";
 import { fitView, render, toScreen, toWorld, type View } from "@/lib/cad/render";
 import { COMMANDS, click, finishPoly, preview, prompt, typedPoint, type DrawTool, type ToolId } from "@/lib/cad/tools";
 import { cadToDxf } from "@/lib/cad/dxf";
 import { renameDrawing, saveDrawing } from "@/app/(editor)/editor/actions";
 import { LayersPanel, PropertiesPanel } from "./panels";
+import { BlocksPanel } from "./block-panels";
+import { expandBlock } from "@/lib/cad/blocks";
 import { fmtM } from "./fields";
 
 type Drawing = { id: string; name: string; doc: CadDoc; rev: number };
@@ -49,6 +52,7 @@ function gripsOf(e: Entity): Grip[] {
     case "arc":
       return [{ id: e.id, key: "c", p: e.c }];
     case "text":
+    case "block":
       return [{ id: e.id, key: "p", p: e.p }];
     case "dim":
       return [{ id: e.id, key: "a", p: e.a }, { id: e.id, key: "b", p: e.b }];
@@ -71,6 +75,7 @@ function applyGrip(e: Entity, key: string, p: P): Entity {
     case "arc":
       return { ...e, c: p };
     case "text":
+    case "block":
       return { ...e, p };
     case "dim":
       return key === "a" ? { ...e, a: p } : { ...e, b: p };
@@ -145,11 +150,33 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
   const [name, setName] = useState(drawing.name);
   const [save, setSave] = useState<"salvo" | "pendente" | "salvando" | "conflito" | "erro">("salvo");
 
+  const [activeType, setActiveTypeState] = useState<string | null>(null);
+  const activeTypeRef = useRef<string | null>(null);
+  const setActiveType = (id: string | null) => {
+    activeTypeRef.current = id;
+    setActiveTypeState(id);
+  };
+  // deslocamento: distância (fica para a próxima vez, como no AutoCAD) e objeto escolhido
+  const [offD, setOffDState] = useState<number | null>(null);
+  const offDRef = useRef<number | null>(null);
+  const setOffD = (v: number | null) => {
+    offDRef.current = v;
+    setOffDState(v);
+  };
+  const [offSrc, setOffSrcState] = useState<string | null>(null);
+  const offSrcRef = useRef<string | null>(null);
+  const setOffSrc = (v: string | null) => {
+    offSrcRef.current = v;
+    setOffSrcState(v);
+  };
+
   const setTool = useCallback((t: ToolId) => {
     toolRef.current = t;
     setToolState(t);
     setPts([]);
     setTyped("");
+    offSrcRef.current = null;
+    setOffSrcState(null);
   }, []);
 
   /** Foco ao montar (ref estável: não rouba o foco do campo de altura a cada render). */
@@ -197,6 +224,15 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
       const base = ptsRef.current[0]!;
       if ((t === "move" || t === "copy") && sel.length) prev = [...prev, ...sel.map((e) => translate(e, cursor.current[0] - base[0], cursor.current[1] - base[1]))];
       if (t === "mirror" && sel.length) prev = [...prev, ...mirrorEntities({ ...docRef.current, entities: sel }, new Set(sel.map((e) => e.id)), base, cursor.current, false).doc.entities];
+    }
+    if (!dragRef.current && t === "block" && activeTypeRef.current) {
+      const b = makeBlock(docRef.current, activeTypeRef.current, cursor.current, layer);
+      if (b) prev = expandBlock(b);
+    }
+    if (!dragRef.current && t === "offset" && offSrcRef.current && offDRef.current) {
+      const src = docRef.current.entities.find((e) => e.id === offSrcRef.current);
+      const o = src && offsetEntity(src, offDRef.current, cursor.current);
+      if (o) prev = [o];
     }
     render(ctx, {
       doc: docRef.current,
@@ -351,7 +387,7 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
   /** Cota vai para a camada "Cotas" e texto para "Textos" (se existirem e estiverem livres); o resto, para a atual. */
   const layerFor = (t: ToolId) => {
     const d = docRef.current;
-    const want = t === "dim" ? "cotas" : t === "text" ? "textos" : null;
+    const want = t === "dim" ? "cotas" : t === "text" ? "textos" : t === "block" ? "esquadrias" : null;
     const l = want && d.layers.find((x) => x.name.toLowerCase() === want && !x.locked);
     return l ? l.id : d.current;
   };
@@ -365,6 +401,27 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
       if (r.askText) askText(r.askText);
       if (r.add) commit(addEntities(docRef.current, r.add));
       setPts(r.pts);
+      return;
+    }
+    if (t === "block") {
+      const b = activeTypeRef.current && makeBlock(docRef.current, activeTypeRef.current, p, layer);
+      if (b) commit(addEntities(docRef.current, [b]));
+      else toast.info("Escolha um tipo no painel Blocos.");
+      return;
+    }
+    if (t === "offset") {
+      if (!offDRef.current) return void toast.info("Digite a distância (ex.: 0,15) e Enter.");
+      if (!offSrcRef.current) {
+        const hit = hitTest(p);
+        if (hit && ["line", "poly", "circle", "arc"].includes(hit.t)) setOffSrc(hit.id);
+        else toast.info("Clique numa linha, polilinha, círculo ou arco.");
+        return;
+      }
+      const src = docRef.current.entities.find((e) => e.id === offSrcRef.current);
+      const o = src && offsetEntity(src, offDRef.current, p);
+      if (o) commit(addEntities(docRef.current, [{ ...o, id: uid() }]));
+      else toast.error("Não dá para deslocar para esse lado com essa distância.");
+      setOffSrc(null);
       return;
     }
     if (t === "move" || t === "copy" || t === "mirror") {
@@ -411,7 +468,21 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
     if (c === "redo") return redo();
     if (c === "extents") return zoomExtents();
     if (c === "array") return toast.info("Selecione os objetos: a matriz fica no painel Propriedades.");
+    if (c === "block") return startBlock(raw.trim().toUpperCase() === "PORTA" ? "porta" : raw.trim().toUpperCase() === "JANELA" ? "janela" : undefined);
     setTool(c);
+  };
+
+  /** Ferramenta Bloco: usa o tipo ativo; sem tipo, pega o primeiro (do tipo pedido) ou cria um. */
+  const startBlock = (kind?: "janela" | "porta", typeId?: string) => {
+    const types = docRef.current.blockTypes ?? [];
+    let id = typeId ?? (kind ? types.find((t) => t.params.kind === kind)?.id : activeTypeRef.current ?? types[0]?.id) ?? null;
+    if (!id || !types.some((t) => t.id === id)) {
+      const r = addBlockType(docRef.current, kind ?? "janela");
+      commit(r.doc);
+      id = r.id;
+    }
+    setTool("block");
+    setActiveType(id);
   };
 
   // ── mouse ─────────────────────────────────────────────────────────────
@@ -607,6 +678,14 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
           endTool();
           return runCommand(txt);
         }
+        if (t === "offset") {
+          const d = Number(txt.replace(",", "."));
+          if (d > 0) {
+            setOffD(d);
+            setOffSrc(null);
+          } else toast.error("Distância inválida. Ex.: 0,15");
+          return;
+        }
         if (t === "circle" && ptsRef.current.length === 1) {
           const r = Number(txt.replace(",", "."));
           if (r > 0) applyPoint([ptsRef.current[0]![0] + r, ptsRef.current[0]![1]]);
@@ -677,6 +756,8 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
     { id: "move", label: "Mover", key: "M", icon: Move },
     { id: "copy", label: "Copiar", key: "CO", icon: Copy },
     { id: "mirror", label: "Espelhar", key: "MI", icon: FlipHorizontal2 },
+    { id: "offset", label: "Deslocar (paralela)", key: "OF", icon: CopyPlus },
+    { id: "block", label: "Janela / porta (bloco)", key: "B", icon: DoorOpen },
   ];
 
   return (
@@ -690,7 +771,7 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
           <div key={t.id} className="contents">
             {(i === 1 || i === 8) && <div className="my-1 h-px w-7 bg-border" />}
             <button
-              onClick={() => setTool(t.id)}
+              onClick={() => (t.id === "block" ? startBlock() : setTool(t.id))}
               title={`${t.label} (${t.key})`}
               className={cn("grid size-9 place-items-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground", tool === t.id && "bg-foreground text-background hover:bg-foreground hover:text-background")}
             >
@@ -816,7 +897,7 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
               <input type="checkbox" checked={keepMirror} onChange={(e) => setKeepMirror(e.target.checked)} /> manter original
             </label>
           )}
-          <span className="min-w-0 flex-1 truncate text-muted-foreground">{prompt(tool, pts.length)}</span>
+          <span className="min-w-0 flex-1 truncate text-muted-foreground">{tool === "offset" ? `${offD ? `Distância ${fmtM(offD)} m (digite outra para trocar) · ` : ""}${prompt(tool, !offD ? 0 : offSrc ? 2 : 1)}` : prompt(tool, pts.length)}</span>
           <span className={cn("w-64 truncate whitespace-nowrap rounded border px-2 py-0.5 font-mono", tool === "select" && typed ? "border-foreground" : "text-muted-foreground")}>
             {tool === "select" ? (typed ? `Comando: ${typed}` : "Comando: L, PL, REC, C, T…") : `${typed || "—"}`}
           </span>
@@ -835,6 +916,22 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
             setSelected(new Set());
           }}
         />
+        <BlocksPanel
+          doc={doc}
+          active={tool === "block" ? activeType : null}
+          onPick={(id) => startBlock(undefined, id)}
+          onAdd={(key) => {
+            const r = addBlockType(docRef.current, key);
+            commit(r.doc);
+            setTool("block");
+            setActiveType(r.id);
+          }}
+          onRemove={(id) => {
+            commit(removeBlockType(docRef.current, id));
+            if (activeTypeRef.current === id) setActiveType(null);
+            setSelected(new Set());
+          }}
+        />
         <PropertiesPanel
           doc={doc}
           selected={selectedEntities}
@@ -844,6 +941,15 @@ export function CadEditor({ drawing }: { drawing: Drawing }) {
           onDelete={eraseSelection}
           onArray={(cols, rows, dx, dy) => commit(arrayEntities(docRef.current, selRef.current, cols, rows, dx, dy))}
           onEditText={(e) => askText(e.p, e.id, e.s)}
+          onBlockParams={(b, patch, scope) => {
+            // "todas do tipo" muda o tipo (e as cópias que o seguem); uma cópia com medida própria recebe a mudança também
+            let d = scope === "tipo" ? updateBlockType(docRef.current, b.type, { params: patch }) : docRef.current;
+            if (scope === "esta" || b.own) d = updateBlockOwn(d, b.id, patch);
+            commit(d);
+          }}
+          onBlockTypeName={(typeId, name) => commit(updateBlockType(docRef.current, typeId, { name }))}
+          onBlockReset={(id) => commit(resetBlockToType(docRef.current, id))}
+          onSelectType={(typeId) => setSelected(new Set(editable(docRef.current).filter((e) => e.t === "block" && e.type === typeId).map((e) => e.id)))}
         />
       </aside>
     </div>

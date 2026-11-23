@@ -3,7 +3,8 @@
  * Puro, testado em tests/cad.test.ts.
  */
 import { mirror, translate } from "./geometry";
-import type { CadDoc, Entity, Layer, P } from "./types";
+import { BLOCK_PRESETS, cleanParams } from "./blocks";
+import type { Block, BlockParams, BlockType, CadDoc, Entity, Layer, P } from "./types";
 
 export const uid = () => Math.random().toString(36).slice(2, 10);
 
@@ -98,5 +99,61 @@ export function normalizeDoc(raw: unknown): CadDoc {
   const d = raw as CadDoc;
   if (!d || d.v !== 1 || !Array.isArray(d.layers) || !Array.isArray(d.entities)) return newDoc();
   const current = d.layers.some((l) => l.id === d.current) ? d.current : d.layers[0]?.id ?? "";
-  return { ...d, current };
+  return { ...d, current, blockTypes: Array.isArray(d.blockTypes) ? d.blockTypes : [] };
+}
+
+// ── blocos ─────────────────────────────────────────────────────────────
+
+/** Cria um tipo a partir de um modelo, com nome livre ("Janela A", "Janela B"…). */
+export function addBlockType(d: CadDoc, presetKey: string): { doc: CadDoc; id: string } {
+  const preset = BLOCK_PRESETS.find((p) => p.key === presetKey) ?? BLOCK_PRESETS[0]!;
+  const types = d.blockTypes ?? [];
+  const prefix = preset.params.kind === "porta" ? "Porta" : "Janela";
+  let n = 0, name = "";
+  do name = `${prefix} ${String.fromCharCode(65 + (n % 26))}${n >= 26 ? Math.floor(n / 26) : ""}`;
+  while (types.some((t) => t.name === name) && ++n < 500);
+  const t: BlockType = { id: uid(), name, params: { ...preset.params } };
+  return { doc: { ...d, blockTypes: [...types, t] }, id: t.id };
+}
+
+export const blockType = (d: CadDoc, id: string) => (d.blockTypes ?? []).find((t) => t.id === id);
+
+/** Novo bloco do tipo, com o canto inferior esquerdo do vão em p. */
+export function makeBlock(d: CadDoc, typeId: string, p: P, layer: string): Block | null {
+  const t = blockType(d, typeId);
+  return t ? { id: uid(), layer, t: "block", type: t.id, p, params: { ...t.params } } : null;
+}
+
+/** Muda o tipo (nome e/ou medidas) e todas as cópias dele sem medida própria. */
+export function updateBlockType(d: CadDoc, typeId: string, patch: { name?: string; params?: Partial<BlockParams> }): CadDoc {
+  const t = blockType(d, typeId);
+  if (!t) return d;
+  const params = patch.params ? cleanParams({ ...t.params, ...patch.params }) : t.params;
+  return {
+    ...d,
+    blockTypes: (d.blockTypes ?? []).map((x) => (x.id === typeId ? { ...x, name: patch.name ?? x.name, params } : x)),
+    entities: d.entities.map((e) => (e.t === "block" && e.type === typeId && !e.own ? { ...e, params } : e)),
+  };
+}
+
+/** Medida própria só para este bloco (deixa de seguir o tipo). */
+export function updateBlockOwn(d: CadDoc, id: string, params: Partial<BlockParams>): CadDoc {
+  return { ...d, entities: d.entities.map((e) => (e.t === "block" && e.id === id ? { ...e, own: true, params: cleanParams({ ...e.params, ...params }) } : e)) };
+}
+
+/** Volta o bloco às medidas do tipo. */
+export function resetBlockToType(d: CadDoc, id: string): CadDoc {
+  return {
+    ...d,
+    entities: d.entities.map((e) => {
+      if (e.t !== "block" || e.id !== id) return e;
+      const t = blockType(d, e.type);
+      return t ? { ...e, own: false, params: { ...t.params } } : e;
+    }),
+  };
+}
+
+/** Apaga o tipo e as cópias dele. */
+export function removeBlockType(d: CadDoc, typeId: string): CadDoc {
+  return { ...d, blockTypes: (d.blockTypes ?? []).filter((t) => t.id !== typeId), entities: d.entities.filter((e) => !(e.t === "block" && e.type === typeId)) };
 }

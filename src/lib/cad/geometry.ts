@@ -3,6 +3,7 @@
  * encaixe (extremidade, meio, centro, quadrante, interseção, perpendicular) e seleção por janela /
  * cruzamento. Puro, testado em tests/cad.test.ts.
  */
+import { expandBlock } from "./blocks";
 import type { Box, Entity, P } from "./types";
 
 const TAU = Math.PI * 2;
@@ -27,6 +28,8 @@ export function segments(e: Entity): [P, P][] {
       if (e.closed && e.pts.length > 2) s.push([e.pts[e.pts.length - 1]!, e.pts[0]!]);
       return s;
     }
+    case "block":
+      return expandBlock(e).flatMap(segments);
     case "image":
       return [
         [e.p, [e.p[0] + e.w, e.p[1]]],
@@ -76,6 +79,8 @@ export function bbox(e: Entity): Box {
     }
     case "image":
       return { x0: e.p[0], y0: e.p[1], x1: e.p[0] + e.w, y1: e.p[1] + e.h };
+    case "block":
+      return extents(expandBlock(e)) ?? { x0: e.p[0], y0: e.p[1], x1: e.p[0], y1: e.p[1] };
   }
   return {
     x0: Math.min(...pts.map((p) => p[0])),
@@ -115,6 +120,12 @@ export function distanceTo(e: Entity, p: P): number {
       const g = dimGeometry(e.a, e.b, e.off);
       return Math.min(segDist(p, g.da, g.db).d, dist(p, g.text));
     }
+    case "block": {
+      // clicar dentro do vão também pega a janela/porta
+      const { w, h } = e.params;
+      if (p[0] >= e.p[0] && p[0] <= e.p[0] + w && p[1] >= e.p[1] && p[1] <= e.p[1] + h) return 0;
+      return Math.min(...expandBlock(e).map((c) => distanceTo(c, p)));
+    }
     default:
       return Math.min(...segments(e).map(([a, b]) => segDist(p, a, b).d), Infinity);
   }
@@ -149,6 +160,11 @@ export function entitySnaps(e: Entity): Snap[] {
   }
   if (e.t === "text") out.push({ p: e.p, kind: "ponta" });
   if (e.t === "dim") out.push({ p: e.a, kind: "ponta" }, { p: e.b, kind: "ponta" });
+  if (e.t === "block") {
+    // segmentos já entraram acima; faltam os pontos dos arcos (centro, pontas, meio)
+    for (const c of expandBlock(e)) if (c.t === "arc") out.push(...entitySnaps(c));
+    out.push({ p: [e.p[0] + e.params.w / 2, e.p[1]], kind: "meio" });
+  }
   return out;
 }
 
@@ -249,6 +265,7 @@ export function translate<T extends Entity>(e: T, dx: number, dy: number): T {
       return { ...e, c: m(e.c) };
     case "text":
     case "image":
+    case "block":
       return { ...e, p: m(e.p) };
     case "dim":
       return { ...e, a: m(e.a), b: m(e.b) };
@@ -282,6 +299,11 @@ export function mirror<T extends Entity>(e: T, a: P, b: P): T {
       const p = m(e.p);
       return { ...e, p: [p[0] - textWidth(e.s, e.h), p[1]] };
     }
+    case "block": {
+      // janela/porta são simétricas: espelhar = levar a caixa do vão para o outro lado
+      const cs = [e.p, [e.p[0] + e.params.w, e.p[1]], [e.p[0], e.p[1] + e.params.h], [e.p[0] + e.params.w, e.p[1] + e.params.h]].map((q) => m(q as P));
+      return { ...e, p: [Math.min(...cs.map((q) => q[0])), Math.min(...cs.map((q) => q[1]))] };
+    }
     default:
       return e;
   }
@@ -306,4 +328,70 @@ export function extents(entities: Entity[]): Box | null {
   if (!entities.length) return null;
   const bs = entities.map(bbox);
   return { x0: Math.min(...bs.map((b) => b.x0)), y0: Math.min(...bs.map((b) => b.y0)), x1: Math.max(...bs.map((b) => b.x1)), y1: Math.max(...bs.map((b) => b.y1)) };
+}
+
+/** Interseção das retas (infinitas) ab e cd, ou null se paralelas. */
+function lineX(a: P, b: P, c: P, d: P): P | null {
+  const r: P = [b[0] - a[0], b[1] - a[1]], q: P = [d[0] - c[0], d[1] - c[1]];
+  const den = r[0] * q[1] - r[1] * q[0];
+  if (Math.abs(den) < 1e-12) return null;
+  const t = ((c[0] - a[0]) * q[1] - (c[1] - a[1]) * q[0]) / den;
+  return [a[0] + t * r[0], a[1] + t * r[1]];
+}
+
+/**
+ * Deslocamento (offset): cópia paralela a `d` metros, para o lado em que está `side`.
+ * Linha, polilinha (cantos em quina), círculo e arco. Devolve null se não der (raio zerado etc.).
+ */
+export function offsetEntity(e: Entity, d: number, side: P): Entity | null {
+  if (!(d > 0)) return null;
+  const left = (a: P, b: P) => {
+    const L = dist(a, b) || 1e-9;
+    return [-(b[1] - a[1]) / L, (b[0] - a[0]) / L] as P;
+  };
+  const sideOf = (a: P, b: P) => Math.sign((b[0] - a[0]) * (side[1] - a[1]) - (b[1] - a[1]) * (side[0] - a[0])) || 1;
+  switch (e.t) {
+    case "line": {
+      const n = left(e.a, e.b), k = sideOf(e.a, e.b) * d;
+      return { ...e, a: [e.a[0] + n[0] * k, e.a[1] + n[1] * k], b: [e.b[0] + n[0] * k, e.b[1] + n[1] * k] };
+    }
+    case "circle":
+    case "arc": {
+      const r = dist(side, e.c) < e.r ? e.r - d : e.r + d;
+      return r > 1e-6 ? { ...e, r } : null;
+    }
+    case "poly": {
+      const segs = segments(e);
+      if (!segs.length) return null;
+      // lado escolhido pelo segmento mais perto do clique; vale para a polilinha toda
+      let best = 0, bd = Infinity;
+      segs.forEach(([a, b], i) => {
+        const dd = segDist(side, a, b).d;
+        if (dd < bd) {
+          bd = dd;
+          best = i;
+        }
+      });
+      const k = sideOf(segs[best]![0], segs[best]![1]) * d;
+      const off = segs.map(([a, b]) => {
+        const n = left(a, b);
+        return [[a[0] + n[0] * k, a[1] + n[1] * k], [b[0] + n[0] * k, b[1] + n[1] * k]] as [P, P];
+      });
+      const n = off.length;
+      const pts: P[] = [];
+      if (e.closed) {
+        for (let i = 0; i < n; i++) {
+          const prev = off[(i - 1 + n) % n]!, cur = off[i]!;
+          pts.push(lineX(prev[0], prev[1], cur[0], cur[1]) ?? cur[0]);
+        }
+      } else {
+        pts.push(off[0]![0]);
+        for (let i = 1; i < n; i++) pts.push(lineX(off[i - 1]![0], off[i - 1]![1], off[i]![0], off[i]![1]) ?? off[i]![0]);
+        pts.push(off[n - 1]![1]);
+      }
+      return { ...e, pts };
+    }
+    default:
+      return null;
+  }
 }

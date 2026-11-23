@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { dist, dimGeometry } from "@/lib/cad/geometry";
 import type { CadDoc, Entity, Layer, P } from "@/lib/cad/types";
 import { NumField, fmtM } from "./fields";
+import { BlockProps } from "./block-panels";
+import type { BlockParams } from "@/lib/cad/types";
 
 const deg = (r: number) => (r * 180) / Math.PI;
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -98,7 +100,7 @@ export function LayersPanel({ doc, onLayer, onCurrent, onAdd, onRemove }: {
   );
 }
 
-const TYPE_LABEL: Record<Entity["t"], string> = { line: "Linha", poly: "Polilinha", circle: "Círculo", arc: "Arco", text: "Texto", dim: "Cota", image: "Imagem" };
+const TYPE_LABEL: Record<Entity["t"], string> = { line: "Linha", poly: "Polilinha", circle: "Círculo", arc: "Arco", text: "Texto", dim: "Cota", image: "Imagem", block: "Bloco" };
 
 /** Retângulo alinhado aos eixos? (polilinha fechada de 4 pontos) */
 function asRect(e: Entity): { x: number; y: number; w: number; h: number } | null {
@@ -126,7 +128,7 @@ function polyMeasures(pts: P[], closed: boolean) {
 }
 
 /** Propriedades do que está selecionado; com vários, ações em grupo. */
-export function PropertiesPanel({ doc, selected, focus, onEntity, onLayerOf, onDelete, onArray, onEditText }: {
+export function PropertiesPanel({ doc, selected, focus, onEntity, onLayerOf, onDelete, onArray, onEditText, onBlockParams, onBlockTypeName, onBlockReset, onSelectType }: {
   doc: CadDoc;
   selected: Entity[];
   /** Objeto que recebeu duplo clique: o primeiro campo dele ganha o foco (só ele, só ao montar). */
@@ -136,6 +138,10 @@ export function PropertiesPanel({ doc, selected, focus, onEntity, onLayerOf, onD
   onDelete: () => void;
   onArray: (cols: number, rows: number, dx: number, dy: number) => void;
   onEditText: (e: Extract<Entity, { t: "text" }>) => void;
+  onBlockParams: (b: Extract<Entity, { t: "block" }>, patch: Partial<BlockParams>, scope: "tipo" | "esta") => void;
+  onBlockTypeName: (typeId: string, name: string) => void;
+  onBlockReset: (id: string) => void;
+  onSelectType: (typeId: string) => void;
 }) {
   const [arr, setArr] = useState({ cols: 3, rows: 1, dx: 1.5, dy: 3 });
   if (!selected.length)
@@ -282,6 +288,21 @@ export function PropertiesPanel({ doc, selected, focus, onEntity, onLayerOf, onD
           </div>
         );
       }
+      case "block":
+        return (
+          <BlockProps
+            key={e.id}
+            doc={doc}
+            b={e}
+            fk={fk}
+            autoFocus={focus?.id === e.id}
+            onParams={(patch, scope) => onBlockParams(e, patch, scope)}
+            onTypeName={(name) => onBlockTypeName(e.type, name)}
+            onReset={() => onBlockReset(e.id)}
+            onSelectType={() => onSelectType(e.type)}
+            onPos={(p) => onEntity(e.id, { p })}
+          />
+        );
       case "image":
         return (
           <p className="text-[11.5px] text-muted-foreground">
@@ -293,7 +314,7 @@ export function PropertiesPanel({ doc, selected, focus, onEntity, onLayerOf, onD
   return (
     <section className="grid gap-3 p-3 text-[12.5px]">
       <div className="flex items-center justify-between">
-        <p className="text-[12px] font-medium">{TYPE_LABEL[e.t]}</p>
+        <p className="text-[12px] font-medium">{e.t === "block" ? (e.params.kind === "porta" ? "Porta" : "Janela") : TYPE_LABEL[e.t]}</p>
         <button className="grid size-6 place-items-center rounded text-muted-foreground hover:bg-muted" onClick={onDelete} title="Apagar (Delete)">
           <Trash2 className="size-3.5" />
         </button>

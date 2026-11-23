@@ -475,3 +475,19 @@ export const academyProgress = pgTable("academy_progress", {
   lessonId: text("lesson_id").notNull(),
   completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [uniqueIndex("academy_progress_user_lesson_idx").on(t.userId, t.lessonId)]);
+
+/**
+ * Desenhos do ArchRay CAD (laboratório): o documento inteiro em JSON (camadas + entidades, metros).
+ * `rev` cresce a cada salvamento (evita sobrescrever uma versão mais nova aberta em outra aba).
+ */
+export const drawings = pgTable("drawings", {
+  id: id(),
+  orgId: uuid("org_id").notNull().references(() => organizations.id, { onDelete: "cascade" }),
+  orthophotoId: uuid("orthophoto_id").references(() => orthophotos.id, { onDelete: "set null" }),
+  name: text("name").notNull(),
+  doc: jsonb("doc").notNull(),
+  rev: integer("rev").notNull().default(0),
+  createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: createdAt(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("drawings_org_idx").on(t.orgId)]);

@@ -1,0 +1,161 @@
+import { describe, expect, it } from "vitest";
+import { arcFrom3, atDistance, bbox, dimGeometry, distanceTo, findSnap, mirror, ortho, selectInBox, translate } from "@/lib/cad/geometry";
+import { arrayEntities, copyEntities, editable, mirrorEntities, moveEntities, newDoc, normalizeDoc, removeLayer, updateLayer } from "@/lib/cad/doc";
+import type { Entity, Line, Poly } from "@/lib/cad/types";
+
+const line = (id: string, a: [number, number], b: [number, number]): Line => ({ id, layer: "L", t: "line", a, b });
+const rect = (id: string, x: number, y: number, w: number, h: number): Poly => ({ id, layer: "L", t: "poly", closed: true, pts: [[x, y], [x + w, y], [x + w, y + h], [x, y + h]] });
+
+describe("ArchRay CAD: geometria", () => {
+  it("distância até linha, círculo e arco", () => {
+    expect(distanceTo(line("a", [0, 0], [10, 0]), [5, 2])).toBeCloseTo(2);
+    expect(distanceTo({ id: "c", layer: "L", t: "circle", c: [0, 0], r: 5 }, [8, 0])).toBeCloseTo(3);
+    // arco do 1º quadrante: ponto no 3º quadrante mede até a ponta mais perto
+    const arc: Entity = { id: "r", layer: "L", t: "arc", c: [0, 0], r: 1, a0: 0, a1: Math.PI / 2 };
+    expect(distanceTo(arc, [0.5, 0.5])).toBeCloseTo(1 - Math.SQRT1_2);
+    expect(distanceTo(arc, [-1, 0])).toBeCloseTo(Math.SQRT2);
+  });
+
+  it("encaixe: ponta antes de meio, interseção de duas linhas e perpendicular", () => {
+    const es = [line("a", [0, 0], [10, 0]), line("b", [5, -5], [5, 5])];
+    const all = new Set(["ponta", "meio", "interseção", "centro", "quadrante", "perpendicular", "grade"] as const);
+    expect(findSnap(es, [0.2, 0.1], { tol: 0.5, kinds: all })!.kind).toBe("ponta");
+    const x = findSnap(es, [5.1, 0.1], { tol: 0.5, kinds: all })!;
+    expect(x.kind === "interseção" || x.kind === "meio").toBe(true);
+    expect(x.p[0]).toBeCloseTo(5);
+    const perp = findSnap([line("a", [0, 0], [10, 0])], [3.1, 0.2], { tol: 0.5, kinds: new Set(["perpendicular"]), from: [3, 4] })!;
+    expect(perp.p).toEqual([3, 0]);
+  });
+
+  it("modo ortogonal e medida digitada", () => {
+    expect(ortho([0, 0], [5, 1])).toEqual([5, 0]);
+    expect(ortho([0, 0], [1, 5])).toEqual([0, 5]);
+    const p = atDistance([0, 0], [3, 4], 10);
+    expect(p[0]).toBeCloseTo(6);
+    expect(p[1]).toBeCloseTo(8);
+  });
+
+  it("seleção por janela pega só o que está inteiro; por cruzamento pega o que encosta", () => {
+    const es = [rect("dentro", 1, 1, 2, 2), rect("meio", 4, 1, 4, 2), rect("fora", 20, 20, 1, 1)];
+    const box = { x0: 0, y0: 0, x1: 5, y1: 5 };
+    expect(selectInBox(es, box, false).map((e) => e.id)).toEqual(["dentro"]);
+    expect(selectInBox(es, box, true).map((e) => e.id).sort()).toEqual(["dentro", "meio"]);
+  });
+
+  it("arco por três pontos (anti-horário) e caixa do arco", () => {
+    const a = arcFrom3([1, 0], [0, 1], [-1, 0])!;
+    expect(a.r).toBeCloseTo(1);
+    expect(a.c[0]).toBeCloseTo(0);
+    const b = bbox({ id: "x", layer: "L", t: "arc", ...a });
+    expect(b.y1).toBeCloseTo(1);
+    expect(b.y0).toBeCloseTo(0);
+  });
+
+  it("cota: linha deslocada para a esquerda e comprimento", () => {
+    const g = dimGeometry([0, 0], [4, 0], 1);
+    expect(g.length).toBe(4);
+    expect(g.da).toEqual([0, 1]);
+  });
+
+  it("mover e espelhar", () => {
+    expect(translate(line("a", [0, 0], [1, 0]), 2, 3)).toMatchObject({ a: [2, 3], b: [3, 3] });
+    const m = mirror(line("a", [1, 0], [2, 1]), [0, 0], [0, 1]);
+    expect(m.a[0]).toBeCloseTo(-1);
+    expect(m.b[0]).toBeCloseTo(-2);
+  });
+});
+
+describe("ArchRay CAD: documento", () => {
+  it("desenho com foto: camada Foto travada e semitransparente, fora do que se edita", () => {
+    const d = newDoc({ url: "x.jpg", w: 10, h: 8 });
+    const foto = d.layers.find((l) => l.name === "Foto")!;
+    expect(foto.locked).toBe(true);
+    expect(foto.opacity).toBeLessThan(1);
+    expect(editable(d)).toHaveLength(0);
+    const destravada = updateLayer(d, foto.id, { locked: false });
+    expect(editable(destravada)).toHaveLength(1);
+  });
+
+  it("mover, copiar, espelhar com cópia e matriz", () => {
+    let d = newDoc();
+    d = { ...d, entities: [{ ...line("a", [0, 0], [1, 0]), layer: d.current }] };
+    d = moveEntities(d, new Set(["a"]), 1, 0);
+    expect((d.entities[0] as Line).a).toEqual([1, 0]);
+    const c = copyEntities(d, new Set(["a"]), 0, 2);
+    expect(c.doc.entities).toHaveLength(2);
+    const m = mirrorEntities(c.doc, new Set(["a"]), [0, 0], [0, 1], true);
+    expect(m.doc.entities).toHaveLength(3);
+    const arr = arrayEntities(d, new Set(["a"]), 4, 2, 3, 5);
+    expect(arr.entities).toHaveLength(8);
+  });
+
+  it("apagar camada leva junto o que está nela e nunca apaga a última", () => {
+    let d = newDoc();
+    const l = d.layers[1]!.id;
+    d = { ...d, entities: [{ ...line("a", [0, 0], [1, 0]), layer: l }] };
+    expect(removeLayer(d, l).entities).toHaveLength(0);
+    const uma = { ...d, layers: [d.layers[0]!] };
+    expect(removeLayer(uma, uma.layers[0]!.id).layers).toHaveLength(1);
+  });
+
+  it("documento inválido do banco vira desenho novo", () => {
+    expect(normalizeDoc(null).v).toBe(1);
+    expect(normalizeDoc({ v: 2 }).layers.length).toBeGreaterThan(0);
+  });
+});
+
+import { click, finishPoly, parsePair, preview, typedPoint } from "@/lib/cad/tools";
+import { cadToDxf, dxfLayerName } from "@/lib/cad/dxf";
+
+describe("ArchRay CAD: ferramentas", () => {
+  it("linha em cadeia: cada clique cria uma linha a partir do último ponto", () => {
+    let r = click("line", [], [0, 0], "L");
+    expect(r.add).toBeUndefined();
+    r = click("line", r.pts, [2, 0], "L");
+    expect(r.add![0]).toMatchObject({ t: "line", a: [0, 0], b: [2, 0] });
+    r = click("line", r.pts, [2, 3], "L");
+    expect(r.add![0]).toMatchObject({ a: [2, 0], b: [2, 3] });
+  });
+
+  it("retângulo por dois cantos e por largura x altura digitada", () => {
+    const r = click("rect", [[1, 1]], [3, 2], "L");
+    expect(r.add![0]).toMatchObject({ t: "poly", closed: true });
+    const p = typedPoint("rect", [[1, 1]], [5, 5], "1,2x0,8")!;
+    expect(p[0]).toBeCloseTo(2.2);
+    expect(p[1]).toBeCloseTo(1.8);
+    // cursor à esquerda e abaixo: cresce para o outro lado
+    const q = typedPoint("rect", [[1, 1]], [0, 0], "1x1")!;
+    expect(q).toEqual([0, 0]);
+  });
+
+  it("comprimento digitado segue a direção do cursor; dx;dy é relativo", () => {
+    const p = typedPoint("line", [[0, 0]], [10, 0], "1,5")!;
+    expect(p).toEqual([1.5, 0]);
+    expect(typedPoint("line", [[1, 1]], [10, 0], "2;3")).toEqual([3, 4]);
+    expect(parsePair("@1,5;2")).toEqual([1.5, 2]);
+  });
+
+  it("círculo, arco por três pontos, cota e polilinha", () => {
+    expect(click("circle", [[0, 0]], [0, 2], "L").add![0]).toMatchObject({ t: "circle", r: 2 });
+    const arc = click("arc", [[1, 0], [0, 1]], [-1, 0], "L").add![0]!;
+    expect(arc.t).toBe("arc");
+    const dim = click("dim", [[0, 0], [4, 0]], [2, 1.5], "L").add![0]!;
+    expect(dim).toMatchObject({ t: "dim", off: 1.5 });
+    expect(finishPoly([[0, 0], [1, 0], [1, 1]], "L", true)).toMatchObject({ closed: true });
+    expect(finishPoly([[0, 0], [1, 0]], "L", true)).toBeNull();
+    expect(preview("rect", [[0, 0]], [2, 1], "L")[0]).toMatchObject({ t: "poly" });
+  });
+});
+
+describe("ArchRay CAD: DXF", () => {
+  it("uma camada DXF por camada (nome sem acento), entidades e cota como linhas + texto; foto fica de fora", () => {
+    const d = newDoc({ url: "x.jpg", w: 10, h: 8 });
+    const l = d.layers.find((x) => x.name === "Esquadrias")!.id;
+    d.entities.push({ id: "a", layer: l, t: "line", a: [0, 0], b: [1, 0] }, { id: "b", layer: l, t: "dim", a: [0, 0], b: [2, 0], off: 0.5 });
+    const s = cadToDxf(d);
+    expect(s).toContain("ESQUADRIAS");
+    expect(s).toContain("2,00");
+    expect(s).not.toContain("x.jpg");
+    expect(dxfLayerName("Cotas de nível")).toBe("COTAS-DE-NIVEL");
+  });
+});
